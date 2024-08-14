@@ -1,7 +1,25 @@
 ﻿@page "/"
+@using FrontEnd.Core.Data
+@using FrontEnd.Core.Services
+@inject HttpClient Http
 
 <PageTitle>Home</PageTitle>
 
 <h1>Hello, world!</h1>
 
 Welcome to your new app.
+
+<a @onclick="Fetch">testing</a>
+@code
+{
+    private async Task Fetch()
+    {
+        var ds = new DataContext();
+        var svc = new DataSourceService(Http);
+
+        await svc.FetchData(ds);
+
+    }
+
+
+}
