@@ -112,3 +112,12 @@ code {
     margin: 0
 }
 
+.acknowledge-section {
+    -webkit-border-radius: 6px;
+    -moz-border-radius: 6px;
+    border-radius: 6px;
+    background-color: #fff;
+    margin-top: 12px;
+    padding: 12px;
+    border: 1px solid #999
+}

@@ -1,12 +1,10 @@
 ﻿@page "/"
-@using FrontEnd.Core.Data
-@using FrontEnd.Core.Services
-@inject HttpClient Http
+
 
 <PageTitle>Home</PageTitle>
 
 <div class="d-flex justify-content-center">
-    <img src="img/hugo-george-melies.png" />
+    <img src="img/hugo-george-melies.png" width="100%" />
     <br/>
  
 </div>
@@ -20,38 +18,13 @@
     </p>
 </div>
 
-<h1>Hello, world!</h1>
+<div class="row">
+    <div class="col-md-7">
+        <HomeSearch />
+    </div>
+    <div class="col-md-5">
+        <HomeAcknowledgements />
+    </div>
 
-Welcome to your new app.
+</div>
 
-@if (ds != null)
-{
-    <p>
-    @ds.Companies.Count Companies -
-   @ds.Countries.Count Countries -
-   @ds.Languages.Count Languages -
-   @ds.Origins.Count Origins -
-   @ds.Origins.Count Origins -
-   @ds.Films.Count Films
-    </p>
-}
-
-
-
-
-<a @onclick="Fetch">testing</a>
-@code
-{
-    DataContext ds = null;
-    private async Task Fetch()
-    {
-        ds = new DataContext();
-        var baseUrl = "https://international-fairy-tale-filmography.github.io/data/csv/";
-        var svc = new DataSourceService(Http, baseUrl);
-
-        await svc.FetchData(ds);
-
-    }
-
-
-}

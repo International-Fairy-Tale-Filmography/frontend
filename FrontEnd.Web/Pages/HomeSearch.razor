@@ -1,0 +1,52 @@
+﻿@using FrontEnd.Core.Data
+@using FrontEnd.Core.Services
+@inject HttpClient Http
+
+@* @if (ds != null)
+{
+    <p>
+        @ds.Companies.Count Companies -
+        @ds.Countries.Count Countries -
+        @ds.Languages.Count Languages -
+        @ds.Origins.Count Origins -
+        @ds.People.Count People -
+        @ds.Films.Count Films
+    </p>
+}
+ *@
+<div class="alert alert-secondary" style="margin-top:12px">
+    
+    
+    <div class="input-group">
+        <button class="btn btn-secondary" type="button"><i class="bi bi-search"></i></button>
+        <input type="text" class="form-control form-control-lg" placeholder="Enter film title" aria-label="Enter film title">
+
+        <button class="btn btn-secondary" type="button">Advanced</button>
+    </div>
+    
+
+
+</div>
+
+@code
+{
+    DataContext ds = null;
+    private async Task Fetch()
+    {
+        ds = new DataContext();
+        var baseUrl = "https://international-fairy-tale-filmography.github.io/data/csv/";
+        var svc = new DataSourceService(Http, baseUrl);
+
+        await svc.FetchData(ds);
+
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Task.Delay(1);
+
+        await Fetch();
+    }
+
+
+}
