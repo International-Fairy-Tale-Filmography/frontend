@@ -4,9 +4,9 @@ using System.Text;
 
 namespace FrontEnd.Core.Data.Models
 {
-    public class Film
+    public class Country
     {
-        public int FilmId { get; set; }
-        public string Title { get; set; }
+        public string CountryId { get; set; }
+        public string Code { get; set; }
     }
 }

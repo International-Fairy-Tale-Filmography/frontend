@@ -9,13 +9,30 @@
 
 Welcome to your new app.
 
+@if (ds != null)
+{
+    <p>
+    @ds.Companies.Count Companies -
+   @ds.Countries.Count Countries -
+   @ds.Languages.Count Languages -
+   @ds.Origins.Count Origins -
+   @ds.Origins.Count Origins -
+   @ds.Films.Count Films
+    </p>
+}
+
+
+
+
 <a @onclick="Fetch">testing</a>
 @code
 {
+    DataContext ds = null;
     private async Task Fetch()
     {
-        var ds = new DataContext();
-        var svc = new DataSourceService(Http);
+        ds = new DataContext();
+        var baseUrl = "https://international-fairy-tale-filmography.github.io/data/csv/";
+        var svc = new DataSourceService(Http, baseUrl);
 
         await svc.FetchData(ds);
 
