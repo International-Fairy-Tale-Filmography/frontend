@@ -33,7 +33,7 @@
       "url": "_framework\/icudt_no_CJK.dat"
     },
     {
-      "hash": "sha256-A8S86sMWaIC8lvSqtI6jDSk5IjCqKtyTU8XADeEReJg=",
+      "hash": "sha256-K+EzOCfBpZUmK2K4md13vHhv27ZZpEvJPw+EpJtwakU=",
       "url": "_framework\/blazor.boot.json"
     },
     {
@@ -41,15 +41,15 @@
       "url": "_framework\/CsvHelper.wasm"
     },
     {
-      "hash": "sha256-36Dbzfjh7v2TxJdB+fOZV8VL7vYZ8wWRW0ZfgQQdqhE=",
+      "hash": "sha256-auQ\/6awVyTaZpIRRbRnRajAakg4kdB4ksnyxSNjBe3c=",
       "url": "_framework\/FrontEnd.Core.wasm"
     },
     {
-      "hash": "sha256-5S1x+r3zv\/mW9bN31wjvJDJpT6RVTLmiDoFYfDnBRWU=",
+      "hash": "sha256-i7rVekNlRsNUY3T\/vqeBnfvqjPQmhY\/D5WBm0pdLd+I=",
       "url": "_framework\/FrontEnd.Web.wasm"
     },
     {
-      "hash": "sha256-AJifA3CYY4xrXY1\/Wp9UUEadasI9GEObrsYJdy+p53M=",
+      "hash": "sha256-ElBPL7ErHO9Y58qFBDCTeWuJl2NMy0nOI4e64okx0Cw=",
       "url": "_framework\/Microsoft.AspNetCore.Components.wasm"
     },
     {
@@ -193,7 +193,7 @@
       "url": "_framework\/System.ObjectModel.wasm"
     },
     {
-      "hash": "sha256-8fKWcN9kCFWeeLm77N4nEFKCkiS3b68rY3e9Xmo5UOM=",
+      "hash": "sha256-3GWZEJ\/knlWoRo8ojYpPMBcrL02Weeda4sTVUJgs8Uc=",
       "url": "_framework\/System.Private.CoreLib.wasm"
     },
     {
@@ -249,7 +249,7 @@
       "url": "FrontEnd.Web.styles.css"
     },
     {
-      "hash": "sha256-yis2dNdJ6e9R472mcuwUOsxBPCQX3snSMmHAL3zu2D8=",
+      "hash": "sha256-OUfdx70dC+q68EWWI87KwQftnEmaox\/wZwx\/\/Wp9laQ=",
       "url": "css\/app.css"
     },
     {
@@ -273,7 +273,15 @@
       "url": "icon-512.png"
     },
     {
-      "hash": "sha256-4glMBC1WbwoyCwJbmSO6DeoFOj249SM1AaKRaAa41Mg=",
+      "hash": "sha256-TP75a+Jfe+4E9H8X4Ded0JjyGlKywuwmXlzDZ\/h4zkc=",
+      "url": "img\/banner.png"
+    },
+    {
+      "hash": "sha256-GASqTlAnGBzvvUvcxUxZCrsqcUhv8Rf3qtabp6aXMFU=",
+      "url": "img\/hugo-george-melies.png"
+    },
+    {
+      "hash": "sha256-vHRujvgmSvjOQUoXIgE35w5E2CRIIJJyUWT98Xoge2Q=",
       "url": "index.html"
     },
     {
@@ -289,5 +297,5 @@
       "url": "sample-data\/weather.json"
     }
   ],
-  "version": "C4SWrwYf"
+  "version": "KkzSGA2d"
 };

@@ -1,7 +1,7 @@
 {
   "mainAssemblyName": "FrontEnd.Web",
   "resources": {
-    "hash": "sha256-iuBfuHmcL328jo7TttmcUV8Nso2/OsXHEUugxl/J8fM=",
+    "hash": "sha256-ZENxnIUl1SErkhxPuD72VmF5vE4baQu5iMzxYJbjW7M=",
     "jsModuleNative": {
       "dotnet.native.8.0.8.746giovk6l.js": "sha256-juC5sA7gHTLXFEhAKgdM2/RavswpwCtDfjYGsAz2FXg="
     },
@@ -18,9 +18,9 @@
     },
     "assembly": {
       "CsvHelper.wasm": "sha256-BXz5RCSFBrg3KCDZD4lxgyWmw1YH6vUT0N/oIQdCKfA=",
-      "FrontEnd.Core.wasm": "sha256-36Dbzfjh7v2TxJdB+fOZV8VL7vYZ8wWRW0ZfgQQdqhE=",
-      "FrontEnd.Web.wasm": "sha256-5S1x+r3zv/mW9bN31wjvJDJpT6RVTLmiDoFYfDnBRWU=",
-      "Microsoft.AspNetCore.Components.wasm": "sha256-AJifA3CYY4xrXY1/Wp9UUEadasI9GEObrsYJdy+p53M=",
+      "FrontEnd.Core.wasm": "sha256-auQ/6awVyTaZpIRRbRnRajAakg4kdB4ksnyxSNjBe3c=",
+      "FrontEnd.Web.wasm": "sha256-i7rVekNlRsNUY3T/vqeBnfvqjPQmhY/D5WBm0pdLd+I=",
+      "Microsoft.AspNetCore.Components.wasm": "sha256-ElBPL7ErHO9Y58qFBDCTeWuJl2NMy0nOI4e64okx0Cw=",
       "Microsoft.AspNetCore.Components.Web.wasm": "sha256-4tmx4uC98MyKjCuM9ErBZwXpqkLx4fwVZfJQIv+Y0+A=",
       "Microsoft.AspNetCore.Components.WebAssembly.wasm": "sha256-Lx3hm0lrkE4uOJE79pdZnKpYhH0HAaOXdsTupkOpFlg=",
       "Microsoft.CSharp.wasm": "sha256-VUPh1r1a1rQPhauXlbfL5hSNccWJHzNmaARMDbZ14Mk=",
@@ -56,7 +56,7 @@
       "System.Net.Http.wasm": "sha256-zuAsRJOLqJgW3OfXy0kpRCebs5zS9/C8QRIGeHhc5Pg=",
       "System.Net.Primitives.wasm": "sha256-9XtuT/hRRp+Dbz7zL2czMsJ+405ppwSC+XY4mCYr6Kw=",
       "System.ObjectModel.wasm": "sha256-kKzeVZg/xPepqYubOte1hHB0v61yigu1TsZ1lBkhnNU=",
-      "System.Private.CoreLib.wasm": "sha256-8fKWcN9kCFWeeLm77N4nEFKCkiS3b68rY3e9Xmo5UOM=",
+      "System.Private.CoreLib.wasm": "sha256-3GWZEJ/knlWoRo8ojYpPMBcrL02Weeda4sTVUJgs8Uc=",
       "System.Private.Uri.wasm": "sha256-oIx6a0jLzmUGkY8T1s/ZrmbU+7frkzl+HwoCQ+oT4Bo=",
       "System.Private.Xml.wasm": "sha256-ipXo86GQd6pzAYPI95HXhfs48HgeyNdKHGLe+IuO7Lc=",
       "System.Runtime.InteropServices.JavaScript.wasm": "sha256-lxdsSKM2nYdr8hFsiNXUaaW/Q9Xf1oTdADKDJWz8MlA=",
