@@ -96,14 +96,14 @@ else
     DataContext ds = null;
     private async Task Fetch()
     {
-        isLoading = true;
+ 
         await Task.Delay(1);
         ds = new DataContext();
         var baseUrl = "https://international-fairy-tale-filmography.github.io/data/csv/";
         var svc = new DataSourceService(Http, baseUrl);
 
         await svc.FetchData(ds);
-        isLoading = false;
+        
     }
 
     protected override async Task OnInitializedAsync()
