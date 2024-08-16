@@ -1,7 +1,7 @@
 {
   "mainAssemblyName": "FrontEnd.Web",
   "resources": {
-    "hash": "sha256-zpb13E8AOhwCcpjFTkdGBEwXZ8kctIfkVqIMrOfylzY=",
+    "hash": "sha256-L34FXJUb+oj/1dBb6ZNBENqazPQR3RNh5WMm6fZVAgk=",
     "jsModuleNative": {
       "dotnet.native.8.0.8.746giovk6l.js": "sha256-juC5sA7gHTLXFEhAKgdM2/RavswpwCtDfjYGsAz2FXg="
     },
@@ -18,9 +18,9 @@
     },
     "assembly": {
       "CsvHelper.wasm": "sha256-BXz5RCSFBrg3KCDZD4lxgyWmw1YH6vUT0N/oIQdCKfA=",
-      "FrontEnd.Core.wasm": "sha256-PP0u9wmNpLa8rRaeI6G5Rpi+myeCszbiskOoncS7Iew=",
-      "FrontEnd.Web.wasm": "sha256-nVEd7Au5yZqVxzckA60vsmj1/WFSQT42wU6OFhEWwWc=",
-      "Microsoft.AspNetCore.Components.wasm": "sha256-ElBPL7ErHO9Y58qFBDCTeWuJl2NMy0nOI4e64okx0Cw=",
+      "FrontEnd.Core.wasm": "sha256-nAe0l1pxAxtd9v23ln8jJ5p+CJA0kgmv46F80UB/hXY=",
+      "FrontEnd.Web.wasm": "sha256-rNubUB7RH9uQ9iF3qtgsAQJNvI+nKyL/6AZ4CwLYdsI=",
+      "Microsoft.AspNetCore.Components.wasm": "sha256-VixA7p1/x4CKOvrakhS/2nh+7U2gqE/my98YDj+8wcw=",
       "Microsoft.AspNetCore.Components.Web.wasm": "sha256-4tmx4uC98MyKjCuM9ErBZwXpqkLx4fwVZfJQIv+Y0+A=",
       "Microsoft.AspNetCore.Components.WebAssembly.wasm": "sha256-Lx3hm0lrkE4uOJE79pdZnKpYhH0HAaOXdsTupkOpFlg=",
       "Microsoft.CSharp.wasm": "sha256-VUPh1r1a1rQPhauXlbfL5hSNccWJHzNmaARMDbZ14Mk=",
@@ -35,7 +35,7 @@
       "Microsoft.Extensions.Primitives.wasm": "sha256-Ms2HR5Gpug/0uRAzdk4SUNT76Ml3CjFv9Jo+dUIMGac=",
       "Microsoft.JSInterop.wasm": "sha256-DOtnQ3+rR9fdahebbFqXxx60H7B8jR03AaYj4y/r7z4=",
       "Microsoft.JSInterop.WebAssembly.wasm": "sha256-nJo9AftA2/mHxtXapqHsgjzQgIHOpue2DnVtxkgTSME=",
-      "netstandard.wasm": "sha256-R9Ip4Fw3CRwsl1AgMpb2NSxEmMDszb5T3i5hGV/D1TQ=",
+      "netstandard.wasm": "sha256-mWJgOMwh9dE/VTFilWXorWa8CONbOyK+xkiKz6DgPFo=",
       "System.Collections.Concurrent.wasm": "sha256-SV0mcJva9duwrGKO4NSGlpH8pySWoqMlKLfSkWO8xyI=",
       "System.Collections.NonGeneric.wasm": "sha256-2vzCre13qOn/oG80ksJIXZ4Z0nbHvmyLvaK8Jh9xTNA=",
       "System.Collections.Specialized.wasm": "sha256-4bMNI5tH4ZW1WugfCw2lxlBfZF3KzzuTN7FkPj4D2Kc=",

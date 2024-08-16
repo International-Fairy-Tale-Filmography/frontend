@@ -33,7 +33,7 @@
       "url": "_framework\/icudt_no_CJK.dat"
     },
     {
-      "hash": "sha256-dIgux8JmUMI3WfTM\/EddjWrs905TFjqq5UY\/M+MI8F8=",
+      "hash": "sha256-tmA1Kk\/iWBlOlxX+7s2pIgp0xj+JQzVZrZloc7OhChg=",
       "url": "_framework\/blazor.boot.json"
     },
     {
@@ -41,15 +41,15 @@
       "url": "_framework\/CsvHelper.wasm"
     },
     {
-      "hash": "sha256-PP0u9wmNpLa8rRaeI6G5Rpi+myeCszbiskOoncS7Iew=",
+      "hash": "sha256-nAe0l1pxAxtd9v23ln8jJ5p+CJA0kgmv46F80UB\/hXY=",
       "url": "_framework\/FrontEnd.Core.wasm"
     },
     {
-      "hash": "sha256-nVEd7Au5yZqVxzckA60vsmj1\/WFSQT42wU6OFhEWwWc=",
+      "hash": "sha256-rNubUB7RH9uQ9iF3qtgsAQJNvI+nKyL\/6AZ4CwLYdsI=",
       "url": "_framework\/FrontEnd.Web.wasm"
     },
     {
-      "hash": "sha256-ElBPL7ErHO9Y58qFBDCTeWuJl2NMy0nOI4e64okx0Cw=",
+      "hash": "sha256-VixA7p1\/x4CKOvrakhS\/2nh+7U2gqE\/my98YDj+8wcw=",
       "url": "_framework\/Microsoft.AspNetCore.Components.wasm"
     },
     {
@@ -109,7 +109,7 @@
       "url": "_framework\/Microsoft.JSInterop.WebAssembly.wasm"
     },
     {
-      "hash": "sha256-R9Ip4Fw3CRwsl1AgMpb2NSxEmMDszb5T3i5hGV\/D1TQ=",
+      "hash": "sha256-mWJgOMwh9dE\/VTFilWXorWa8CONbOyK+xkiKz6DgPFo=",
       "url": "_framework\/netstandard.wasm"
     },
     {
@@ -297,5 +297,5 @@
       "url": "sample-data\/weather.json"
     }
   ],
-  "version": "xj9ORAfT"
+  "version": "7OleWT\/Q"
 };
