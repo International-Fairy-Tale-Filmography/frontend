@@ -1,4 +1,5 @@
 ﻿@using FrontEnd.Core.Data
+@using FrontEnd.Core.Data.Models
 @using FrontEnd.Core.Services
 @inject HttpClient Http
 
@@ -19,17 +20,45 @@
     
     <div class="input-group">
         <button class="btn btn-secondary" type="button"><i class="bi bi-search"></i></button>
-        <input type="text" class="form-control form-control-lg" placeholder="Enter film title" aria-label="Enter film title">
+        <input type="text" @bind-value="searchTitle" class="form-control form-control-lg" placeholder="Enter film title" aria-label="Enter film title">
 
-        <button class="btn btn-secondary" type="button">Advanced</button>
+        <button class="btn btn-secondary" @onclick="Search" type="button">Advanced</button>
     </div>
     
 
 
 </div>
 
+
+<ul class="unstyled list-manager">
+
+
+    @foreach (var i in results)
+    {
+        <li>
+
+            <a class="nopad" href="/Home/Film/@i.FilmId"><i class="bi bi-film"></i></a>
+            <em>
+                <a class="italics" href="/Home/Film/@i.FilmId">@i.Title</a>
+            </em>
+            
+          @*   1979.
+
+            Directed by <a class="nopad" href="/Search/ByDirector/7783">Ina Rarisch</a>.
+
+            <a class="nopad" href="/Search/ByCountry/996">East Germany</a>:
+
+            <a class="nopad" href="/Search/ByCompany/293">DEFA-Studio für Trickfilme</a>.
+ *@
+        </li>
+    }
+
+</ul>
 @code
 {
+    private string searchTitle = "";
+
+    private List<Film> results = new List<Film>();
     DataContext ds = null;
     private async Task Fetch()
     {
@@ -46,6 +75,11 @@
         await Task.Delay(1);
 
         await Fetch();
+    }
+
+    private void Search()
+    {
+        results = ds.Films.Where(i => i.Title.ToLowerInvariant().Contains(searchTitle)).ToList();
     }
 
 
