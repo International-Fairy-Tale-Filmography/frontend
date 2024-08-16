@@ -6,9 +6,11 @@ namespace FrontEnd.Core.Data.Models
 {
     public class Company
     {
+        
         public int CompanyId { get; set; }
         public string Name { get; set; }
         public string Description { get; set; }
+        public List<Film> Films { get; set; } = new List<Film>();
 
     }
 }

@@ -34,6 +34,8 @@ namespace FrontEnd.Core.Services
             context.Origins.AddRange(await FetchCsv<Origin>("Origin"));
             context.People.AddRange(await FetchCsv<Person>("Person"));
 
+
+            await MapCompanyFilms(context);
         }
 
         private async Task<List<T>> FetchCsv<T>(string name)
@@ -49,6 +51,26 @@ namespace FrontEnd.Core.Services
 
             return records.ToList();
         }
+
+        private async Task MapCompanyFilms(DataContext context)
+        {
+            var companyFilms = await FetchCsv<CompanyFilm>("CompanyFilm");
+
+            var filmDict = context.Films.ToDictionary(i => i.FilmId, i => i);
+            var companyDict = context.Companies.ToDictionary(i => i.CompanyId, i => i);
+
+            foreach (var i in companyFilms)
+            {
+                var film = filmDict[i.FilmId];
+
+                var company = companyDict[i.CompanyId];
+
+                film.Company = company;
+                company.Films.Add(film);
+            }
+
+        }
+
 
 
     }

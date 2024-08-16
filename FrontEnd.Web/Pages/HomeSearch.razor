@@ -42,14 +42,24 @@
                 <a class="italics" href="/Home/Film/@i.FilmId">@i.Title</a>
             </em>
             
-          @*   1979.
+            @*   1979.
 
             Directed by <a class="nopad" href="/Search/ByDirector/7783">Ina Rarisch</a>.
 
             <a class="nopad" href="/Search/ByCountry/996">East Germany</a>:
+        *@
+            @if (i.Company != null)
+            {
+                
+                <a class="nopad" href="/Search/ByCompany/@i.Company.CompanyId">
+                    @i.Company.Name
+                </a>                
+            }
 
-            <a class="nopad" href="/Search/ByCompany/293">DEFA-Studio für Trickfilme</a>.
- *@
+.
+
+             
+            
         </li>
     }
 
