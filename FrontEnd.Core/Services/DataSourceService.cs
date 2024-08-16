@@ -36,6 +36,7 @@ namespace FrontEnd.Core.Services
 
 
             await MapCompanyFilms(context);
+            await MapCountryFilms(context);
         }
 
         private async Task<List<T>> FetchCsv<T>(string name)
@@ -65,8 +66,28 @@ namespace FrontEnd.Core.Services
 
                 var company = companyDict[i.CompanyId];
 
-                film.Company = company;
+                film.Companies.Add(company);
                 company.Films.Add(film);
+            }
+
+        }
+
+
+        private async Task MapCountryFilms(DataContext context)
+        {
+            var companyFilms = await FetchCsv<CountryFilm>("CountryFilm");
+
+            var filmDict = context.Films.ToDictionary(i => i.FilmId, i => i);
+            var countryDict = context.Countries.ToDictionary(i => i.CountryId, i => i);
+
+            foreach (var i in companyFilms)
+            {
+                var film = filmDict[i.FilmId];
+
+                var country = countryDict[i.CountryId];
+
+                film.Countries.Add(country);
+                country.Films.Add(film);
             }
 
         }

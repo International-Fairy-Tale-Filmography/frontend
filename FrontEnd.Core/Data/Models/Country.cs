@@ -6,7 +6,9 @@ namespace FrontEnd.Core.Data.Models
 {
     public class Country
     {
-        public string CountryId { get; set; }
+        public int CountryId { get; set; }
         public string Code { get; set; }
+        public string Name { get; set; }
+        public List<Film> Films { get; set; } = new List<Film>();
     }
 }

@@ -20,7 +20,7 @@
     
     <div class="input-group">
         <button class="btn btn-secondary" type="button" @onclick="Search"><i class="bi bi-search"></i></button>
-        <input type="text" @bind-value="searchTitle" class="form-control form-control-lg" placeholder="Enter film title" aria-label="Enter film title">
+        <input type="text" @bind-value="searchTitle" @onkeyup="Enter" class="form-control form-control-lg" placeholder="Enter film title" aria-label="Enter film title">
 
         <button class="btn btn-secondary"  type="button">Advanced</button>
     </div>
@@ -30,54 +30,80 @@
 </div>
 
 
-<ul class="unstyled list-manager">
+@if (isLoading)
+{
+    <span>Please Wait.. 🎥</span>
+}
+else
+{
 
 
-    @foreach (var i in results)
-    {
-        <li>
 
-            <a class="nopad" href="/Home/Film/@i.FilmId"><i class="bi bi-film"></i></a>
-            <em>
-                <a class="italics" href="/Home/Film/@i.FilmId">@i.Title</a>
-            </em>
-            
-            @*   1979.
+    <ul class="unstyled list-manager">
+
+
+        @foreach (var i in results)
+        {
+            <li>
+
+                <a class="nopad" href="/Home/Film/@i.FilmId"><i class="bi bi-film"></i></a>
+                <em>
+                    <a class="italics" href="/Home/Film/@i.FilmId">@i.Title (@i.ReleaseYear)</a>
+                </em>
+
+                @*   1979.
 
             Directed by <a class="nopad" href="/Search/ByDirector/7783">Ina Rarisch</a>.
 
             <a class="nopad" href="/Search/ByCountry/996">East Germany</a>:
         *@
-            @if (i.Company != null)
-            {
-                <span> - </span>
-                <a class="nopad" href="/Search/ByCompany/@i.Company.CompanyId">
-                    @i.Company.Name
-                </a>                
-            }
 
-.
+                @foreach (var j in i.Countries)
+                {
 
-             
-            
-        </li>
-    }
+                    <span> - </span>
+                    <a class="nopad" href="/Search/ByCountry/@j.CountryId">
+                        @j.Name
+                    </a>
+                }
 
-</ul>
+                @foreach (var j in i.Companies)
+                {
+
+                    <span> - </span>
+                    <a class="nopad" href="/Search/ByCompany/@j.CompanyId">
+                        @j.Name
+                    </a>
+                }
+
+                .
+
+
+
+            </li>
+        }
+
+    </ul>
+}
+
 @code
 {
+
+    private bool isLoading = true;
     private string searchTitle = "";
 
     private List<Film> results = new List<Film>();
     DataContext ds = null;
     private async Task Fetch()
     {
+        isLoading = true;
+        await Task.Delay(1);
         ds = new DataContext();
         var baseUrl = "https://international-fairy-tale-filmography.github.io/data/csv/";
         var svc = new DataSourceService(Http, baseUrl);
 
         await svc.FetchData(ds);
-
+        isLoading = false;
     }
 
     protected override async Task OnInitializedAsync()
@@ -87,10 +113,20 @@
         await Fetch();
     }
 
-    private void Search()
+    private async Task Search()
     {
+        isLoading = true;
+        await Task.Delay(5);
         results = ds.Films.Where(i => i.Title.ToLowerInvariant().Contains(searchTitle)).ToList();
+        isLoading = false;
     }
 
+    public async Task Enter(KeyboardEventArgs e)
+    {
+        if (e.Code == "Enter" || e.Code == "NumpadEnter")
+        {
+            await Search();
+        }
+    }
 
 }
