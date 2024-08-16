@@ -33,7 +33,7 @@
       "url": "_framework\/icudt_no_CJK.dat"
     },
     {
-      "hash": "sha256-pbUD6xFjKwzkiT6MCPiKrxJbSV3Vru2WpB8kCduPgqE=",
+      "hash": "sha256-bzu3BbWIkrO\/y2l3wfZCEQkGtDBttzkGGWNgyo8WDgY=",
       "url": "_framework\/blazor.boot.json"
     },
     {
@@ -41,19 +41,19 @@
       "url": "_framework\/CsvHelper.wasm"
     },
     {
-      "hash": "sha256-6\/rS75Hygtej\/VCn0t6U4dG4X6En7N7HBphUaXTmvBA=",
+      "hash": "sha256-TKruZdkjaOj4ZaRy+bAvJhlCvTgSJ7Ec97ULHQ+FEWs=",
       "url": "_framework\/FrontEnd.Core.wasm"
     },
     {
-      "hash": "sha256-8f2P6FmPqGAOH\/PRxqK\/H2ZgXx4rlfV7rAE5FEvKrlI=",
+      "hash": "sha256-XWEtSCfjKdNQ\/2D9SKnO2ClfBk8XKxYTJxOoYii3M\/E=",
       "url": "_framework\/FrontEnd.Web.wasm"
     },
     {
-      "hash": "sha256-VixA7p1\/x4CKOvrakhS\/2nh+7U2gqE\/my98YDj+8wcw=",
+      "hash": "sha256-a18H1rR9X1tbUShY0oUVnpOAccY+SbGbBYJyY93t\/Ts=",
       "url": "_framework\/Microsoft.AspNetCore.Components.wasm"
     },
     {
-      "hash": "sha256-4tmx4uC98MyKjCuM9ErBZwXpqkLx4fwVZfJQIv+Y0+A=",
+      "hash": "sha256-Tm6o2yyZo5nka\/s3zhvlLC2y3mfiW9IuCQdR0B2HDMs=",
       "url": "_framework\/Microsoft.AspNetCore.Components.Web.wasm"
     },
     {
@@ -109,7 +109,7 @@
       "url": "_framework\/Microsoft.JSInterop.WebAssembly.wasm"
     },
     {
-      "hash": "sha256-mWJgOMwh9dE\/VTFilWXorWa8CONbOyK+xkiKz6DgPFo=",
+      "hash": "sha256-GP8gWDoBFZThIgkLby\/cQQgT\/Wt7S39Z9vfWHSwi8T8=",
       "url": "_framework\/netstandard.wasm"
     },
     {
@@ -297,5 +297,5 @@
       "url": "sample-data\/weather.json"
     }
   ],
-  "version": "KWGXgESi"
+  "version": "Gbe+wvd1"
 };
