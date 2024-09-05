@@ -1,4 +1,6 @@
-﻿@inject HttpClient Http
+﻿@using Microsoft.EntityFrameworkCore
+@inject HttpClient Http
+@inject BasicDataContext context
 
 @* @if (ds != null)
 {
@@ -90,16 +92,19 @@ else
     private string searchTitle = "";
 
     private List<Film> results = new List<Film>();
-    DataContext ds = null;
     private async Task Fetch()
     {
  
         await Task.Delay(1);
-        ds = new DataContext();
-        var baseUrl = "https://international-fairy-tale-filmography.github.io/data/csv/";
-        var svc = new DataSourceService(Http, baseUrl);
 
-        await svc.FetchData(ds);
+
+        if (!context.Films.Any())
+        {
+            var baseUrl = "https://international-fairy-tale-filmography.github.io/data/csv/";
+            var svc = new DataSourceService(context, Http, baseUrl);
+            await svc.FetchData();
+        }
+        
         
     }
 
@@ -117,11 +122,11 @@ else
         await Task.Delay(5);
         if (!string.IsNullOrEmpty(searchTitle))
         {
-            results = ds.Films.Where(i => i.Title.ToLowerInvariant().Contains(searchTitle)).ToList();
+            results = context.Films.Where(i => i.Title.ToLowerInvariant().Contains(searchTitle)).ToList();
         }
         else
         {
-            results = ds.Films.OrderBy(i => i.Title).Take(30).ToList();
+            results = context.Films.OrderBy(i => i.Title).Take(30).ToList();
         }
 
 

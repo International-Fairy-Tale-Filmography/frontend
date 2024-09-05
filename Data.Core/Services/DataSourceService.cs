@@ -4,27 +4,29 @@ using CsvHelper;
 
 public class DataSourceService
 {
+    private readonly BasicDataContext _context;
     private readonly HttpClient _httpClient;
     private readonly string _baseUrl;
 
-    public DataSourceService(HttpClient httpClient, string baseUrl)
+    public DataSourceService(BasicDataContext context, HttpClient httpClient, string baseUrl)
     {
+        _context = context;
         _httpClient = httpClient;
         _baseUrl = baseUrl;
     }
-    public async Task FetchData(DataContext context)
+    public async Task FetchData()
     {
-        
-        context.Companies.AddRange(await FetchCsv<Company>("Company"));
-        context.Countries.AddRange(await FetchCsv<Country>("Country"));
-        context.Films.AddRange(await FetchCsv<Film>("Film"));
-        context.Languages.AddRange(await FetchCsv<Language>("Language"));
-        context.Origins.AddRange(await FetchCsv<Origin>("Origin"));
-        context.People.AddRange(await FetchCsv<Person>("Person"));
+
+        _context.Companies.AddRange(await FetchCsv<Company>("Company"));
+        _context.Countries.AddRange(await FetchCsv<Country>("Country"));
+        _context.Films.AddRange(await FetchCsv<Film>("Film"));
+        _context.Languages.AddRange(await FetchCsv<Language>("Language"));
+        _context.Origins.AddRange(await FetchCsv<Origin>("Origin"));
+        _context.People.AddRange(await FetchCsv<Person>("Person"));
 
 
-        await MapCompanyFilms(context);
-        await MapCountryFilms(context);
+        await MapCompanyFilms(_context);
+        await MapCountryFilms(_context);
     }
 
     private async Task<List<T>> FetchCsv<T>(string name)
@@ -41,7 +43,7 @@ public class DataSourceService
         return records.ToList();
     }
 
-    private async Task MapCompanyFilms(DataContext context)
+    private async Task MapCompanyFilms(BasicDataContext context)
     {
         var companyFilms = await FetchCsv<CompanyFilm>("CompanyFilm");
 
@@ -61,7 +63,7 @@ public class DataSourceService
     }
 
 
-    private async Task MapCountryFilms(DataContext context)
+    private async Task MapCountryFilms(BasicDataContext context)
     {
         var companyFilms = await FetchCsv<CountryFilm>("CountryFilm");
 
