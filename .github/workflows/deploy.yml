@@ -23,7 +23,10 @@ jobs:
         run: dotnet publish FrontEnd.Web/FrontEnd.Web.csproj -c Release -o release --nologo
 
       - name: Publish DataEditor
-        run: dotnet publish DataEditor.Web/DataEditor.Web.csproj -c Release -o release/dataeditor --nologo
+        run: dotnet publish DataEditor.Web/DataEditor.Web.csproj -c Release -o releasedataeditor --nologo
+
+      - name: Copy DataEditor
+        run: cp -R releasedataeditor/wwwroot release/wwwroot/dataeditor
 
       # changes the base-tag in index.html from '/' to 'BlazorGitHubPagesDemo' to match GitHub Pages repository subdirectory
       - name: Change base-tag in index.html from / to BlazorGitHubPagesDemo
