@@ -1,5 +1,3 @@
-using DataEditor.Core.Configuration;
-using DataEditor.Core.Services;
 using DataEditor.Web;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
