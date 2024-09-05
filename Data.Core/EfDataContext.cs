@@ -1,19 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using Data.Core;
 using Microsoft.EntityFrameworkCore;
 
-public class EfDataContext : DbContext
+public class EfDataContext : BaseDataContext
 {
     protected override void OnConfiguring
         (DbContextOptionsBuilder optionsBuilder)
     {
         optionsBuilder.UseInMemoryDatabase(databaseName: "db");
     }
-    public DbSet<Company> Companies { get; set; }
-    public DbSet<Country> Countries { get; set; }
-    public DbSet<Film> Films { get; set; } 
-    public DbSet<Language> Languages { get; set; } 
-    public DbSet<Origin> Origins { get; set; } 
-    public DbSet<Person> People { get; set; } 
+
+    public new DbSet<Company> Companies { get; set; }
+    public new DbSet<Country> Countries { get; set; }
+    public new DbSet<Film> Films { get; set; } 
+    public new DbSet<Language> Languages { get; set; } 
+    public new DbSet<Origin> Origins { get; set; } 
+    public new DbSet<Person> People { get; set; } 
 }

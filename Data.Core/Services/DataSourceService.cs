@@ -1,14 +1,15 @@
 ﻿using System.Globalization;
 using CsvHelper.Configuration;
 using CsvHelper;
+using Data.Core;
 
 public class DataSourceService
 {
-    private readonly BasicDataContext _context;
+    private readonly BaseDataContext _context;
     private readonly HttpClient _httpClient;
     private readonly string _baseUrl;
 
-    public DataSourceService(BasicDataContext context, HttpClient httpClient, string baseUrl)
+    public DataSourceService(BaseDataContext context, HttpClient httpClient, string baseUrl)
     {
         _context = context;
         _httpClient = httpClient;
@@ -25,8 +26,8 @@ public class DataSourceService
         _context.People.AddRange(await FetchCsv<Person>("Person"));
 
 
-        await MapCompanyFilms(_context);
-        await MapCountryFilms(_context);
+        await MapCompanyFilms();
+        await MapCountryFilms();
     }
 
     private async Task<List<T>> FetchCsv<T>(string name)
@@ -43,12 +44,12 @@ public class DataSourceService
         return records.ToList();
     }
 
-    private async Task MapCompanyFilms(BasicDataContext context)
+    private async Task MapCompanyFilms()
     {
         var companyFilms = await FetchCsv<CompanyFilm>("CompanyFilm");
 
-        var filmDict = context.Films.ToDictionary(i => i.FilmId, i => i);
-        var companyDict = context.Companies.ToDictionary(i => i.CompanyId, i => i);
+        var filmDict = _context.Films.ToDictionary(i => i.FilmId, i => i);
+        var companyDict = _context.Companies.ToDictionary(i => i.CompanyId, i => i);
 
         foreach (var i in companyFilms)
         {
@@ -63,12 +64,12 @@ public class DataSourceService
     }
 
 
-    private async Task MapCountryFilms(BasicDataContext context)
+    private async Task MapCountryFilms()
     {
         var companyFilms = await FetchCsv<CountryFilm>("CountryFilm");
 
-        var filmDict = context.Films.ToDictionary(i => i.FilmId, i => i);
-        var countryDict = context.Countries.ToDictionary(i => i.CountryId, i => i);
+        var filmDict = _context.Films.ToDictionary(i => i.FilmId, i => i);
+        var countryDict = _context.Countries.ToDictionary(i => i.CountryId, i => i);
 
         foreach (var i in companyFilms)
         {
