@@ -16,13 +16,13 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataEditor.Web", "DataEdito
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataEditor.Core", "DataEditor.Core\DataEditor.Core.csproj", "{C063D6FA-A451-43A1-9B1E-37C8D429F629}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Data.Core", "Data.Core\Data.Core.csproj", "{388B7CB8-21DB-4E99-ACB6-F215FE0B42CD}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Data.Core", "Data.Core\Data.Core.csproj", "{388B7CB8-21DB-4E99-ACB6-F215FE0B42CD}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "FrontEnd", "FrontEnd", "{891F02AA-9E12-4D0A-9B38-8F75F97B3EDB}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "DataEditor", "DataEditor", "{068368E1-5F01-44C6-B26C-CEFC4B1CA891}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FrontEnd.Core", "FrontEnd.Core\FrontEnd.Core.csproj", "{1C19925E-7895-4190-9B19-914CD9E300B8}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FrontEnd.Core", "FrontEnd.Core\FrontEnd.Core.csproj", "{1C19925E-7895-4190-9B19-914CD9E300B8}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -1,7 +1,12 @@
 ﻿@page "/EditFile"
 @using Octokit
 @using System.ComponentModel
+@using System.Text
+@using DataEditor.Core.Services
+@using Microsoft.EntityFrameworkCore
 @inject GitService service
+@inject GitEntityService EntityService
+@inject DataEditorDataContext context
 @inject ISnackbar Snackbar
 
 <h3>Edit File</h3>
@@ -28,15 +33,23 @@
         file = null;
         content = "loading..";
 
-        file = await service.GetFile(filename);
-        content = file.Content;
+        await EntityService.FetchDataFromGit();
+        var films = await context.Films.ToListAsync();
+
+        var sb = new StringBuilder();
+        foreach (var film in films)
+        {
+            sb.AppendLine(film.Title);
+        }
+
+        content = sb.ToString();
     }
 
     private async Task Save()
     {
-        var result = await service.UpdateFile(filename, file, content, $"test update at {DateTime.Now}");
+        // var result = await service.UpdateFile(filename, file, content, $"test update at {DateTime.Now}");
 
-        Snackbar.Add("Saved commit " + result.Commit.Sha, Severity.Success);
+        // Snackbar.Add("Saved commit " + result.Commit.Sha, Severity.Success);
         await Refresh();
     }
 

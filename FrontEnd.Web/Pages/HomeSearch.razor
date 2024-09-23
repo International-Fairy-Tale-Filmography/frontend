@@ -1,6 +1,8 @@
-﻿@using Microsoft.EntityFrameworkCore
+﻿@using FrontEnd.Core.Data
+@using FrontEnd.Core.Services
+@using Microsoft.EntityFrameworkCore
 @inject HttpClient Http
-@inject BasicDataContext context
+@inject FrontEndDataContext context
 
 @* @if (ds != null)
 {
@@ -101,7 +103,7 @@ else
         if (!context.Films.Any())
         {
             var baseUrl = "https://international-fairy-tale-filmography.github.io/data/csv/";
-            var svc = new DataSourceService(context, Http, baseUrl);
+            var svc = new FrontEndDataInitializerService(context, Http, baseUrl);
             await svc.FetchData();
         }
         

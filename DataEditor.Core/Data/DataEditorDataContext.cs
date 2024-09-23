@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using Data.Core;
 using Microsoft.EntityFrameworkCore;
 
-public class EfDataContext : BaseDataContext
+public class DataEditorDataContext : DbContext
 {
     protected override void OnConfiguring
         (DbContextOptionsBuilder optionsBuilder)
