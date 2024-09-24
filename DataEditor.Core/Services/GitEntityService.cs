@@ -40,8 +40,8 @@ namespace DataEditor.Core.Services
 
         private async Task<List<T>> FetchCsv<T>(string name)
         {
-            var folderPath = settings.Folder;
-            var file = await gitService.GetFile(folderPath + name);
+            var filePath = Path.Combine(settings.Folder, name) + ".csv";
+            var file = await gitService.GetFile(filePath);
 
             using var reader = new StringReader(file.Content);
 

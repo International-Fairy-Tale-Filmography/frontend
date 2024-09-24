@@ -1,3 +1,4 @@
+using DataEditor.Core.Services;
 using DataEditor.Web;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
@@ -11,7 +12,8 @@ builder.RootComponents.Add<HeadOutlet>("head::after");
 builder.Services.AddDbContext<DataEditorDataContext>();
 
 builder.Services.AddMudServices();
-builder.Services.AddSingleton<GitService>();
+builder.Services.AddScoped<GitService>();
+builder.Services.AddScoped<GitEntityService>();
 builder.Services.AddSingleton<CoreSettingsModel>(i => new CoreSettingsModel()
 {
     Branch = "features/devtests",

@@ -45,11 +45,11 @@ public class GitService
         return user.Login;
     }
 
-    public async Task<RepositoryContent> GetFile(string filename)
+    public async Task<RepositoryContent> GetFile(string filePath)
     {
         await GetConfiguration();
 
-        var filePath = Path.Combine(_coreSettings.Folder, filename);
+        
         var fileDetails = await _gitHubClient.Repository.Content.GetAllContentsByRef(
             _coreSettings.Owner, 
             _coreSettings.RepoName,
