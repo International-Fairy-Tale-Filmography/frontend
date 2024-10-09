@@ -69,7 +69,7 @@
       "url": "_framework\/icudt_no_CJK.dat"
     },
     {
-      "hash": "sha256-HqLutTMuxMzijoJusRHFiOfP5OaYzS+w0vhfwl+lhKw=",
+      "hash": "sha256-VprNgaci\/\/3rm1qwcG9g7vhoVXr6wflRyciFJfQ6fvc=",
       "url": "_framework\/blazor.boot.json"
     },
     {
@@ -77,15 +77,15 @@
       "url": "_framework\/CsvHelper.wasm"
     },
     {
-      "hash": "sha256-egOmL1jCz\/KElTqTBnQpTeJM7sdkyVkKE7CRfv5YoBU=",
+      "hash": "sha256-nEPeugU8ROpdP7o0k0R18QcKBFuMgXTa3tmdAUMGtlQ=",
       "url": "_framework\/Data.Core.wasm"
     },
     {
-      "hash": "sha256-e1LjEi6BNkO6rvNmCdaKnpUcV7qOUvCLvxYAConMElc=",
+      "hash": "sha256-TgjpvWvGmurHVoklnSjmGqeidUy7GYel46tE8VBzq8o=",
       "url": "_framework\/DataEditor.Core.wasm"
     },
     {
-      "hash": "sha256-+Z7dfvF8NMg6OotDbX+McZUUNrJHXbXX2i98CWwTIno=",
+      "hash": "sha256-l6y+r8yiDjWu3QrI6vCkxOBT2FBve1dsMzpwh59vliM=",
       "url": "_framework\/DataEditor.Web.wasm"
     },
     {
@@ -93,11 +93,11 @@
       "url": "_framework\/Microsoft.AspNetCore.Components.Forms.wasm"
     },
     {
-      "hash": "sha256-MonhK7CPlmR5uK0RWtLR\/nyXAbRWAJmLzVFjn1Q\/aYs=",
+      "hash": "sha256-JoQMMDAV8z2cGMbskw2dvIIDtY0e+EPtwjDehiyQGls=",
       "url": "_framework\/Microsoft.AspNetCore.Components.wasm"
     },
     {
-      "hash": "sha256-WOL3dmcSjwVwgB0el7JBayX2TRvw9Q08iW7bJKk883M=",
+      "hash": "sha256-\/k6BUOxxt00o2jpfFj0vmW2baIOfVTNUBdohqdEnFps=",
       "url": "_framework\/Microsoft.AspNetCore.Components.Web.wasm"
     },
     {
@@ -181,7 +181,7 @@
       "url": "_framework\/Microsoft.JSInterop.WebAssembly.wasm"
     },
     {
-      "hash": "sha256-qGH7AOI9eDv0aG+cDAyQzax6nGTUAmaJZeVL7SVW\/jQ=",
+      "hash": "sha256-+WbLZmDOcHcO3myigaPq21B208TrO0a5cZ3edQd1OI0=",
       "url": "_framework\/MudBlazor.wasm"
     },
     {
@@ -293,7 +293,7 @@
       "url": "_framework\/System.ObjectModel.wasm"
     },
     {
-      "hash": "sha256-MS4E7OKt0tlYDH4syycy0viXF27tQcvBtjQjVOCzpkc=",
+      "hash": "sha256-MhQweonZDdNZ17F240vUe5SByCdKuIUoABbNORP1aZA=",
       "url": "_framework\/System.Private.CoreLib.wasm"
     },
     {
@@ -361,5 +361,5 @@
       "url": "_content\/MudBlazor\/MudBlazor.min.js"
     }
   ],
-  "version": "jTHgrYlN"
+  "version": "zbHuBCFU"
 };
