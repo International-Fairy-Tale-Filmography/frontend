@@ -33,6 +33,10 @@ namespace DataEditor.Core.Services
             context.Languages.AddRange(await FetchCsv<Language>("Language"));
             context.Origins.AddRange(await FetchCsv<Origin>("Origin"));
             context.People.AddRange(await FetchCsv<Person>("Person"));
+            await context.SaveChangesAsync();
+
+            await MapCompanyFilms();
+            await MapCountryFilms();
 
             await context.SaveChangesAsync();
         }
@@ -50,6 +54,45 @@ namespace DataEditor.Core.Services
             var records = csv.GetRecords<T>();
 
             return records.ToList();
+        }
+
+        private async Task MapCompanyFilms()
+        {
+            var companyFilms = await FetchCsv<CompanyFilm>("CompanyFilm");
+
+            var filmDict = context.Films.ToDictionary(i => i.FilmId, i => i);
+            var companyDict = context.Companies.ToDictionary(i => i.CompanyId, i => i);
+
+            foreach (var i in companyFilms)
+            {
+                var film = filmDict[i.FilmId];
+
+                var company = companyDict[i.CompanyId];
+
+                film.Companies.Add(company);
+                company.Films.Add(film);
+            }
+
+        }
+
+
+        private async Task MapCountryFilms()
+        {
+            var companyFilms = await FetchCsv<CountryFilm>("CountryFilm");
+
+            var filmDict = context.Films.ToDictionary(i => i.FilmId, i => i);
+            var countryDict = context.Countries.ToDictionary(i => i.CountryId, i => i);
+
+            foreach (var i in companyFilms)
+            {
+                var film = filmDict[i.FilmId];
+
+                var country = countryDict[i.CountryId];
+
+                film.Countries.Add(country);
+                country.Films.Add(film);
+            }
+
         }
 
     }

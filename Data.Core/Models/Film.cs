@@ -1,9 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Drawing;
+using CsvHelper.Configuration.Attributes;
 
 public class Film
 {
+    [Key]
+    [Name("FilmId")]
     public int FilmId { get; set; }
     public string Title { get; set; }
     public string OtherTitle { get; set; }
