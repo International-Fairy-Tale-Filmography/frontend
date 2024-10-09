@@ -11,6 +11,8 @@ builder.RootComponents.Add<HeadOutlet>("head::after");
 
 builder.Services.AddDbContext<DataEditorDataContext>();
 
+
+
 builder.Services.AddMudServices();
 builder.Services.AddScoped<GitService>();
 builder.Services.AddScoped<GitEntityService>();
@@ -23,4 +25,16 @@ builder.Services.AddSingleton<CoreSettingsModel>(i => new CoreSettingsModel()
 });
 builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
 
-await builder.Build().RunAsync();
+
+//seed data from github
+
+
+
+var app = builder.Build();
+
+var git = app.Services.GetService<GitEntityService>();
+
+await git.SeedDataFromGit();
+
+
+await app.RunAsync();

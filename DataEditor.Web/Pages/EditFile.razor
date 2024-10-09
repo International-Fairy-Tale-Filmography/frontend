@@ -5,7 +5,6 @@
 @using DataEditor.Core.Services
 @using Microsoft.EntityFrameworkCore
 @inject GitService service
-@inject GitEntityService EntityService
 @inject DataEditorDataContext context
 @inject ISnackbar Snackbar
 
@@ -33,7 +32,7 @@
         file = null;
         content = "loading..";
 
-        await EntityService.FetchDataFromGit();
+
         var films = await context.Films.ToListAsync();
 
         var sb = new StringBuilder();

@@ -25,7 +25,7 @@ namespace DataEditor.Core.Services
         }
 
 
-        public async Task FetchDataFromGit()
+        public async Task SeedDataFromGit()
         {
             context.Companies.AddRange(await FetchCsv<Company>("Company"));
             context.Countries.AddRange(await FetchCsv<Country>("Country"));
