@@ -28,8 +28,6 @@ builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.
 
 //seed data from github
 
-
-
 var app = builder.Build();
 
 var git = app.Services.GetService<GitEntityService>();

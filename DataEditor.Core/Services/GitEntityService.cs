@@ -27,16 +27,16 @@ namespace DataEditor.Core.Services
 
         public async Task SeedDataFromGit()
         {
-            context.Companies.AddRange(await FetchCsv<Company>("Company"));
-            context.Countries.AddRange(await FetchCsv<Country>("Country"));
+            //context.Companies.AddRange(await FetchCsv<Company>("Company"));
+            //context.Countries.AddRange(await FetchCsv<Country>("Country"));
             context.Films.AddRange(await FetchCsv<Film>("Film"));
-            context.Languages.AddRange(await FetchCsv<Language>("Language"));
-            context.Origins.AddRange(await FetchCsv<Origin>("Origin"));
-            context.People.AddRange(await FetchCsv<Person>("Person"));
-            await context.SaveChangesAsync();
+            //context.Languages.AddRange(await FetchCsv<Language>("Language"));
+            //context.Origins.AddRange(await FetchCsv<Origin>("Origin"));
+            //context.People.AddRange(await FetchCsv<Person>("Person"));
+            //await context.SaveChangesAsync();
 
-            await MapCompanyFilms();
-            await MapCountryFilms();
+            //await MapCompanyFilms();
+            //await MapCountryFilms();
 
             await context.SaveChangesAsync();
         }

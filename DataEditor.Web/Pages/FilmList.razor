@@ -1,0 +1,69 @@
+﻿@page "/film"
+@using Microsoft.AspNetCore.Components
+@using Microsoft.EntityFrameworkCore
+@inject DataEditorDataContext ctx
+<h3>FilmList</h3>
+
+
+<MudDataGrid T="Film" Items="@Films" ReadOnly="false" EditMode="@DataGridEditMode.Form"
+             StartedEditingItem="StartedEditingItem" CanceledEditingItem="CanceledEditingItem" CommittedItemChanges="CommittedItemChanges"
+             Bordered="true" Dense="true" EditTrigger="DataGridEditTrigger.Manual">
+    <Columns>
+        <TemplateColumn CellClass="d-flex justify-end">
+            <CellTemplate>
+                <MudIconButton Size="@Size.Small" Icon="@Icons.Material.Outlined.Edit" OnClick="@context.Actions.StartEditingItemAsync" />
+            </CellTemplate>
+        </TemplateColumn>
+        <PropertyColumn Property="x => x.Title"  />
+        <PropertyColumn Property="x => x.OtherTitle" Required="false"/>
+        <PropertyColumn Property="x => x.Color"/>
+        <PropertyColumn Property="x => x.ReleaseYear"/>
+        <PropertyColumn Property="x => x.Duration"/>
+        <PropertyColumn Property="x => x.Mode"/>
+        @*         <PropertyColumn Property="x => x.Comment" /> *@
+        <PropertyColumn Property="x => x.Published"/>
+
+
+
+        @* <PropertyColumn Property="x => x.Position">
+            <EditTemplate>
+                <MudSelect @bind-Value="context.Item.Position" Required RequiredError="You must select a Position!!!" Margin="@Margin.Dense">
+                    <MudSelectItem Value="0">zero</MudSelectItem>
+                    <MudSelectItem Value="1">one</MudSelectItem>
+                    <MudSelectItem Value="17">seventeen</MudSelectItem>
+                </MudSelect>
+            </EditTemplate>
+        </PropertyColumn> *@
+
+
+    </Columns>
+    <PagerContent>
+        <MudDataGridPager T="Film" />
+    </PagerContent>
+</MudDataGrid>
+
+
+@code {
+    
+    public List<Film> Films { get; set; }
+    protected override async Task OnInitializedAsync()
+    {
+        Films = await ctx.Films.ToListAsync();
+    }
+
+    void StartedEditingItem(Film item)
+    {
+        Console.WriteLine($"Event = StartedEditingItem, Data = {System.Text.Json.JsonSerializer.Serialize(item)}");
+
+    }
+
+    void CanceledEditingItem(Film item)
+    {
+        Console.WriteLine($"Event = CanceledEditingItem, Data = {System.Text.Json.JsonSerializer.Serialize(item)}");
+    }
+
+    void CommittedItemChanges(Film item)
+    {
+        Console.WriteLine($"Event = CommittedItemChanges, Data = {System.Text.Json.JsonSerializer.Serialize(item)}");
+    }
+}
