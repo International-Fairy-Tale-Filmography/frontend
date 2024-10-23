@@ -4,9 +4,10 @@
 @inject DataEditorDataContext ctx
 <h3>FilmList</h3>
 
+<MudButton OnClick="@AddItem" Color="@Color.Success" Class="add-item-btn">Add Item</MudButton>
 
 <MudDataGrid T="Film" Items="@Films" ReadOnly="false" EditMode="@DataGridEditMode.Form"
-             StartedEditingItem="StartedEditingItem" CanceledEditingItem="CanceledEditingItem" CommittedItemChanges="CommittedItemChanges"
+             CommittedItemChanges="CommittedItemChanges"
              Bordered="true" Dense="true" EditTrigger="DataGridEditTrigger.Manual">
     <Columns>
         <TemplateColumn CellClass="d-flex justify-end">
@@ -44,26 +45,26 @@
 
 
 @code {
-    
+
+
     public List<Film> Films { get; set; }
     protected override async Task OnInitializedAsync()
     {
         Films = await ctx.Films.ToListAsync();
     }
 
-    void StartedEditingItem(Film item)
+    void AddItem()
     {
-        Console.WriteLine($"Event = StartedEditingItem, Data = {System.Text.Json.JsonSerializer.Serialize(item)}");
+        Films.Add(new Film()
+        {
 
-    }
-
-    void CanceledEditingItem(Film item)
-    {
-        Console.WriteLine($"Event = CanceledEditingItem, Data = {System.Text.Json.JsonSerializer.Serialize(item)}");
+        });
     }
 
     void CommittedItemChanges(Film item)
     {
-        Console.WriteLine($"Event = CommittedItemChanges, Data = {System.Text.Json.JsonSerializer.Serialize(item)}");
+        ctx.SaveChanges();
+        //Console.WriteLine($"Event = CommittedItemChanges, Data = {System.Text.Json.JsonSerializer.Serialize(item)}");
     }
+
 }
