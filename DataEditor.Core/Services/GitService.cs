@@ -33,7 +33,7 @@ public class GitService
         _coreSettings.Branch = settings.Branch;
         _coreSettings.Folder = settings.Folder;
 
-        //await _jsRuntime.InvokeVoidAsync("localStorage.setItem", "github_accesstoken", _coreSettings.AccessToken);
+        await _jsRuntime.InvokeVoidAsync("localStorage.setItem", "github_accesstoken", _coreSettings.AccessToken);
 
         _gitHubClient.Credentials = new Credentials(_coreSettings.AccessToken);
     }
