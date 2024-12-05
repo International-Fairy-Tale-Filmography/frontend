@@ -1,7 +1,74 @@
-﻿
+﻿@using Microsoft.EntityFrameworkCore
+@inject DataEditorDataContext ctx
 
-<h3>FilmEdit</h3>
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            <MudIcon Icon="@Icons.Material.Filled.Edit" Class="mr-3 mb-n1" />
+            Film Edit
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudTextField @bind-Value="film.Title" Label="Title"></MudTextField>
+        <MudTextField @bind-Value="film.OtherTitle" Label="Other Title"></MudTextField>
+        <MudTextField @bind-Value="film.Color" Label="Color"></MudTextField>
+        <MudTextField @bind-Value="film.ReleaseYear" Label="Release Year"></MudTextField>
+        <MudTextField @bind-Value="film.Duration" Label="Duration"></MudTextField>
+        <MudTextField @bind-Value="film.Mode" Label="Mode"></MudTextField>
+        <MudTextField @bind-Value="film.Comment" Label="Comment"></MudTextField>
+        <MudCheckBox @bind-Value="film.Published"></MudCheckBox>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Error" OnClick="Save">Save</MudButton>
+    </DialogActions>
+</MudDialog>
+
+
+
 
 @code {
 
+    [CascadingParameter]
+    private MudDialogInstance MudDialog { get; set; }
+
+    [Parameter]
+    public int Id { get; set; } = 0;
+
+    public Film film { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Id != 0)
+        {
+            film = await ctx.Films.FirstAsync(i => i.FilmId == Id);
+        }
+        else
+        {
+            film = new Film();
+        }
+
+    }
+
+    private async Task Save()
+    {
+        if (Id == 0)
+        {
+            
+            await ctx.Films.AddAsync(film);
+        }
+        else
+        {
+            ctx.Films.Update(film);
+        }
+
+        await ctx.SaveChangesAsync();
+        Snackbar.Add($"{film.Title} queued!", Severity.Success);
+        MudDialog.Close();
+
+    }
+
+    private void Cancel() => MudDialog.Cancel();
 }

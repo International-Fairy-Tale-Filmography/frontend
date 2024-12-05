@@ -1,25 +1,26 @@
 ﻿@page "/film"
-@using Microsoft.AspNetCore.Components
+
 @using Microsoft.EntityFrameworkCore
 @inject DataEditorDataContext ctx
+@inject IDialogService DialogService
+
 <h3>FilmList</h3>
 
 <MudButton OnClick="@AddItem" Color="@Color.Success" Class="add-item-btn">Add Item</MudButton>
 
-<MudDataGrid T="Film" Items="@Films" ReadOnly="false" EditMode="@DataGridEditMode.Form"
-             CommittedItemChanges="CommittedItemChanges"
-             Bordered="true" Dense="true" EditTrigger="DataGridEditTrigger.Manual">
+<MudDataGrid @ref="grid" T="Film" Items="@Films" ReadOnly="true" Virtualize="true"
+             Bordered="true" Dense="true" Loading="_loading">
     <Columns>
         <TemplateColumn CellClass="d-flex justify-end">
             <CellTemplate>
-                <MudIconButton Size="@Size.Small" Icon="@Icons.Material.Outlined.Edit" OnClick="@context.Actions.StartEditingItemAsync" />
+                <MudIconButton Size="@Size.Small" Icon="@Icons.Material.Outlined.Edit" OnClick="@((e) => EditCell(context.Item))" />
             </CellTemplate>
         </TemplateColumn>
         <PropertyColumn Property="x => x.Title"  />
         <PropertyColumn Property="x => x.OtherTitle" Required="false"/>
         <PropertyColumn Property="x => x.Color"/>
         <PropertyColumn Property="x => x.ReleaseYear"/>
-        <PropertyColumn Property="x => x.Duration"/>
+        <PropertyColumn Property="x => x.Duration"/> 
         <PropertyColumn Property="x => x.Mode"/>
         @*         <PropertyColumn Property="x => x.Comment" /> *@
         <PropertyColumn Property="x => x.Published"/>
@@ -45,26 +46,40 @@
 
 
 @code {
+    public bool _loading { get; set; }
 
-
-    public List<Film> Films { get; set; }
+    public List<Film> Films { get; set; } = new List<Film>();
     protected override async Task OnInitializedAsync()
     {
+        await Refresh();
+    }
+
+    async Task Refresh()
+    {
+        _loading = true;
+        Thread.Sleep(10);
         Films = await ctx.Films.ToListAsync();
+        _loading = false;
     }
 
-    void AddItem()
+    async Task<EventCallback> EditCell(Film cell)
     {
-        Films.Add(new Film()
-        {
-
-        });
+        await EditItem(cell.FilmId);
+        return EventCallback.Empty;
     }
-
-    void CommittedItemChanges(Film item)
+    async Task AddItem()
     {
-        ctx.SaveChanges();
-        //Console.WriteLine($"Event = CommittedItemChanges, Data = {System.Text.Json.JsonSerializer.Serialize(item)}");
+         await EditItem(0);
     }
+
+    async Task  EditItem(int id)
+    {
+        var parameters = new DialogParameters<FilmEdit> { { x => x.Id, id } };
+        var dialog = DialogService.ShowAsync<FilmEdit>("Edit Film", parameters);
+        await Refresh();
+    }
+
+
+    public MudDataGrid<Film> grid { get; set; }
 
 }
