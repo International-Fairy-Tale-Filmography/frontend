@@ -18,23 +18,39 @@ namespace DataEditor.Core.Services
     public class GitEntityService(DataEditorDataContext context, CoreSettingsModel settings, GitService gitService)
     {
 
-        public async Task<string> CommitChangesToGit()
+        public async Task<string> CommitChangesToGit<T>()
         {
-            var filename = "Film.csv";
+
+            var handlers = new Dictionary<Type, Func<Task<string>>>
+            {
+                { typeof(Film), () => CommitChangesToGit( context.Films.ToList(), "Film.csv") }
+            };
+
+            if (handlers.ContainsKey(typeof(T)))
+            {
+                return await handlers[typeof(T)]();
+            }
+
+            return "unknown";
+        }
+
+        public async Task<string> CommitChangesToGit<T>(List<T> objects, string filename)
+        {
+            //var filename = "Film.csv";
             var filePath = Path.Combine(settings.Folder, filename);
             var file = await GetFileByName(filename);
 
-            var films = await context.Films.ToListAsync();
+            //var films = await context.Films.ToListAsync();
 
             await using var writer = new StringWriter();
             await using var csv = new CsvWriter(writer, new CsvConfiguration(CultureInfo.InvariantCulture));
-            csv.WriteHeader<Film>();
+            csv.WriteHeader<T>();
             await csv.NextRecordAsync();
-            await csv.WriteRecordsAsync(films);
+            await csv.WriteRecordsAsync(objects);
 
             var content = writer.ToString();
 
-            var result = await gitService.UpdateFile("Film.csv", file, content, $"test update at {DateTime.Now}");
+            var result = await gitService.UpdateFile(filename, file, content, $"test update at {DateTime.Now}");
 
              return result.Commit.Sha;
              // Snackbar.Add("Saved commit " + result.Commit.Sha, Severity.Success);
