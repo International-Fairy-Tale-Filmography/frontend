@@ -36,6 +36,17 @@
                 </MudChipSet>
                 <MudAutocomplete ToStringFunc="@(e => e == null ? null : $"{e.Name}")" T="Country" Label="Search Country" @bind-Value="selectedCountry" SearchFunc="@SearchCountries" Variant="Variant.Text" ShowProgressIndicator="true" ResetValueOnEmptyText="true" Clearable="true" Dense="true"/>
                 <MudButton StartIcon="@Icons.Material.Filled.Add" OnClick="AddCountry">Add Country</MudButton>
+                
+                
+                <MudChipSet T="string" AllClosable OnClose="RemoveLanguage">
+                    @foreach (var value in item.Languages)
+                    {
+                        <MudChip Text="@value.Name" Value="value.LanguageId.ToString()"></MudChip>
+                    }
+                </MudChipSet>
+                <MudAutocomplete ToStringFunc="@(e => e == null ? null : $"{e.Name}")" T="Language" Label="Search Language" @bind-Value="selectedLanguage" SearchFunc="@SearchLanguages" Variant="Variant.Text" ShowProgressIndicator="true" ResetValueOnEmptyText="true" Clearable="true" Dense="true" />
+                <MudButton StartIcon="@Icons.Material.Filled.Add" OnClick="AddLanguage">Add Language</MudButton>
+
             </MudItem>
 
         </MudGrid>
@@ -65,7 +76,11 @@
     {
         if (Id != 0)
         {
-            item = await ctx.Films.Include(i => i.Companies).Include(i => i.Countries).FirstAsync(i => i.FilmId == Id);
+            item = await ctx.Films
+                .Include(i => i.Companies)
+                .Include(i => i.Countries)
+                .Include(i => i.Languages)
+                .FirstAsync(i => i.FilmId == Id);
         }
         else
         {
@@ -146,6 +161,34 @@
     {
         var selected = item.Countries.First(i => i.CountryId == int.Parse(chip.Value!));
         item.Countries.Remove(selected);
+    }
+
+
+    //Language
+    private Language selectedLanguage = null;
+    public void AddLanguage()
+    {
+        item.Languages.Add(selectedLanguage);
+        selectedLanguage = null;
+    }
+
+    private async Task<IEnumerable<Language>> SearchLanguages(string value, CancellationToken token)
+    {
+
+        var query = ctx.Languages.AsQueryable();
+
+        if (!string.IsNullOrEmpty(value))
+        {
+            query = query.Where(i => i.Name.Contains(value, StringComparison.InvariantCultureIgnoreCase));
+        }
+
+        return await query.OrderBy(i => i.Name).Take(10).ToListAsync(cancellationToken: token);
+    }
+
+    public void RemoveLanguage(MudChip<string> chip)
+    {
+        var selected = item.Languages.First(i => i.LanguageId == int.Parse(chip.Value!));
+        item.Languages.Remove(selected);
     }
 
 }

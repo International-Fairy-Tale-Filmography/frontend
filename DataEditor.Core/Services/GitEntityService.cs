@@ -17,8 +17,19 @@ using Language = Data.Core.Models.Language;
 
 namespace DataEditor.Core.Services
 {
-    public class GitEntityService(DataEditorDataContext context, CoreSettingsModel settings, GitService gitService)
+    public class GitEntityService
     {
+        private readonly DataEditorDataContext _context;
+        private readonly CoreSettingsModel _settings;
+        private readonly GitService _gitService;
+
+        public GitEntityService(DataEditorDataContext context, CoreSettingsModel settings, GitService gitService)
+        {
+            _context = context;
+            _settings = settings;
+            _gitService = gitService;
+        }
+
 
         public async Task<string> CommitChangesToGit<T>()
         {
@@ -41,7 +52,7 @@ namespace DataEditor.Core.Services
         public async Task<string> CommitChangesToGit<T>(List<T> objects, string filename)
         {
             //var filename = "Film.csv";
-            var filePath = Path.Combine(settings.Folder, filename);
+            var filePath = Path.Combine(_settings.Folder, filename);
             var file = await GetFileByName(filename);
 
             //var films = await context.Films.ToListAsync();
@@ -54,7 +65,7 @@ namespace DataEditor.Core.Services
 
             var content = writer.ToString();
 
-            var result = await gitService.UpdateFile(filename, file, content, $"test update at {DateTime.Now}");
+            var result = await _gitService.UpdateFile(filename, file, content, $"test update at {DateTime.Now}");
 
              return result.Commit.Sha;
              // Snackbar.Add("Saved commit " + result.Commit.Sha, Severity.Success);
@@ -63,31 +74,32 @@ namespace DataEditor.Core.Services
 
         public async Task<RepositoryContent> GetFileByName(string name)
         {
-            var filePath = Path.Combine(settings.Folder, name);
-            var file = await gitService.GetFile(filePath);
+            var filePath = Path.Combine(_settings.Folder, name);
+            var file = await _gitService.GetFile(filePath);
             return file;
         }
 
 
         public async Task SeedDataFromGit()
         {
-            context.Companies.AddRange(await FetchCsv<Company>("Company.csv"));
+            //_context.Companies.AddRange(await FetchCsv<Company>("Company.csv"));
 
 
 
             //done
-            context.Countries.AddRange(await FetchCsv<Country>("Country.csv"));
-            //context.Languages.AddRange(await FetchCsv<Language>("Language.csv"));
-            context.Films.AddRange(await FetchCsv<Film>("Film.csv"));
+            //_context.Countries.AddRange(await FetchCsv<Country>("Country.csv"));
+            _context.Languages.AddRange(await FetchCsv<Language>("Language.csv"));
+            _context.Films.AddRange(await FetchCsv<Film>("Film.csv"));
             //context.Origins.AddRange(await FetchCsv<Origin>("Origin.csv"));
             //context.People.AddRange(await FetchCsv<Person>("Person.csv"));
 
-            await context.SaveChangesAsync();
+            await _context.SaveChangesAsync();
 
-            await MapCompanyFilms();
-            await MapCountryFilms();
+            //await MapCompanyFilms();
+            //await MapCountryFilms();
+            await MapLanguageFilms();
 
-            await context.SaveChangesAsync();
+            await _context.SaveChangesAsync();
         }
 
 
@@ -108,8 +120,8 @@ namespace DataEditor.Core.Services
         {
             var companyFilms = await FetchCsv<CompanyFilm>("CompanyFilm.csv");
 
-            var filmDict = context.Films.ToDictionary(i => i.FilmId, i => i);
-            var companyDict = context.Companies.ToDictionary(i => i.CompanyId, i => i);
+            var filmDict = _context.Films.ToDictionary(i => i.FilmId, i => i);
+            var companyDict = _context.Companies.ToDictionary(i => i.CompanyId, i => i);
 
             foreach (var i in companyFilms)
             {
@@ -119,7 +131,7 @@ namespace DataEditor.Core.Services
                 var company = companyDict[i.CompanyId];
 
                 film.Companies.Add(company);
-                company.Films.Add(film);
+                //company.Films.Add(film);
             }
 
         }
@@ -129,8 +141,8 @@ namespace DataEditor.Core.Services
         {
             var companyFilms = await FetchCsv<CountryFilm>("CountryFilm.csv");
 
-            var filmDict = context.Films.ToDictionary(i => i.FilmId, i => i);
-            var countryDict = context.Countries.ToDictionary(i => i.CountryId, i => i);
+            var filmDict = _context.Films.ToDictionary(i => i.FilmId, i => i);
+            var countryDict = _context.Countries.ToDictionary(i => i.CountryId, i => i);
 
             foreach (var i in companyFilms)
             {
@@ -139,7 +151,36 @@ namespace DataEditor.Core.Services
                 var country = countryDict[i.CountryId];
 
                 film.Countries.Add(country);
-                country.Films.Add(film);
+                //country.Films.Add(film);
+            }
+
+        }
+
+        private async Task MapLanguageFilms()
+        {
+            var languageFilms = await FetchCsv<LanguageFilm>("LanguageFilm.csv");
+
+            var filmDict = _context.Films.ToDictionary(i => i.FilmId, i => i);
+            var languageDict = _context.Languages.ToDictionary(i => i.LanguageId, i => i);
+
+            foreach (var i in languageFilms)
+            {
+                if (!filmDict.ContainsKey(i.FilmId))
+                {
+                    continue;
+                }
+
+                if (!languageDict.ContainsKey(i.LanguageId))
+                {
+                    continue;
+                }
+
+                var film = filmDict[i.FilmId];
+
+                var language = languageDict[i.LanguageId];
+
+                film.Languages.Add(language);
+              
             }
 
         }
