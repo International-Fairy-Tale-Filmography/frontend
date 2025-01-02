@@ -78,13 +78,13 @@ namespace DataEditor.Core.Services
             //done
             //context.Countries.AddRange(await FetchCsv<Country>("Country.csv"));
             //context.Languages.AddRange(await FetchCsv<Language>("Language.csv"));
-            //context.Films.AddRange(await FetchCsv<Film>("Film.csv"));
+            context.Films.AddRange(await FetchCsv<Film>("Film.csv"));
             //context.Origins.AddRange(await FetchCsv<Origin>("Origin.csv"));
             //context.People.AddRange(await FetchCsv<Person>("Person.csv"));
 
-            //await context.SaveChangesAsync();
+            await context.SaveChangesAsync();
 
-            //await MapCompanyFilms();
+            await MapCompanyFilms();
             //await MapCountryFilms();
 
             await context.SaveChangesAsync();
@@ -113,7 +113,8 @@ namespace DataEditor.Core.Services
 
             foreach (var i in companyFilms)
             {
-                var film = filmDict[i.FilmId];
+              
+                 var film = filmDict[i.FilmId];
 
                 var company = companyDict[i.CompanyId];
 

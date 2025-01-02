@@ -7,14 +7,34 @@
 
 <MudDialog>
     <DialogContent>
-        <MudTextField @bind-Value="item.Title" Label="Title"></MudTextField>
-        <MudTextField @bind-Value="item.OtherTitle" Label="Other Title"></MudTextField>
-        <MudTextField @bind-Value="item.Color" Label="Color"></MudTextField>
-        <MudTextField @bind-Value="item.ReleaseYear" Label="Release Year"></MudTextField>
-        <MudTextField @bind-Value="item.Duration" Label="Duration"></MudTextField>
-        <MudTextField @bind-Value="item.Mode" Label="Mode"></MudTextField>
-        <MudTextField @bind-Value="item.Comment" Label="Comment"></MudTextField>
-        <MudCheckBox @bind-Value="item.Published"></MudCheckBox>
+        <MudCheckBox @bind-Value="item.Published"> Published</MudCheckBox>
+        <MudGrid xs="12" md="6">
+            <MudItem>
+                <MudTextField @bind-Value="item.Title" Label="Title"></MudTextField>
+                <MudTextField @bind-Value="item.OtherTitle" Label="Other Title"></MudTextField>
+                <MudTextField @bind-Value="item.Color" Label="Color"></MudTextField>
+                <MudTextField @bind-Value="item.ReleaseYear" Label="Release Year"></MudTextField>
+                <MudTextField @bind-Value="item.Duration" Label="Duration"></MudTextField>
+                <MudTextField @bind-Value="item.Mode" Label="Mode"></MudTextField>
+                <MudTextField @bind-Value="item.Comment" Label="Comment"></MudTextField>
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudChipSet T="string" AllClosable OnClose="RemoveCompany">
+                    @foreach (var value in item.Companies)
+                    {
+                        <MudChip Text="@value.Name" Value="value.CompanyId"></MudChip>
+                    }
+                </MudChipSet>
+                <MudAutocomplete ToStringFunc="@(e => e == null ? null : $"{e.Name}")" T="Company" Label="Search Company" @bind-Value="selectedCompany" SearchFunc="@Search" Variant="Variant.Text" ShowProgressIndicator="true" ResetValueOnEmptyText="true" Clearable="true" Dense="true"/>
+                <MudButton StartIcon="@Icons.Material.Filled.Add" OnClick="Add">Add Company</MudButton>
+            </MudItem>
+
+        </MudGrid>
+
+
+
+
+        
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="Cancel">Cancel</MudButton>
@@ -36,7 +56,7 @@
     {
         if (Id != 0)
         {
-            item = await ctx.Films.FirstAsync(i => i.FilmId == Id);
+            item = await ctx.Films.Include(i => i.Companies).FirstAsync(i => i.FilmId == Id);
         }
         else
         {
@@ -63,5 +83,32 @@
 
     }
 
+    //company
+    private Company selectedCompany = null;
     private void Cancel() => MudDialog.Cancel();
+    public void Add()
+    {
+        item.Companies.Add(selectedCompany);
+        selectedCompany = null;
+    }
+
+    private async Task<IEnumerable<Company>> Search(string value, CancellationToken token)
+    {
+
+        var query = ctx.Companies.AsQueryable();
+
+        if (!string.IsNullOrEmpty(value))
+        {
+            query = query.Where(i => i.Name.Contains(value, StringComparison.InvariantCultureIgnoreCase));
+        }
+
+        return await query.OrderBy( i=> i.Name).Take(10).ToListAsync(cancellationToken: token);
+    }
+
+    public void RemoveCompany(MudChip<string> chip)
+    {
+        var selected = item.Companies.First(i => i.CompanyId == int.Parse(chip.Value!));
+        item.Companies.Remove(selected);
+    }
+
 }
