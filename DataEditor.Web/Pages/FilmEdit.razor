@@ -7,14 +7,14 @@
 
 <MudDialog>
     <DialogContent>
-        <MudTextField @bind-Value="film.Title" Label="Title"></MudTextField>
-        <MudTextField @bind-Value="film.OtherTitle" Label="Other Title"></MudTextField>
-        <MudTextField @bind-Value="film.Color" Label="Color"></MudTextField>
-        <MudTextField @bind-Value="film.ReleaseYear" Label="Release Year"></MudTextField>
-        <MudTextField @bind-Value="film.Duration" Label="Duration"></MudTextField>
-        <MudTextField @bind-Value="film.Mode" Label="Mode"></MudTextField>
-        <MudTextField @bind-Value="film.Comment" Label="Comment"></MudTextField>
-        <MudCheckBox @bind-Value="film.Published"></MudCheckBox>
+        <MudTextField @bind-Value="item.Title" Label="Title"></MudTextField>
+        <MudTextField @bind-Value="item.OtherTitle" Label="Other Title"></MudTextField>
+        <MudTextField @bind-Value="item.Color" Label="Color"></MudTextField>
+        <MudTextField @bind-Value="item.ReleaseYear" Label="Release Year"></MudTextField>
+        <MudTextField @bind-Value="item.Duration" Label="Duration"></MudTextField>
+        <MudTextField @bind-Value="item.Mode" Label="Mode"></MudTextField>
+        <MudTextField @bind-Value="item.Comment" Label="Comment"></MudTextField>
+        <MudCheckBox @bind-Value="item.Published"></MudCheckBox>
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="Cancel">Cancel</MudButton>
@@ -30,17 +30,17 @@
     [Parameter]
     public int Id { get; set; } = 0;
 
-    public Film film { get; set; }
+    public Film item { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
         if (Id != 0)
         {
-            film = await ctx.Films.FirstAsync(i => i.FilmId == Id);
+            item = await ctx.Films.FirstAsync(i => i.FilmId == Id);
         }
         else
         {
-            film = new Film();
+            item = new Film();
         }
 
     }
@@ -50,15 +50,15 @@
         if (Id == 0)
         {
             
-            await ctx.Films.AddAsync(film);
+            await ctx.Films.AddAsync(item);
         }
         else
         {
-            ctx.Films.Update(film);
+            ctx.Films.Update(item);
         }
 
         await ctx.SaveChangesAsync();
-        Snackbar.Add($"{film.Title} queued!", Severity.Success);
+        Snackbar.Add($"{item.Title} queued!", Severity.Success);
         MudDialog.Close();
 
     }

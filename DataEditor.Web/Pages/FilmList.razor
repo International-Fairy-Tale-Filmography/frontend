@@ -9,7 +9,7 @@
 
 <MudButton OnClick="@AddItem" Color="@Color.Success" Class="add-item-btn">Add Item</MudButton>
 
-<MudDataGrid T="Film" Items="@Films" ReadOnly="true" Virtualize="true"
+<MudDataGrid T="Film" Items="@Items" ReadOnly="true" Virtualize="true"
              Bordered="true" Dense="true" Loading="_loading">
     <Columns>
         <TemplateColumn CellClass="d-flex justify-end">
@@ -35,7 +35,7 @@
 @code {
     public bool _loading { get; set; }
 
-    public List<Film> Films { get; set; } = new List<Film>();
+    public List<Film> Items { get; set; } = new();
     protected override async Task OnInitializedAsync()
     {
         await Refresh();
@@ -45,7 +45,7 @@
     {
         _loading = true;
         Thread.Sleep(10);
-        Films = await ctx.Films.ToListAsync();
+        Items = await ctx.Films.ToListAsync();
         _loading = false;
     }
 
