@@ -1,0 +1,62 @@
+﻿@using Microsoft.EntityFrameworkCore
+@using DataEditor.Core.Services
+@using Data.Core.Models
+
+@inject DataEditorDataContext ctx
+
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <DialogContent>
+        <MudTextField @bind-Value="item.Name" Label="Title"></MudTextField>
+        <MudTextField @bind-Value="item.Code" Label="Code"></MudTextField>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Error" OnClick="Save">Save</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+
+    [CascadingParameter]
+    private MudDialogInstance MudDialog { get; set; }
+
+    [Parameter]
+    public int Id { get; set; } = 0;
+
+    public Language item { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Id != 0)
+        {
+            item = await ctx.Languages.FirstAsync(i => i.LanguageId == Id);
+        }
+        else
+        {
+            item = new Language();
+        }
+
+    }
+
+    private async Task Save()
+    {
+        if (Id == 0)
+        {
+            
+            await ctx.Languages.AddAsync(item);
+        }
+        else
+        {
+            ctx.Languages.Update(item);
+        }
+
+        await ctx.SaveChangesAsync();
+        Snackbar.Add($"{item.Name} queued!", Severity.Success);
+        MudDialog.Close();
+
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+}

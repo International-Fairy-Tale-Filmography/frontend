@@ -13,6 +13,7 @@ using CsvHelper.Configuration;
 using Data.Core.Models;
 using Microsoft.EntityFrameworkCore;
 using Octokit;
+using Language = Data.Core.Models.Language;
 
 namespace DataEditor.Core.Services
 {
@@ -72,9 +73,10 @@ namespace DataEditor.Core.Services
         {
             //context.Companies.AddRange(await FetchCsv<Company>("Company.csv"));
             //context.Countries.AddRange(await FetchCsv<Country>("Country.csv"));
-            context.Languages.AddRange(await FetchCsv<Language>("Language.csv"));
+
 
             //done
+            //context.Languages.AddRange(await FetchCsv<Language>("Language.csv"));
             //context.Films.AddRange(await FetchCsv<Film>("Film.csv"));
             //context.Origins.AddRange(await FetchCsv<Origin>("Origin.csv"));
             //context.People.AddRange(await FetchCsv<Person>("Person.csv"));
