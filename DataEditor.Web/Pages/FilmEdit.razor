@@ -1,6 +1,7 @@
 ﻿@using Microsoft.EntityFrameworkCore
 @using DataEditor.Core.Services
 @using Data.Core.Models
+@using Origin = MudBlazor.Origin
 @inject DataEditorDataContext ctx
 
 @inject ISnackbar Snackbar
@@ -14,6 +15,14 @@
         <MudTextField @bind-Value="item.Duration" Label="Duration"></MudTextField>
         <MudTextField @bind-Value="item.Mode" Label="Mode"></MudTextField>
         <MudTextField @bind-Value="item.Comment" Label="Comment"></MudTextField>
+        
+        <MudSelectExtended ItemCollection="complexes" ToStringFunc="@(v => v?.Text)"
+                           
+                           ValuePresenter="ValuePresenter.Chip" MultiSelection="true" T="Complex" @bind-SelectedValues="complexValues" Label="Complex Type" AnchorOrigin="Origin.BottomCenter"
+                           ChipCloseable="true" ChipSize="Size.Small" ChipVariant="Variant.Filled" NoWrap="false"
+                           SearchBox="true" SearchBoxAutoFocus="true" SearchBoxClearable="true" SearchFunc="@(new Func<Complex, string, bool>(SearchItems))">
+        </MudSelectExtended>
+
         <MudCheckBox @bind-Value="item.Published"></MudCheckBox>
     </DialogContent>
     <DialogActions>
@@ -64,4 +73,39 @@
     }
 
     private void Cancel() => MudDialog.Cancel();
+
+    //
+
+    IEnumerable<Complex> complexValues { get; set; } = new HashSet<Complex>() { };
+
+    public class Complex
+    {
+        public int? Value { get; set; }
+        public string? Text { get; set; }
+    }
+
+    private Complex[] complexes =
+    {
+        new Complex() { Value = 1, Text = "A"},
+        new Complex() { Value = 2, Text = "B"},
+        new Complex() { Value = 3, Text = "C"},
+        new Complex() { Value = 4, Text = "D"},
+        new Complex() { Value = 5, Text = "E"},
+    };
+
+    private bool SearchItems(Complex value, string searchString)
+    {
+        if (searchString == "")
+        {
+            return true;
+        }
+
+        if (value.Text.StartsWith(searchString, StringComparison.CurrentCultureIgnoreCase))
+        {
+            return true;
+        }
+
+        return false;
+    }
+
 }
