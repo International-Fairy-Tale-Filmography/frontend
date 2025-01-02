@@ -69,7 +69,7 @@
       "url": "_framework\/icudt_no_CJK.dat"
     },
     {
-      "hash": "sha256-8M0NZlcCclx46BPZTBG4TUzkc6MhemHMcTVh0jQgmSk=",
+      "hash": "sha256-qEkEHVudwO9+Hs8iWR\/hFKE1ncyGH0G8T36dhGSsuYc=",
       "url": "_framework\/blazor.boot.json"
     },
     {
@@ -77,15 +77,15 @@
       "url": "_framework\/CsvHelper.wasm"
     },
     {
-      "hash": "sha256-VsNbTnmSDUP5US0yXZFXWdfcRNzNR+8tQ1EEmEEh+bk=",
+      "hash": "sha256-m1K2y3aHtXI6sWeMvE0TwtKr\/xp18kZlDL93A+g0HSg=",
       "url": "_framework\/Data.Core.wasm"
     },
     {
-      "hash": "sha256-xtWK7PCtRTYENAqXRc7jRkp+aiHzfCORyr\/+aWLG2Io=",
+      "hash": "sha256-uwkKSRqkk2zJVkmWRJubMnpgabmVfvaD4VIf4acEU7Q=",
       "url": "_framework\/DataEditor.Core.wasm"
     },
     {
-      "hash": "sha256-6pNYFM0FwgrsRctUO7+i2B8UUny0NSHhGlyCyVDnqyQ=",
+      "hash": "sha256-YZmfVop0A3gJ3LL4QuDdtgII3NYEu8mnW6MmnPU70oY=",
       "url": "_framework\/DataEditor.Web.wasm"
     },
     {
@@ -109,7 +109,7 @@
       "url": "_framework\/Microsoft.CSharp.wasm"
     },
     {
-      "hash": "sha256-DUZk\/c6bdZjhwjRWUayMMQSZtvGAzzd8FWQ0H+iYVGc=",
+      "hash": "sha256-lXtLzRKDsh45QeDrMikjc9n+y2wK8EGEyKaK6PWmX+U=",
       "url": "_framework\/Microsoft.EntityFrameworkCore.Abstractions.wasm"
     },
     {
@@ -365,5 +365,5 @@
       "url": "_content\/MudBlazor\/MudBlazor.min.js"
     }
   ],
-  "version": "2q+VC8oF"
+  "version": "LUCuItoa"
 };
