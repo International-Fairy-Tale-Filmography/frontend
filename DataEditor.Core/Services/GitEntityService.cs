@@ -71,11 +71,12 @@ namespace DataEditor.Core.Services
 
         public async Task SeedDataFromGit()
         {
-            //context.Companies.AddRange(await FetchCsv<Company>("Company.csv"));
-            context.Countries.AddRange(await FetchCsv<Country>("Country.csv"));
+            context.Companies.AddRange(await FetchCsv<Company>("Company.csv"));
+
 
 
             //done
+            //context.Countries.AddRange(await FetchCsv<Country>("Country.csv"));
             //context.Languages.AddRange(await FetchCsv<Language>("Language.csv"));
             //context.Films.AddRange(await FetchCsv<Film>("Film.csv"));
             //context.Origins.AddRange(await FetchCsv<Origin>("Origin.csv"));
