@@ -22,11 +22,20 @@
                 <MudChipSet T="string" AllClosable OnClose="RemoveCompany">
                     @foreach (var value in item.Companies)
                     {
-                        <MudChip Text="@value.Name" Value="value.CompanyId"></MudChip>
+                        <MudChip Text="@value.Name" Value="value.CompanyId.ToString()"></MudChip>
                     }
                 </MudChipSet>
-                <MudAutocomplete ToStringFunc="@(e => e == null ? null : $"{e.Name}")" T="Company" Label="Search Company" @bind-Value="selectedCompany" SearchFunc="@Search" Variant="Variant.Text" ShowProgressIndicator="true" ResetValueOnEmptyText="true" Clearable="true" Dense="true"/>
-                <MudButton StartIcon="@Icons.Material.Filled.Add" OnClick="Add">Add Company</MudButton>
+                <MudAutocomplete ToStringFunc="@(e => e == null ? null : $"{e.Name}")" T="Company" Label="Search Company" @bind-Value="selectedCompany" SearchFunc="@SearchCompanies" Variant="Variant.Text" ShowProgressIndicator="true" ResetValueOnEmptyText="true" Clearable="true" Dense="true"/>
+                <MudButton StartIcon="@Icons.Material.Filled.Add" OnClick="AddCompany">Add Company</MudButton>
+ 
+                <MudChipSet T="string" AllClosable OnClose="RemoveCountry">
+                    @foreach (var value in item.Countries)
+                    {
+                        <MudChip Text="@value.Name" Value="value.CountryId.ToString()"></MudChip>
+                    }
+                </MudChipSet>
+                <MudAutocomplete ToStringFunc="@(e => e == null ? null : $"{e.Name}")" T="Country" Label="Search Country" @bind-Value="selectedCountry" SearchFunc="@SearchCountries" Variant="Variant.Text" ShowProgressIndicator="true" ResetValueOnEmptyText="true" Clearable="true" Dense="true"/>
+                <MudButton StartIcon="@Icons.Material.Filled.Add" OnClick="AddCountry">Add Country</MudButton>
             </MudItem>
 
         </MudGrid>
@@ -56,7 +65,7 @@
     {
         if (Id != 0)
         {
-            item = await ctx.Films.Include(i => i.Companies).FirstAsync(i => i.FilmId == Id);
+            item = await ctx.Films.Include(i => i.Companies).Include(i => i.Countries).FirstAsync(i => i.FilmId == Id);
         }
         else
         {
@@ -82,17 +91,18 @@
         MudDialog.Close();
 
     }
+    private void Cancel() => MudDialog.Cancel();
+
 
     //company
     private Company selectedCompany = null;
-    private void Cancel() => MudDialog.Cancel();
-    public void Add()
+    public void AddCompany()
     {
         item.Companies.Add(selectedCompany);
         selectedCompany = null;
     }
 
-    private async Task<IEnumerable<Company>> Search(string value, CancellationToken token)
+    private async Task<IEnumerable<Company>> SearchCompanies(string value, CancellationToken token)
     {
 
         var query = ctx.Companies.AsQueryable();
@@ -109,6 +119,33 @@
     {
         var selected = item.Companies.First(i => i.CompanyId == int.Parse(chip.Value!));
         item.Companies.Remove(selected);
+    }
+
+    //Country
+    private Country selectedCountry = null;
+    public void AddCountry()
+    {
+        item.Countries.Add(selectedCountry);
+        selectedCountry = null;
+    }
+
+    private async Task<IEnumerable<Country>> SearchCountries(string value, CancellationToken token)
+    {
+
+        var query = ctx.Countries.AsQueryable();
+
+        if (!string.IsNullOrEmpty(value))
+        {
+            query = query.Where(i => i.Name.Contains(value, StringComparison.InvariantCultureIgnoreCase));
+        }
+
+        return await query.OrderBy(i => i.Name).Take(10).ToListAsync(cancellationToken: token);
+    }
+
+    public void RemoveCountry(MudChip<string> chip)
+    {
+        var selected = item.Countries.First(i => i.CountryId == int.Parse(chip.Value!));
+        item.Countries.Remove(selected);
     }
 
 }

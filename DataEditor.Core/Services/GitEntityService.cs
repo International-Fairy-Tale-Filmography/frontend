@@ -76,7 +76,7 @@ namespace DataEditor.Core.Services
 
 
             //done
-            //context.Countries.AddRange(await FetchCsv<Country>("Country.csv"));
+            context.Countries.AddRange(await FetchCsv<Country>("Country.csv"));
             //context.Languages.AddRange(await FetchCsv<Language>("Language.csv"));
             context.Films.AddRange(await FetchCsv<Film>("Film.csv"));
             //context.Origins.AddRange(await FetchCsv<Origin>("Origin.csv"));
@@ -85,7 +85,7 @@ namespace DataEditor.Core.Services
             await context.SaveChangesAsync();
 
             await MapCompanyFilms();
-            //await MapCountryFilms();
+            await MapCountryFilms();
 
             await context.SaveChangesAsync();
         }
