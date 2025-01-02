@@ -1,6 +1,7 @@
 ﻿@using Microsoft.EntityFrameworkCore
 @using DataEditor.Core.Services
 @using Data.Core.Models
+@using Origin = Data.Core.Models.Origin
 @inject DataEditorDataContext ctx
 
 @inject ISnackbar Snackbar
@@ -46,6 +47,19 @@
                 </MudChipSet>
                 <MudAutocomplete ToStringFunc="@(e => e == null ? null : $"{e.Name}")" T="Language" Label="Search Language" @bind-Value="selectedLanguage" SearchFunc="@SearchLanguages" Variant="Variant.Text" ShowProgressIndicator="true" ResetValueOnEmptyText="true" Clearable="true" Dense="true" />
                 <MudButton StartIcon="@Icons.Material.Filled.Add" OnClick="AddLanguage">Add Language</MudButton>
+                
+                
+                 
+                <MudChipSet T="string" AllClosable OnClose="RemoveOrigin">
+                    @foreach (var value in item.Origins)
+                    {
+                        <MudChip Text="@value.Title" Value="value.OriginId.ToString()"></MudChip>
+                    }
+                </MudChipSet>
+                <MudAutocomplete ToStringFunc="@(e => e == null ? null : $"{e.Title}")" T="Origin" Label="Search Origin" @bind-Value="selectedOrigin" SearchFunc="@SearchOrigins" Variant="Variant.Text" ShowProgressIndicator="true" ResetValueOnEmptyText="true" Clearable="true" Dense="true" />
+                <MudButton StartIcon="@Icons.Material.Filled.Add" OnClick="AddOrigin">Add Origin</MudButton>
+
+                
 
             </MudItem>
 
@@ -80,6 +94,7 @@
                 .Include(i => i.Companies)
                 .Include(i => i.Countries)
                 .Include(i => i.Languages)
+                .Include(i => i.Origins)
                 .FirstAsync(i => i.FilmId == Id);
         }
         else
@@ -189,6 +204,33 @@
     {
         var selected = item.Languages.First(i => i.LanguageId == int.Parse(chip.Value!));
         item.Languages.Remove(selected);
+    }
+
+    //Origin
+    private Origin selectedOrigin = null;
+    public void AddOrigin()
+    {
+        item.Origins.Add(selectedOrigin);
+        selectedOrigin = null;
+    }
+
+    private async Task<IEnumerable<Origin>> SearchOrigins(string value, CancellationToken token)
+    {
+
+        var query = ctx.Origins.AsQueryable();
+
+        if (!string.IsNullOrEmpty(value))
+        {
+            query = query.Where(i => i.Title.Contains(value, StringComparison.InvariantCultureIgnoreCase));
+        }
+
+        return await query.OrderBy(i => i.Title).Take(10).ToListAsync(cancellationToken: token);
+    }
+
+    public void RemoveOrigin(MudChip<string> chip)
+    {
+        var selected = item.Origins.First(i => i.OriginId == int.Parse(chip.Value!));
+        item.Origins.Remove(selected);
     }
 
 }

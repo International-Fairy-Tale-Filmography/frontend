@@ -88,16 +88,17 @@ namespace DataEditor.Core.Services
 
             //done
             //_context.Countries.AddRange(await FetchCsv<Country>("Country.csv"));
-            _context.Languages.AddRange(await FetchCsv<Language>("Language.csv"));
+            //_context.Languages.AddRange(await FetchCsv<Language>("Language.csv"));
             _context.Films.AddRange(await FetchCsv<Film>("Film.csv"));
-            //context.Origins.AddRange(await FetchCsv<Origin>("Origin.csv"));
+            _context.Origins.AddRange(await FetchCsv<Origin>("Origin.csv"));
             //context.People.AddRange(await FetchCsv<Person>("Person.csv"));
 
             await _context.SaveChangesAsync();
 
             //await MapCompanyFilms();
             //await MapCountryFilms();
-            await MapLanguageFilms();
+            //await MapLanguageFilms();
+            await MapOriginFilms();
 
             await _context.SaveChangesAsync();
         }
@@ -181,6 +182,35 @@ namespace DataEditor.Core.Services
 
                 film.Languages.Add(language);
               
+            }
+
+        }
+
+        private async Task MapOriginFilms()
+        {
+            var OriginFilms = await FetchCsv<OriginFilm>("OriginFilm.csv");
+
+            var filmDict = _context.Films.ToDictionary(i => i.FilmId, i => i);
+            var originDict = _context.Origins.ToDictionary(i => i.OriginId, i => i);
+
+            foreach (var i in OriginFilms)
+            {
+                if (!filmDict.ContainsKey(i.FilmId))
+                {
+                    continue;
+                }
+
+                if (!originDict.ContainsKey(i.OriginId))
+                {
+                    continue;
+                }
+
+                var film = filmDict[i.FilmId];
+
+                var Origin = originDict[i.OriginId];
+
+                film.Origins.Add(Origin);
+
             }
 
         }
