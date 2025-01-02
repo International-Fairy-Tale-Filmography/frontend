@@ -1,0 +1,63 @@
+﻿@using Microsoft.EntityFrameworkCore
+@using DataEditor.Core.Services
+@using Data.Core.Models
+@using Origin = Data.Core.Models.Origin
+@inject DataEditorDataContext ctx
+
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <DialogContent>
+        <MudTextField @bind-Value="item.Title" Label="Title"></MudTextField>
+        <MudTextField @bind-Value="item.Code" Label="Code"></MudTextField>
+        <MudTextField @bind-Value="item.Author" Label="Author"></MudTextField>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Error" OnClick="Save">Save</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+
+    [CascadingParameter]
+    private MudDialogInstance MudDialog { get; set; }
+
+    [Parameter]
+    public int Id { get; set; } = 0;
+
+    public Origin item { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Id != 0)
+        {
+            item = await ctx.Origins.FirstAsync(i => i.OriginId == Id);
+        }
+        else
+        {
+            item = new Origin();
+        }
+
+    }
+
+    private async Task Save()
+    {
+        if (Id == 0)
+        {
+            
+            await ctx.Origins.AddAsync(item);
+        }
+        else
+        {
+            ctx.Origins.Update(item);
+        }
+
+        await ctx.SaveChangesAsync();
+        Snackbar.Add($"{item.Code} queued!", Severity.Success);
+        MudDialog.Close();
+
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+}

@@ -24,7 +24,8 @@ namespace DataEditor.Core.Services
 
             var handlers = new Dictionary<Type, Func<Task<string>>>
             {
-                { typeof(Film), () => CommitChangesToGit( context.Films.ToList(), "Film.csv") }
+                { typeof(Film), () => CommitChangesToGit( context.Films.ToList(), "Film.csv") },
+                { typeof(Origin), () => CommitChangesToGit( context.Origins.ToList(), "Origin.csv") }
             };
 
             if (handlers.ContainsKey(typeof(T)))
@@ -72,7 +73,7 @@ namespace DataEditor.Core.Services
             //context.Countries.AddRange(await FetchCsv<Country>("Country.csv"));
             context.Films.AddRange(await FetchCsv<Film>("Film.csv"));
             //context.Languages.AddRange(await FetchCsv<Language>("Language.csv"));
-            //context.Origins.AddRange(await FetchCsv<Origin>("Origin.csv"));
+            context.Origins.AddRange(await FetchCsv<Origin>("Origin.csv"));
             //context.People.AddRange(await FetchCsv<Person>("Person.csv"));
             //await context.SaveChangesAsync();
 
