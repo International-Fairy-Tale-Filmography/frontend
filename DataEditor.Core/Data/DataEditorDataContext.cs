@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using Data.Core.Models;
 using Microsoft.EntityFrameworkCore;
 using Octokit;
+using Language = Data.Core.Models.Language;
 
 public class DataEditorDataContext : DbContext
 {

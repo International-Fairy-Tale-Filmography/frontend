@@ -1,6 +1,7 @@
 ﻿using System.Globalization;
 using CsvHelper;
 using CsvHelper.Configuration;
+using Data.Core.Models;
 using FrontEnd.Core.Data;
 
 namespace FrontEnd.Core.Services;

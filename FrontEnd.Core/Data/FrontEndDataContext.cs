@@ -1,4 +1,6 @@
-﻿namespace FrontEnd.Core.Data
+﻿using Data.Core.Models;
+
+namespace FrontEnd.Core.Data
 {
     public class FrontEndDataContext
     {

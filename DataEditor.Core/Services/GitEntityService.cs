@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using System.Xml.Linq;
 using CsvHelper;
 using CsvHelper.Configuration;
+using Data.Core.Models;
 using Microsoft.EntityFrameworkCore;
 using Octokit;
 

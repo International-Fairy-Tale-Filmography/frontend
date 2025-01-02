@@ -1,8 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Drawing;
+﻿using System.ComponentModel.DataAnnotations;
 using CsvHelper.Configuration.Attributes;
+
+namespace Data.Core.Models;
 
 public class Film
 {
