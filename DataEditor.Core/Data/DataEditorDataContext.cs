@@ -22,4 +22,5 @@ public class DataEditorDataContext : DbContext
     public new DbSet<Language> Languages { get; set; } 
     public new DbSet<Origin> Origins { get; set; } 
     public new DbSet<Person> People { get; set; } 
+    public new DbSet<Role> Roles { get; set; } 
 }

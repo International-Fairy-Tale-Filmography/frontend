@@ -39,6 +39,7 @@ namespace DataEditor.Core.Services
                 //{ typeof(Film), () => CommitChangesToGit( context.People.ToList(), "Person.csv") },
                 //{ typeof(Film), () => CommitChangesToGit( context.Films.ToList(), "Film.csv") },
                 //{ typeof(Origin), () => CommitChangesToGit( context.Origins.ToList(), "Origin.csv") }
+                { typeof(Role), () => CommitChangesToGit( _context.Roles.ToList(), "Role.csv") }
             };
 
             if (handlers.ContainsKey(typeof(T)))
@@ -51,8 +52,6 @@ namespace DataEditor.Core.Services
 
         public async Task<string> CommitChangesToGit<T>(List<T> objects, string filename)
         {
-            //var filename = "Film.csv";
-            var filePath = Path.Combine(_settings.Folder, filename);
             var file = await GetFileByName(filename);
 
             //var films = await context.Films.ToListAsync();
@@ -82,15 +81,13 @@ namespace DataEditor.Core.Services
 
         public async Task SeedDataFromGit()
         {
+            // _context.Films.AddRange(await FetchCsv<Film>("Film.csv"));
             //_context.Companies.AddRange(await FetchCsv<Company>("Company.csv"));
-
-
-
-            //done
             //_context.Countries.AddRange(await FetchCsv<Country>("Country.csv"));
             //_context.Languages.AddRange(await FetchCsv<Language>("Language.csv"));
-            _context.Films.AddRange(await FetchCsv<Film>("Film.csv"));
-            _context.Origins.AddRange(await FetchCsv<Origin>("Origin.csv"));
+
+            //_context.Origins.AddRange(await FetchCsv<Origin>("Origin.csv"));
+            _context.Roles.AddRange(await FetchCsv<Role>("Role.csv"));
             //context.People.AddRange(await FetchCsv<Person>("Person.csv"));
 
             await _context.SaveChangesAsync();
@@ -98,7 +95,7 @@ namespace DataEditor.Core.Services
             //await MapCompanyFilms();
             //await MapCountryFilms();
             //await MapLanguageFilms();
-            await MapOriginFilms();
+            //await MapOriginFilms();
 
             await _context.SaveChangesAsync();
         }
