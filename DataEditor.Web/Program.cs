@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Microsoft.EntityFrameworkCore;
 using MudBlazor.Services;
+using MudExtensions.Services;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
@@ -14,6 +15,7 @@ builder.Services.AddDbContext<DataEditorDataContext>();
 
 
 builder.Services.AddMudServices();
+builder.Services.AddMudExtensions();
 builder.Services.AddScoped<GitService>();
 builder.Services.AddScoped<GitEntityService>();
 builder.Services.AddSingleton<CoreSettingsModel>(i => new CoreSettingsModel()
