@@ -4,11 +4,11 @@
 @inject DataEditorDataContext ctx
 @inject IDialogService DialogService
 
-<h3>FilmList</h3>
+<h3>Film List</h3>
 
 <MudButton OnClick="@AddItem" Color="@Color.Success" Class="add-item-btn">Add Item</MudButton>
 
-<MudDataGrid @ref="grid" T="Film" Items="@Films" ReadOnly="true" Virtualize="true"
+<MudDataGrid T="Film" Items="@Films" ReadOnly="true" Virtualize="true"
              Bordered="true" Dense="true" Loading="_loading">
     <Columns>
         <TemplateColumn CellClass="d-flex justify-end">
@@ -22,21 +22,7 @@
         <PropertyColumn Property="x => x.ReleaseYear"/>
         <PropertyColumn Property="x => x.Duration"/> 
         <PropertyColumn Property="x => x.Mode"/>
-        @*         <PropertyColumn Property="x => x.Comment" /> *@
         <PropertyColumn Property="x => x.Published"/>
-
-
-
-        @* <PropertyColumn Property="x => x.Position">
-            <EditTemplate>
-                <MudSelect @bind-Value="context.Item.Position" Required RequiredError="You must select a Position!!!" Margin="@Margin.Dense">
-                    <MudSelectItem Value="0">zero</MudSelectItem>
-                    <MudSelectItem Value="1">one</MudSelectItem>
-                    <MudSelectItem Value="17">seventeen</MudSelectItem>
-                </MudSelect>
-            </EditTemplate>
-        </PropertyColumn> *@
-
 
     </Columns>
     <PagerContent>
@@ -75,11 +61,14 @@
     async Task  EditItem(int id)
     {
         var parameters = new DialogParameters<FilmEdit> { { x => x.Id, id } };
-        var dialog = DialogService.ShowAsync<FilmEdit>("Edit Film", parameters);
-        await Refresh();
+        var dialog = await DialogService.ShowAsync<FilmEdit>("Edit", parameters);
+        var result = await dialog.Result;
+        if (!result.Canceled)
+        {
+            await Refresh();
+        }
+        
     }
-
-
-    public MudDataGrid<Film> grid { get; set; }
+    
 
 }

@@ -5,12 +5,6 @@
 @inject ISnackbar Snackbar
 
 <MudDialog>
-    <TitleContent>
-        <MudText Typo="Typo.h6">
-            <MudIcon Icon="@Icons.Material.Filled.Edit" Class="mr-3 mb-n1" />
-            Film Edit
-        </MudText>
-    </TitleContent>
     <DialogContent>
         <MudTextField @bind-Value="film.Title" Label="Title"></MudTextField>
         <MudTextField @bind-Value="film.OtherTitle" Label="Other Title"></MudTextField>
@@ -26,9 +20,6 @@
         <MudButton Color="Color.Error" OnClick="Save">Save</MudButton>
     </DialogActions>
 </MudDialog>
-
-
-
 
 @code {
 
