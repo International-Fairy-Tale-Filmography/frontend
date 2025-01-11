@@ -2,8 +2,10 @@
 
 @using Microsoft.EntityFrameworkCore
 @using Data.Core.Models
+
 @inject DataEditorDataContext ctx
 @inject IDialogService DialogService
+@inject GitEntityService ges
 
 <h3>Company List</h3>
 
@@ -33,6 +35,7 @@
 
     protected override async Task OnInitializedAsync()
     {
+        await ges.SeedDataFromGit<Company>();
         await Refresh();
     }
 

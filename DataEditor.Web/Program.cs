@@ -30,9 +30,4 @@ builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.
 
 var app = builder.Build();
 
-var git = app.Services.GetService<GitEntityService>();
-
-await git.SeedDataFromGit();
-
-
 await app.RunAsync();

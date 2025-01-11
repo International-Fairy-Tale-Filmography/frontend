@@ -79,24 +79,67 @@ namespace DataEditor.Core.Services
         }
 
 
-        public async Task SeedDataFromGit()
+
+        public static Dictionary<Type, string> fileName = new Dictionary<Type, string>()
         {
-            // _context.Films.AddRange(await FetchCsv<Film>("Film.csv"));
-            //_context.Companies.AddRange(await FetchCsv<Company>("Company.csv"));
-            //_context.Countries.AddRange(await FetchCsv<Country>("Country.csv"));
-            //_context.Languages.AddRange(await FetchCsv<Language>("Language.csv"));
+            {typeof(Film), "Film" },
+            {typeof(Company), "Company"},
+            {typeof(Country), "Country"},
+            {typeof(Language), "Language"},
+            {typeof(Origin), "Origin"},
+            {typeof(Role), "Role"},
+            {typeof(Person), "Person"},
+        };
 
-            //_context.Origins.AddRange(await FetchCsv<Origin>("Origin.csv"));
-            _context.Roles.AddRange(await FetchCsv<Role>("Role.csv"));
-            //context.People.AddRange(await FetchCsv<Person>("Person.csv"));
+        public static Dictionary<Type, string> dbSetNames = new Dictionary<Type, string>()
+        {
+            {typeof(Company), "Companies"},
+            {typeof(Country), "Countries"},
+            {typeof(Film), "Films"},
+            {typeof(Language), "Languages"},
+            {typeof(Origin), "Origins"},
+            {typeof(Person), "People"},
+            {typeof(Role), "Roles"}
+        };
 
-            await _context.SaveChangesAsync();
+        public static HashSet<Type> LoadedFiles = new ();
 
-            //await MapCompanyFilms();
-            //await MapCountryFilms();
-            //await MapLanguageFilms();
-            //await MapOriginFilms();
 
+        public async Task SeedDataFromGit<T>()
+        {
+            if (!LoadedFiles.Contains(typeof(T)))
+            {
+                var entities = await FetchCsv<T>($"{fileName[typeof(T)]}.csv");
+
+                //get the property method for the appropriate entity
+                var dbSetName = dbSetNames[typeof(T)];
+                var dbSetProperty = _context.GetType().GetProperty(dbSetName);
+                var dbSet = dbSetProperty.GetValue(_context);
+
+                //call the dbset's addrange method
+                var addRangeMethod = dbSet.GetType().GetMethod("AddRange", new[] { typeof(IEnumerable<T>) });
+                addRangeMethod.Invoke(dbSet, new object[] { entities });
+
+                //mark the file as loaded
+                LoadedFiles.Add(typeof(T));
+
+                //if the file is FILM, then load everything and map everything
+                if (typeof(T) == typeof(Film))
+                {
+                    await SeedDataFromGit<Company>();
+                    await SeedDataFromGit<Country>();
+                    await SeedDataFromGit<Language>();
+                    await SeedDataFromGit<Origin>();
+                    await SeedDataFromGit<Role>();
+                    await SeedDataFromGit<Person>();
+
+                    await MapCompanyFilms();
+                    await MapCountryFilms();
+                    await MapLanguageFilms();
+                    await MapOriginFilms();
+                }
+            }
+            
             await _context.SaveChangesAsync();
         }
 
