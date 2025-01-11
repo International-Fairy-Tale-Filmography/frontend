@@ -4,6 +4,7 @@
 @using Origin = Data.Core.Models.Origin
 @inject DataEditorDataContext ctx
 @inject IDialogService DialogService
+@inject GitEntityService ges
 
 <h3>Origin List</h3>
 
@@ -41,6 +42,7 @@
     {
         _loading = true;
         Thread.Sleep(10);
+        await ges.SeedDataFromGit<Origin>();
         Items = await ctx.Origins.ToListAsync();
         _loading = false;
     }

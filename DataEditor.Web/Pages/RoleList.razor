@@ -4,6 +4,7 @@
 @using Data.Core.Models
 @inject DataEditorDataContext ctx
 @inject IDialogService DialogService
+@inject GitEntityService ges
 
 <h3>Role List</h3>
 
@@ -39,6 +40,7 @@
     {
         _loading = true;
         Thread.Sleep(10);
+        await ges.SeedDataFromGit<Role>();
         Items = await ctx.Roles.ToListAsync();
         _loading = false;
     }

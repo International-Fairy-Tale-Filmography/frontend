@@ -4,6 +4,7 @@
 @using Data.Core.Models
 @inject DataEditorDataContext ctx
 @inject IDialogService DialogService
+@inject GitEntityService ges
 
 <h3>Country List</h3>
 
@@ -33,6 +34,7 @@
 
     protected override async Task OnInitializedAsync()
     {
+
         await Refresh();
     }
 
@@ -40,6 +42,7 @@
     {
         _loading = true;
         Thread.Sleep(10);
+        await ges.SeedDataFromGit<Country>();
         Items = await ctx.Countries.ToListAsync();
         _loading = false;
     }

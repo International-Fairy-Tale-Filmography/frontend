@@ -35,13 +35,13 @@
 
     protected override async Task OnInitializedAsync()
     {
-        await ges.SeedDataFromGit<Company>();
         await Refresh();
     }
 
     async Task Refresh()
     {
         _loading = true;
+        await ges.SeedDataFromGit<Company>();
         Thread.Sleep(10);
         Items = await ctx.Companies.ToListAsync();
         _loading = false;

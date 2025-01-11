@@ -4,6 +4,7 @@
 @using Data.Core.Models
 @inject DataEditorDataContext ctx
 @inject IDialogService DialogService
+@inject GitEntityService ges
 
 <h3>Language List</h3>
 
@@ -40,6 +41,7 @@
     {
         _loading = true;
         Thread.Sleep(10);
+        await ges.SeedDataFromGit<Language>();
         Items = await ctx.Languages.ToListAsync();
         _loading = false;
     }
