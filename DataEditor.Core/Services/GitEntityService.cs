@@ -99,7 +99,7 @@ namespace DataEditor.Core.Services
             if (content != file.Content)
             {
                 var result = await _gitService.UpdateFile(filename, file, content, $"test update at {DateTime.Now}");
-                return result.Commit.Sha;
+                return filename + "; ";
             }
             else
             {

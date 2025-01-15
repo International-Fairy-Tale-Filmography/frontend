@@ -10,7 +10,7 @@
 
 <MudButton OnClick="@AddItem" Color="@Color.Success" Class="add-item-btn">Add Item</MudButton>
 
-<MudDataGrid T="Language" Items="@Items" ReadOnly="true" Virtualize="true"
+<MudDataGrid T="Language" Items="@Items" ReadOnly="true" Virtualize="true" Filterable="true" FilterCaseSensitivity="DataGridFilterCaseSensitivity.CaseInsensitive"
              Bordered="true" Dense="true" Loading="_loading">
     <Columns>
         <TemplateColumn CellClass="d-flex justify-end">
