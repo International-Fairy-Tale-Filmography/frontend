@@ -101,3 +101,23 @@ a, .btn-link {
 code {
     color: #c02d76;
 }
+
+/*iftf*/
+
+.banner-credit {
+    font-size: 12px;
+    font-weight: normal;
+    padding-bottom: 3px;
+    padding-top: 2px;
+    margin: 0
+}
+
+.acknowledge-section {
+    -webkit-border-radius: 6px;
+    -moz-border-radius: 6px;
+    border-radius: 6px;
+    background-color: #fff;
+    margin-top: 12px;
+    padding: 12px;
+    border: 1px solid #999
+}
