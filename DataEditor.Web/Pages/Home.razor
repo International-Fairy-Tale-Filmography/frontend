@@ -1,0 +1,23 @@
+﻿@page "/"
+@inject GitService service
+<PageTitle>Home</PageTitle>
+
+<h1>Hello, @name!</h1>
+
+Welcome to your new app.
+
+
+
+@code
+{
+
+    string name;
+    
+    
+    protected override async Task OnInitializedAsync()
+    {
+        name = await service.GetUser();
+    }
+
+
+}

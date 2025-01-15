@@ -1,0 +1,236 @@
+﻿@using Microsoft.EntityFrameworkCore
+@using DataEditor.Core.Services
+@using Data.Core.Models
+@using Origin = Data.Core.Models.Origin
+@inject DataEditorDataContext ctx
+
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <DialogContent>
+        <MudCheckBox @bind-Value="item.Published"> Published</MudCheckBox>
+        <MudGrid xs="12" md="6">
+            <MudItem>
+                <MudTextField @bind-Value="item.Title" Label="Title"></MudTextField>
+                <MudTextField @bind-Value="item.OtherTitle" Label="Other Title"></MudTextField>
+                <MudTextField @bind-Value="item.Color" Label="Color"></MudTextField>
+                <MudTextField @bind-Value="item.ReleaseYear" Label="Release Year"></MudTextField>
+                <MudTextField @bind-Value="item.Duration" Label="Duration"></MudTextField>
+                <MudTextField @bind-Value="item.Mode" Label="Mode"></MudTextField>
+                <MudTextField @bind-Value="item.Comment" Label="Comment"></MudTextField>
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudChipSet T="string" AllClosable OnClose="RemoveCompany">
+                    @foreach (var value in item.Companies)
+                    {
+                        <MudChip Text="@value.Name" Value="value.CompanyId.ToString()"></MudChip>
+                    }
+                </MudChipSet>
+                <MudAutocomplete ToStringFunc="@(e => e == null ? null : $"{e.Name}")" T="Company" Label="Search Company" @bind-Value="selectedCompany" SearchFunc="@SearchCompanies" Variant="Variant.Text" ShowProgressIndicator="true" ResetValueOnEmptyText="true" Clearable="true" Dense="true"/>
+                <MudButton StartIcon="@Icons.Material.Filled.Add" OnClick="AddCompany">Add Company</MudButton>
+ 
+                <MudChipSet T="string" AllClosable OnClose="RemoveCountry">
+                    @foreach (var value in item.Countries)
+                    {
+                        <MudChip Text="@value.Name" Value="value.CountryId.ToString()"></MudChip>
+                    }
+                </MudChipSet>
+                <MudAutocomplete ToStringFunc="@(e => e == null ? null : $"{e.Name}")" T="Country" Label="Search Country" @bind-Value="selectedCountry" SearchFunc="@SearchCountries" Variant="Variant.Text" ShowProgressIndicator="true" ResetValueOnEmptyText="true" Clearable="true" Dense="true"/>
+                <MudButton StartIcon="@Icons.Material.Filled.Add" OnClick="AddCountry">Add Country</MudButton>
+                
+                
+                <MudChipSet T="string" AllClosable OnClose="RemoveLanguage">
+                    @foreach (var value in item.Languages)
+                    {
+                        <MudChip Text="@value.Name" Value="value.LanguageId.ToString()"></MudChip>
+                    }
+                </MudChipSet>
+                <MudAutocomplete ToStringFunc="@(e => e == null ? null : $"{e.Name}")" T="Language" Label="Search Language" @bind-Value="selectedLanguage" SearchFunc="@SearchLanguages" Variant="Variant.Text" ShowProgressIndicator="true" ResetValueOnEmptyText="true" Clearable="true" Dense="true" />
+                <MudButton StartIcon="@Icons.Material.Filled.Add" OnClick="AddLanguage">Add Language</MudButton>
+                
+                
+                 
+                <MudChipSet T="string" AllClosable OnClose="RemoveOrigin">
+                    @foreach (var value in item.Origins)
+                    {
+                        <MudChip Text="@value.Title" Value="value.OriginId.ToString()"></MudChip>
+                    }
+                </MudChipSet>
+                <MudAutocomplete ToStringFunc="@(e => e == null ? null : $"{e.Title}")" T="Origin" Label="Search Origin" @bind-Value="selectedOrigin" SearchFunc="@SearchOrigins" Variant="Variant.Text" ShowProgressIndicator="true" ResetValueOnEmptyText="true" Clearable="true" Dense="true" />
+                <MudButton StartIcon="@Icons.Material.Filled.Add" OnClick="AddOrigin">Add Origin</MudButton>
+
+                
+
+            </MudItem>
+
+        </MudGrid>
+
+
+
+
+        
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Error" OnClick="Save">Save</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+
+    [CascadingParameter]
+    private MudDialogInstance MudDialog { get; set; }
+
+    [Parameter]
+    public int Id { get; set; } = 0;
+
+    public Film item { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Id != 0)
+        {
+            item = await ctx.Films
+                .Include(i => i.Companies)
+                .Include(i => i.Countries)
+                .Include(i => i.Languages)
+                .Include(i => i.Origins)
+                .FirstAsync(i => i.FilmId == Id);
+        }
+        else
+        {
+            item = new Film();
+        }
+
+    }
+
+    private async Task Save()
+    {
+        if (Id == 0)
+        {
+            
+            await ctx.Films.AddAsync(item);
+        }
+        else
+        {
+            ctx.Films.Update(item);
+        }
+
+        await ctx.SaveChangesAsync();
+        Snackbar.Add($"{item.Title} queued!", Severity.Success);
+        MudDialog.Close();
+
+    }
+    private void Cancel() => MudDialog.Cancel();
+
+
+    //company
+    private Company selectedCompany = null;
+    public void AddCompany()
+    {
+        item.Companies.Add(selectedCompany);
+        selectedCompany = null;
+    }
+
+    private async Task<IEnumerable<Company>> SearchCompanies(string value, CancellationToken token)
+    {
+
+        var query = ctx.Companies.AsQueryable();
+
+        if (!string.IsNullOrEmpty(value))
+        {
+            query = query.Where(i => i.Name.Contains(value, StringComparison.InvariantCultureIgnoreCase));
+        }
+
+        return await query.OrderBy( i=> i.Name).Take(10).ToListAsync(cancellationToken: token);
+    }
+
+    public void RemoveCompany(MudChip<string> chip)
+    {
+        var selected = item.Companies.First(i => i.CompanyId == int.Parse(chip.Value!));
+        item.Companies.Remove(selected);
+    }
+
+    //Country
+    private Country selectedCountry = null;
+    public void AddCountry()
+    {
+        item.Countries.Add(selectedCountry);
+        selectedCountry = null;
+    }
+
+    private async Task<IEnumerable<Country>> SearchCountries(string value, CancellationToken token)
+    {
+
+        var query = ctx.Countries.AsQueryable();
+
+        if (!string.IsNullOrEmpty(value))
+        {
+            query = query.Where(i => i.Name.Contains(value, StringComparison.InvariantCultureIgnoreCase));
+        }
+
+        return await query.OrderBy(i => i.Name).Take(10).ToListAsync(cancellationToken: token);
+    }
+
+    public void RemoveCountry(MudChip<string> chip)
+    {
+        var selected = item.Countries.First(i => i.CountryId == int.Parse(chip.Value!));
+        item.Countries.Remove(selected);
+    }
+
+
+    //Language
+    private Language selectedLanguage = null;
+    public void AddLanguage()
+    {
+        item.Languages.Add(selectedLanguage);
+        selectedLanguage = null;
+    }
+
+    private async Task<IEnumerable<Language>> SearchLanguages(string value, CancellationToken token)
+    {
+
+        var query = ctx.Languages.AsQueryable();
+
+        if (!string.IsNullOrEmpty(value))
+        {
+            query = query.Where(i => i.Name.Contains(value, StringComparison.InvariantCultureIgnoreCase));
+        }
+
+        return await query.OrderBy(i => i.Name).Take(10).ToListAsync(cancellationToken: token);
+    }
+
+    public void RemoveLanguage(MudChip<string> chip)
+    {
+        var selected = item.Languages.First(i => i.LanguageId == int.Parse(chip.Value!));
+        item.Languages.Remove(selected);
+    }
+
+    //Origin
+    private Origin selectedOrigin = null;
+    public void AddOrigin()
+    {
+        item.Origins.Add(selectedOrigin);
+        selectedOrigin = null;
+    }
+
+    private async Task<IEnumerable<Origin>> SearchOrigins(string value, CancellationToken token)
+    {
+
+        var query = ctx.Origins.AsQueryable();
+
+        if (!string.IsNullOrEmpty(value))
+        {
+            query = query.Where(i => i.Title.Contains(value, StringComparison.InvariantCultureIgnoreCase));
+        }
+
+        return await query.OrderBy(i => i.Title).Take(10).ToListAsync(cancellationToken: token);
+    }
+
+    public void RemoveOrigin(MudChip<string> chip)
+    {
+        var selected = item.Origins.First(i => i.OriginId == int.Parse(chip.Value!));
+        item.Origins.Remove(selected);
+    }
+
+}

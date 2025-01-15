@@ -1,0 +1,55 @@
+﻿@page "/EditFile"
+@using Octokit
+@using System.ComponentModel
+@using System.Text
+@using DataEditor.Core.Services
+@using Microsoft.EntityFrameworkCore
+@inject GitService service
+@inject DataEditorDataContext context
+@inject ISnackbar Snackbar
+
+<h3>Edit File</h3>
+
+<MudButton OnClick="Refresh" Variant="Variant.Filled" Color="Color.Primary">Refresh - @file?.Sha</MudButton>
+
+<MudButton Disabled="(file == null)"  OnClick="Save" Variant="Variant.Filled" Color="Color.Primary">Save</MudButton>
+
+<MudTextField Disabled="(file == null)" T="string" @bind-Value="content" Variant="Variant.Outlined" Lines="10"></MudTextField>
+
+@code {
+    string content;
+    string filename = "Company.csv";
+
+    RepositoryContent file = null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Refresh();
+    }
+
+    private async Task Refresh()
+    {
+        file = null;
+        content = "loading..";
+
+
+        var films = await context.Films.ToListAsync();
+
+        var sb = new StringBuilder();
+        foreach (var film in films)
+        {
+            sb.AppendLine(film.Title);
+        }
+
+        content = sb.ToString();
+    }
+
+    private async Task Save()
+    {
+        // var result = await service.UpdateFile(filename, file, content, $"test update at {DateTime.Now}");
+
+        // Snackbar.Add("Saved commit " + result.Commit.Sha, Severity.Success);
+        await Refresh();
+    }
+
+}

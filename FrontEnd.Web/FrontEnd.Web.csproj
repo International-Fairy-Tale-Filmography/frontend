@@ -16,4 +16,13 @@
     <ServiceWorker Include="wwwroot\service-worker.js" PublishedContent="wwwroot\service-worker.published.js" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="wwwroot\img\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Data.Core\Data.Core.csproj" />
+    <ProjectReference Include="..\FrontEnd.Core\FrontEnd.Core.csproj" />
+  </ItemGroup>
+
 </Project>
