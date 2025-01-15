@@ -19,6 +19,7 @@ namespace DataEditor.Core.Services
 {
     public class GitEntityService
     {
+        
         private readonly DataEditorDataContext _context;
         private readonly CoreSettingsModel _settings;
         private readonly GitService _gitService;
@@ -30,16 +31,42 @@ namespace DataEditor.Core.Services
             _gitService = gitService;
         }
 
+        public async Task<string> CommitAllChangesToGit()
+        {
+            var sb = new StringBuilder();
+            //todo make this loop the dictionary
+            sb.AppendLine(await CommitChangesToGit<Company>());
+            sb.AppendLine(await CommitChangesToGit<Country>());
+            sb.AppendLine(await CommitChangesToGit<Film>());
+            sb.AppendLine(await CommitChangesToGit<Origin>());
+            sb.AppendLine(await CommitChangesToGit<Person>());
+            sb.AppendLine(await CommitChangesToGit<Role>());
 
+            //sb.AppendLine(await CommitChangesToGit<CompanyFilm>());
+            //sb.AppendLine(await CommitChangesToGit<OriginFilm>());
+            //sb.AppendLine(await CommitChangesToGit<CountryFilm>());
+            //sb.AppendLine(await CommitChangesToGit<LanguageFilm>());
+
+            return sb.ToString();
+        }
         public async Task<string> CommitChangesToGit<T>()
         {
 
-            var handlers = new Dictionary<Type, Func<Task<string>>>
+            Dictionary<Type, Func<Task<string>>> handlers = new Dictionary<Type, Func<Task<string>>>
             {
-                //{ typeof(Film), () => CommitChangesToGit( context.People.ToList(), "Person.csv") },
-                //{ typeof(Film), () => CommitChangesToGit( context.Films.ToList(), "Film.csv") },
-                //{ typeof(Origin), () => CommitChangesToGit( context.Origins.ToList(), "Origin.csv") }
-                { typeof(Role), () => CommitChangesToGit( _context.Roles.ToList(), "Role.csv") }
+                { typeof(Company), () => CommitChangesToGit( _context.Companies.OrderBy(i => i.CompanyId).ToList(), "Company.csv") },
+                { typeof(Country), () => CommitChangesToGit( _context.Countries.OrderBy(i => i.CountryId).ToList(), "Country.csv") },
+                { typeof(Film), () => CommitChangesToGit( _context.Films.OrderBy(i => i.FilmId).ToList(), "Film.csv") },
+                { typeof(Language), () => CommitChangesToGit( _context.Languages.OrderBy(i => i.LanguageId).ToList(), "Language.csv") },
+                { typeof(Origin), () => CommitChangesToGit( _context.Origins.OrderBy(i => i.OriginId).ToList(), "Origin.csv") },
+                { typeof(Person), () => CommitChangesToGit( _context.People.OrderBy(i => i.PersonId).ToList(), "Person.csv") },
+                { typeof(Role), () => CommitChangesToGit( _context.Roles.OrderBy(i => i.RoleId).ToList(), "Role.csv") },
+
+                //{ typeof(CompanyFilm), () => CommitChangesToGit( _context.CompanyFilms.OrderBy(i => i.FilmId).ThenBy(i => i.CompanyId).ToList(), "CompanyFilm.csv") },
+                //{ typeof(OriginFilm), () => CommitChangesToGit( _context.OriginFilms.OrderBy(i => i.FilmId).ThenBy(i => i.OriginId).ToList(), "OriginFilm.csv") },
+                //{ typeof(CountryFilm), () => CommitChangesToGit( _context.CountryFilms.OrderBy(i => i.FilmId).ThenBy(i => i.CountryId).ToList(), "CountryFilm.csv") },
+                //{ typeof(LanguageFilm), () => CommitChangesToGit( _context.LanguageFilms.OrderBy(i => i.FilmId).ThenBy(i => i.LanguageId).ToList(), "LanguageFilm.csv") },
+                //{ typeof(PersonFilmRole), () => CommitChangesToGit( _context.Roles.ToList(), "PersonFilmRole.csv") } WIP
             };
 
             if (handlers.ContainsKey(typeof(T)))
@@ -52,6 +79,11 @@ namespace DataEditor.Core.Services
 
         public async Task<string> CommitChangesToGit<T>(List<T> objects, string filename)
         {
+            if (!LoadedFiles.Contains(typeof(T)))
+            {
+                return "";
+            }
+
             var file = await GetFileByName(filename);
 
             //var films = await context.Films.ToListAsync();
@@ -64,10 +96,19 @@ namespace DataEditor.Core.Services
 
             var content = writer.ToString();
 
-            var result = await _gitService.UpdateFile(filename, file, content, $"test update at {DateTime.Now}");
+            if (content != file.Content)
+            {
+                var result = await _gitService.UpdateFile(filename, file, content, $"test update at {DateTime.Now}");
+                return result.Commit.Sha;
+            }
+            else
+            {
+                return "";
+            }
 
-             return result.Commit.Sha;
-             // Snackbar.Add("Saved commit " + result.Commit.Sha, Severity.Success);
+
+            
+              
         }
 
 
@@ -175,6 +216,8 @@ namespace DataEditor.Core.Services
                 //company.Films.Add(film);
             }
 
+            LoadedFiles.Add(typeof(CompanyFilm));
+
         }
 
 
@@ -194,6 +237,8 @@ namespace DataEditor.Core.Services
                 film.Countries.Add(country);
                 //country.Films.Add(film);
             }
+
+            LoadedFiles.Add(typeof(CountryFilm));
 
         }
 
@@ -224,6 +269,7 @@ namespace DataEditor.Core.Services
               
             }
 
+            LoadedFiles.Add(typeof(LanguageFilm));
         }
 
         private async Task MapOriginFilms()
@@ -253,6 +299,7 @@ namespace DataEditor.Core.Services
 
             }
 
+            LoadedFiles.Add(typeof(OriginFilm));
         }
 
     }

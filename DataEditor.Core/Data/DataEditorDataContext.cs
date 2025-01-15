@@ -23,4 +23,9 @@ public class DataEditorDataContext : DbContext
     public new DbSet<Origin> Origins { get; set; } 
     public new DbSet<Person> People { get; set; } 
     public new DbSet<Role> Roles { get; set; } 
+    public new DbSet<CompanyFilm> CompanyFilms { get; set; } 
+    public new DbSet<OriginFilm> OriginFilms { get; set; } 
+    public new DbSet<CountryFilm> CountryFilms { get; set; } 
+    public new DbSet<LanguageFilm> LanguageFilms { get; set; } 
+    //public new DbSet<PersonFilmRole> PersonFilmRoles { get; set; } 
 }

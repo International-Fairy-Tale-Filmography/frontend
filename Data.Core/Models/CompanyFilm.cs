@@ -1,5 +1,8 @@
-﻿namespace Data.Core.Models;
+﻿using Microsoft.EntityFrameworkCore;
 
+namespace Data.Core.Models;
+
+[PrimaryKey("CompanyId", "FilmId")]
 public class CompanyFilm
 {
     public int CompanyId { get; set; }

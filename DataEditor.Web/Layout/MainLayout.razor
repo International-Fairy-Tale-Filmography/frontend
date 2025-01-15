@@ -2,6 +2,7 @@
 @using Data.Core.Models
 @inherits LayoutComponentBase
 @inject GitEntityService ges
+@inject ISnackbar Snackbar
 <MudThemeProvider />
 <MudSnackbarProvider />
 <MudPopoverProvider />
@@ -35,7 +36,9 @@
     {
         _isCommitting = true;
 
-        await ges.CommitChangesToGit<Role>();
+        var result = await ges.CommitAllChangesToGit();
+
+        Snackbar.Add(result, Severity.Success);
         _isCommitting = false;
     }
 }

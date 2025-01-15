@@ -19,8 +19,9 @@ public class GitService
     public async Task<CoreSettingsModel> GetConfiguration()
     {
 
-        //var githubAccessToken = await _jsRuntime.InvokeAsync<string>("localStorage.getItem", "github_accesstoken");
-        //_coreSettings.AccessToken = githubAccessToken;
+        var githubAccessToken = await _jsRuntime.InvokeAsync<string>("localStorage.getItem", "github_accesstoken");
+        _coreSettings.AccessToken = githubAccessToken;
+        _gitHubClient.Credentials = new Credentials(_coreSettings.AccessToken);
 
         return _coreSettings;
     }
