@@ -18,12 +18,19 @@ jobs:
         with:
           dotnet-version: "8.0.x"
 
+      - name: Create frontend Directory
+        run: mkdir -p release/wwwroot/frontend
+
+      - name: Create dataeditor Directory
+        run: mkdir -p release/wwwroot/dataeditor
+
+
       # publishes Blazor project to the release folder
       - name: Publish FrontEnd
         run: dotnet publish FrontEnd.Web/FrontEnd.Web.csproj -c Release -o releasefrontend --nologo
 
       - name: Copy FrontEnd
-        run: mkdir -p release/wwwroot/frontend && cp -R releasefrontend/wwwroot release/wwwroot/frontend
+        run: cp -R releasefrontend/wwwroot release/wwwroot/frontend
 
       - name: Publish DataEditor
         run: dotnet publish DataEditor.Web/DataEditor.Web.csproj -c Release -o releasedataeditor --nologo
