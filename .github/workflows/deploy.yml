@@ -47,13 +47,13 @@ jobs:
       #  run: sed -i 's/<base href="\/" \/>/<base href="\/FrontEnd.Web\/" \/>/g' release/wwwroot/dataeditor/index.html
 
 
-      # copy index.html to 404.html to serve the same file when a file is not found
-      - name: copy index.html to 404.html
-        run: cp release/wwwroot/frontend/index.html release/wwwroot/frontend/404.html
+      # # copy index.html to 404.html to serve the same file when a file is not found
+      # - name: copy index.html to 404.html
+      #   run: cp release/wwwroot/frontend/index.html release/wwwroot/frontend/404.html
 
-      # copy index.html to 404.html to serve the same file when a file is not found
-      - name: copy index.html to 404.html
-        run: cp release/wwwroot/dataeditor/index.html release/wwwroot/dataeditor/404.html
+      # # copy index.html to 404.html to serve the same file when a file is not found
+      # - name: copy index.html to 404.html
+      #   run: cp release/wwwroot/dataeditor/index.html release/wwwroot/dataeditor/404.html
 
       # add .nojekyll file to tell GitHub pages to not treat this as a Jekyll project. (Allow files and folders starting with an underscore)
       - name: Add .nojekyll file
