@@ -32,12 +32,12 @@ jobs:
         run: cp -R releasedataeditor/wwwroot release/wwwroot/dataeditor
 
       # changes the base-tag in index.html from '/' to 'BlazorGitHubPagesDemo' to match GitHub Pages repository subdirectory
-      - name: frontend - Change base-tag in index.html from / to BlazorGitHubPagesDemo
-        run: sed -i 's/<base href="\/" \/>/<base href="\/FrontEnd.Web\/" \/>/g' release/wwwroot/frontend/index.html
+      #- name: frontend - Change base-tag in index.html from / to BlazorGitHubPagesDemo
+      #  run: sed -i 's/<base href="\/" \/>/<base href="\/FrontEnd.Web\/" \/>/g' release/wwwroot/frontend/index.html
 
               # changes the base-tag in index.html from '/' to 'BlazorGitHubPagesDemo' to match GitHub Pages repository subdirectory
-      - name: dataeditor - Change base-tag in index.html from / to BlazorGitHubPagesDemo
-        run: sed -i 's/<base href="\/" \/>/<base href="\/FrontEnd.Web\/" \/>/g' release/wwwroot/dataeditor/index.html
+      #- name: dataeditor - Change base-tag in index.html from / to BlazorGitHubPagesDemo
+      #  run: sed -i 's/<base href="\/" \/>/<base href="\/FrontEnd.Web\/" \/>/g' release/wwwroot/dataeditor/index.html
 
 
       # copy index.html to 404.html to serve the same file when a file is not found
