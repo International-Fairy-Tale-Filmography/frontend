@@ -7,7 +7,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Data.Core\Data.Core.csproj" />
+    <PackageReference Include="Microsoft.JSInterop" Version="8.0.8" />
+    <PackageReference Include="Octokit" Version="13.0.1" />
   </ItemGroup>
 
 </Project>

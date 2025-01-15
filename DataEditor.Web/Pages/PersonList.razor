@@ -1,0 +1,72 @@
+﻿@page "/person"
+
+@using Microsoft.EntityFrameworkCore
+@using Data.Core.Models
+@inject DataEditorDataContext ctx
+@inject IDialogService DialogService
+@inject GitEntityService ges
+
+<h3>Person List</h3>
+
+<MudButton OnClick="@AddItem" Color="@Color.Success" Class="add-item-btn">Add Item</MudButton>
+
+<MudDataGrid T="Person" Items="@Items" ReadOnly="true" Virtualize="true"
+             Bordered="true" Dense="true" Loading="_loading">
+    <Columns>
+        <TemplateColumn CellClass="d-flex justify-end">
+            <CellTemplate>
+                <MudIconButton Size="@Size.Small" Icon="@Icons.Material.Outlined.Edit" OnClick="@((e) => EditCell(context.Item))" />
+            </CellTemplate>
+        </TemplateColumn>
+        <PropertyColumn Property="x => x.FirstName" />
+        <PropertyColumn Property="x => x.LastName" />
+
+    </Columns>
+    <PagerContent>
+        <MudDataGridPager T="Person" />
+    </PagerContent>
+</MudDataGrid>
+
+
+@code {
+    public bool _loading { get; set; }
+
+    public List<Person> Items { get; set; } = new();
+    protected override async Task OnInitializedAsync()
+    {
+        await Refresh();
+    }
+
+    async Task Refresh()
+    {
+        _loading = true;
+        Thread.Sleep(10);
+        await ges.SeedDataFromGit<Person>();
+        Items = await ctx.People.ToListAsync();
+        _loading = false;
+    }
+
+    async Task<EventCallback> EditCell(Person cell)
+    {
+        await EditItem(cell.PersonId);
+        return EventCallback.Empty;
+    }
+    async Task AddItem()
+    {
+        await EditItem(0);
+    }
+
+    async Task EditItem(int id)
+    {
+        var parameters = new DialogParameters<PersonEdit> { { x => x.Id, id } };
+        var dialog = await DialogService.ShowAsync<PersonEdit>("Edit", parameters);
+        var result = await dialog.Result;
+        if (!result.Canceled)
+        {
+            await Refresh();
+        }
+
+    }
+
+
+}

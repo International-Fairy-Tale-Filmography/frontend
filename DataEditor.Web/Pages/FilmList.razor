@@ -1,0 +1,77 @@
+﻿@page "/film"
+
+@using Microsoft.EntityFrameworkCore
+@using Data.Core.Models
+@inject DataEditorDataContext ctx
+@inject IDialogService DialogService
+@inject GitEntityService ges
+
+<h3>Film List</h3>
+
+<MudButton OnClick="@AddItem" Color="@Color.Success" Class="add-item-btn">Add Item</MudButton>
+
+<MudDataGrid T="Film" Items="@Items" ReadOnly="true" Virtualize="true"
+             Bordered="true" Dense="true" Loading="_loading">
+    <Columns>
+        <TemplateColumn CellClass="d-flex justify-end">
+            <CellTemplate>
+                <MudIconButton Size="@Size.Small" Icon="@Icons.Material.Outlined.Edit" OnClick="@((e) => EditCell(context.Item))" />
+            </CellTemplate>
+        </TemplateColumn>
+        <PropertyColumn Property="x => x.Title"  />
+        <PropertyColumn Property="x => x.OtherTitle" Required="false"/>
+        <PropertyColumn Property="x => x.Color"/>
+        <PropertyColumn Property="x => x.ReleaseYear"/>
+        <PropertyColumn Property="x => x.Duration"/> 
+        <PropertyColumn Property="x => x.Mode"/>
+        <PropertyColumn Property="x => x.Published"/>
+
+    </Columns>
+    <PagerContent>
+        <MudDataGridPager T="Film" />
+    </PagerContent>
+</MudDataGrid>
+
+
+@code {
+    public bool _loading { get; set; }
+
+    public List<Film> Items { get; set; } = new();
+    protected override async Task OnInitializedAsync()
+    {
+        await Refresh();
+    }
+
+    async Task Refresh()
+    {
+        _loading = true;
+        Thread.Sleep(10);
+        await ges.SeedDataFromGit<Film>();
+        Items = await ctx.Films.ToListAsync();
+        _loading = false;
+    }
+
+    async Task<EventCallback> EditCell(Film cell)
+    {
+        await EditItem(cell.FilmId);
+        return EventCallback.Empty;
+    }
+    async Task AddItem()
+    {
+         await EditItem(0);
+    }
+
+    async Task  EditItem(int id)
+    {
+        var parameters = new DialogParameters<FilmEdit> { { x => x.Id, id } };
+        var dialog = await DialogService.ShowAsync<FilmEdit>("Edit", parameters);
+        var result = await dialog.Result;
+        if (!result.Canceled)
+        {
+            await Refresh();
+        }
+        
+    }
+    
+
+}
