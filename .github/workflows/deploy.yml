@@ -23,7 +23,7 @@ jobs:
         run: dotnet publish FrontEnd.Web/FrontEnd.Web.csproj -c Release -o releasefrontend --nologo
 
       - name: Copy FrontEnd
-        run: cp -R releasefrontend/wwwroot release/wwwroot/frontend
+        run: mkdir -p release/wwwroot/frontend && cp -R releasefrontend/wwwroot release/wwwroot/frontend
 
       - name: Publish DataEditor
         run: dotnet publish DataEditor.Web/DataEditor.Web.csproj -c Release -o releasedataeditor --nologo
