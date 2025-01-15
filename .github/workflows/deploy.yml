@@ -19,10 +19,10 @@ jobs:
           dotnet-version: "8.0.x"
 
       - name: Create frontend Directory
-        run: mkdir -p release/wwwroot/frontend
+        run: mkdir -p wwwroot/frontend
 
       - name: Create dataeditor Directory
-        run: mkdir -p release/wwwroot/dataeditor
+        run: mkdir -p wwwroot/dataeditor
 
 
       # publishes Blazor project to the release folder
@@ -30,13 +30,13 @@ jobs:
         run: dotnet publish FrontEnd.Web/FrontEnd.Web.csproj -c Release -o releasefrontend --nologo
 
       - name: Copy FrontEnd
-        run: cp -R releasefrontend/wwwroot release/wwwroot/frontend
+        run: cp -R releasefrontend/wwwroot wwwroot
 
       - name: Publish DataEditor
         run: dotnet publish DataEditor.Web/DataEditor.Web.csproj -c Release -o releasedataeditor --nologo
 
       - name: Copy DataEditor
-        run: cp -R releasedataeditor/wwwroot release/wwwroot/dataeditor
+        run: cp -R releasedataeditor/wwwroot wwwroot/dataeditor
 
       # changes the base-tag in index.html from '/' to 'BlazorGitHubPagesDemo' to match GitHub Pages repository subdirectory
       #- name: frontend - Change base-tag in index.html from / to BlazorGitHubPagesDemo
@@ -57,7 +57,7 @@ jobs:
 
       # add .nojekyll file to tell GitHub pages to not treat this as a Jekyll project. (Allow files and folders starting with an underscore)
       - name: Add .nojekyll file
-        run: touch release/wwwroot/.nojekyll
+        run: touch wwwroot/.nojekyll
 
       # publishes wwwroot directory to GitHub Pages
       - name: Commit wwwroot to GitHub Pages
@@ -65,4 +65,4 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           branch: gh-pages-${{ github.ref_name }}  # The branch the action should deploy to.
-          folder: release/wwwroot # The folder the action should deploy.
+          folder: wwwroot # The folder the action should deploy.
