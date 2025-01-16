@@ -42,7 +42,7 @@ namespace DataEditor.Core.Services
             sb.AppendLine(await CommitChangesToGit<Person>());
             sb.AppendLine(await CommitChangesToGit<Role>());
 
-            //sb.AppendLine(await CommitChangesToGit<CompanyFilm>());
+            sb.AppendLine(await CommitChangesToGit<CompanyFilm>());
             //sb.AppendLine(await CommitChangesToGit<OriginFilm>());
             //sb.AppendLine(await CommitChangesToGit<CountryFilm>());
             //sb.AppendLine(await CommitChangesToGit<LanguageFilm>());
@@ -62,7 +62,7 @@ namespace DataEditor.Core.Services
                 { typeof(Person), () => CommitChangesToGit( _context.People.OrderBy(i => i.PersonId).ToList(), "Person.csv") },
                 { typeof(Role), () => CommitChangesToGit( _context.Roles.OrderBy(i => i.RoleId).ToList(), "Role.csv") },
 
-                //{ typeof(CompanyFilm), () => CommitChangesToGit( _context.CompanyFilms.OrderBy(i => i.FilmId).ThenBy(i => i.CompanyId).ToList(), "CompanyFilm.csv") },
+                { typeof(CompanyFilm), () => CommitChangesToGit( _context.CompanyFilms.OrderBy(i => i.FilmId).ThenBy(i => i.CompanyId).ToList(), "CompanyFilm.csv") },
                 //{ typeof(OriginFilm), () => CommitChangesToGit( _context.OriginFilms.OrderBy(i => i.FilmId).ThenBy(i => i.OriginId).ToList(), "OriginFilm.csv") },
                 //{ typeof(CountryFilm), () => CommitChangesToGit( _context.CountryFilms.OrderBy(i => i.FilmId).ThenBy(i => i.CountryId).ToList(), "CountryFilm.csv") },
                 //{ typeof(LanguageFilm), () => CommitChangesToGit( _context.LanguageFilms.OrderBy(i => i.FilmId).ThenBy(i => i.LanguageId).ToList(), "LanguageFilm.csv") },
@@ -130,6 +130,7 @@ namespace DataEditor.Core.Services
             {typeof(Origin), "Origin"},
             {typeof(Role), "Role"},
             {typeof(Person), "Person"},
+            {typeof(CompanyFilm), "CompanyFilm"},
         };
 
         public static Dictionary<Type, string> dbSetNames = new Dictionary<Type, string>()
@@ -140,7 +141,8 @@ namespace DataEditor.Core.Services
             {typeof(Language), "Languages"},
             {typeof(Origin), "Origins"},
             {typeof(Person), "People"},
-            {typeof(Role), "Roles"}
+            {typeof(Role), "Roles"},
+            {typeof(CompanyFilm), "CompanyFilms"}
         };
 
         public static HashSet<Type> LoadedFiles = new ();
@@ -155,6 +157,7 @@ namespace DataEditor.Core.Services
                 //get the property method for the appropriate entity
                 var dbSetName = dbSetNames[typeof(T)];
                 var dbSetProperty = _context.GetType().GetProperty(dbSetName);
+
                 var dbSet = dbSetProperty.GetValue(_context);
 
                 //call the dbset's addrange method
@@ -174,7 +177,9 @@ namespace DataEditor.Core.Services
                     await SeedDataFromGit<Role>();
                     await SeedDataFromGit<Person>();
 
-                    await MapCompanyFilms();
+                    await SeedDataFromGit<CompanyFilm>();
+
+                   // await MapCompanyFilms();
                     await MapCountryFilms();
                     await MapLanguageFilms();
                     await MapOriginFilms();
@@ -198,27 +203,27 @@ namespace DataEditor.Core.Services
             return records.ToList();
         }
 
-        private async Task MapCompanyFilms()
-        {
-            var companyFilms = await FetchCsv<CompanyFilm>("CompanyFilm.csv");
+        //private async Task MapCompanyFilms()
+        //{
+        //    var companyFilms = await FetchCsv<CompanyFilm>("CompanyFilm.csv");
 
-            var filmDict = _context.Films.ToDictionary(i => i.FilmId, i => i);
-            var companyDict = _context.Companies.ToDictionary(i => i.CompanyId, i => i);
+        //    var filmDict = _context.Films.ToDictionary(i => i.FilmId, i => i);
+        //    var companyDict = _context.Companies.ToDictionary(i => i.CompanyId, i => i);
 
-            foreach (var i in companyFilms)
-            {
+        //    foreach (var i in companyFilms)
+        //    {
               
-                 var film = filmDict[i.FilmId];
+        //         var film = filmDict[i.FilmId];
 
-                var company = companyDict[i.CompanyId];
+        //        var company = companyDict[i.CompanyId];
 
-                film.Companies.Add(company);
-                //company.Films.Add(film);
-            }
+        //        film.Companies.Add(company);
+        //        //company.Films.Add(film);
+        //    }
 
-            LoadedFiles.Add(typeof(CompanyFilm));
+        //    LoadedFiles.Add(typeof(CompanyFilm));
 
-        }
+        //}
 
 
         private async Task MapCountryFilms()

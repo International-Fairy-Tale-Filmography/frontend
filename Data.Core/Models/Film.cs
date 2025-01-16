@@ -17,7 +17,7 @@ public class Film
     public string Comment { get; set; }
     public bool? Published { get; set; }
 
-    public List<Company> Companies { get; set; } = new();
+    public List<CompanyFilm> Companies { get; set; } = new();
     public List<Country> Countries { get; set; } = new();
     public List<Language> Languages { get; set; } = new();
     public List<Origin> Origins { get; set; } = new();
