@@ -23,9 +23,11 @@ public class DataEditorDataContext : DbContext
     public new DbSet<Origin> Origins { get; set; } 
     public new DbSet<Person> People { get; set; } 
     public new DbSet<Role> Roles { get; set; } 
-    public new DbSet<FilmCompany> CompanyFilms { get; set; } 
-    public new DbSet<FilmOrigin> OriginFilms { get; set; } 
-    public new DbSet<FilmCountry> CountryFilms { get; set; } 
-    public new DbSet<FilmLanguage> LanguageFilms { get; set; } 
-    //public new DbSet<PersonFilmRole> PersonFilmRoles { get; set; } 
+
+    public new DbSet<FilmLink> FilmLinks { get; set; } 
+    public new DbSet<FilmCompany> FilmCompanies { get; set; } 
+    public new DbSet<FilmOrigin> FilmOrigins { get; set; } 
+    public new DbSet<FilmCountry> FilmCountries { get; set; } 
+    public new DbSet<FilmLanguage> FilmLanguages { get; set; } 
+    public new DbSet<FilmPersonRole> FilmPersonRoles { get; set; } 
 }

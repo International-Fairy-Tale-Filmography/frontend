@@ -1,5 +1,4 @@
 ﻿using CsvHelper.Configuration.Attributes;
-using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -10,24 +9,16 @@ using System.Threading.Tasks;
 
 namespace Data.Core.Models
 {
-    [PrimaryKey("FilmId", "PersonId","RoleId")]
-    public class FilmPersonRole
+    public class FilmLink
     {
+        [Key] 
+        public int LinkId { get; set; }
+
         [Ignore]
         [ForeignKey("FilmId")]
         public virtual Film Film { get; set; }
-
-        [Ignore]
-        [ForeignKey("PersonId")]
-        public virtual Person Person { get; set; }
-
-        [Ignore]
-        [ForeignKey("RoleId")]
-        public virtual Role Role { get; set; }
-
-
         public int FilmId { get; set; }
-        public int PersonId { get; set; }
-        public int RoleId { get; set; }
+
+        public string Url { get; set; }
     }
 }
