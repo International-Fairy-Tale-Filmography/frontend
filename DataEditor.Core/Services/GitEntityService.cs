@@ -42,7 +42,7 @@ namespace DataEditor.Core.Services
             sb.AppendLine(await CommitChangesToGit<Person>());
             sb.AppendLine(await CommitChangesToGit<Role>());
 
-            sb.AppendLine(await CommitChangesToGit<CompanyFilm>());
+            sb.AppendLine(await CommitChangesToGit<FilmCompany>());
             //sb.AppendLine(await CommitChangesToGit<OriginFilm>());
             //sb.AppendLine(await CommitChangesToGit<CountryFilm>());
             //sb.AppendLine(await CommitChangesToGit<LanguageFilm>());
@@ -62,7 +62,7 @@ namespace DataEditor.Core.Services
                 { typeof(Person), () => CommitChangesToGit( _context.People.OrderBy(i => i.PersonId).ToList(), "Person.csv") },
                 { typeof(Role), () => CommitChangesToGit( _context.Roles.OrderBy(i => i.RoleId).ToList(), "Role.csv") },
 
-                { typeof(CompanyFilm), () => CommitChangesToGit( _context.CompanyFilms.OrderBy(i => i.FilmId).ThenBy(i => i.CompanyId).ToList(), "CompanyFilm.csv") },
+                { typeof(FilmCompany), () => CommitChangesToGit( _context.CompanyFilms.OrderBy(i => i.FilmId).ThenBy(i => i.CompanyId).ToList(), "CompanyFilm.csv") },
                 //{ typeof(OriginFilm), () => CommitChangesToGit( _context.OriginFilms.OrderBy(i => i.FilmId).ThenBy(i => i.OriginId).ToList(), "OriginFilm.csv") },
                 //{ typeof(CountryFilm), () => CommitChangesToGit( _context.CountryFilms.OrderBy(i => i.FilmId).ThenBy(i => i.CountryId).ToList(), "CountryFilm.csv") },
                 //{ typeof(LanguageFilm), () => CommitChangesToGit( _context.LanguageFilms.OrderBy(i => i.FilmId).ThenBy(i => i.LanguageId).ToList(), "LanguageFilm.csv") },
@@ -130,7 +130,7 @@ namespace DataEditor.Core.Services
             {typeof(Origin), "Origin"},
             {typeof(Role), "Role"},
             {typeof(Person), "Person"},
-            {typeof(CompanyFilm), "CompanyFilm"},
+            {typeof(FilmCompany), "CompanyFilm"},
         };
 
         public static Dictionary<Type, string> dbSetNames = new Dictionary<Type, string>()
@@ -142,7 +142,7 @@ namespace DataEditor.Core.Services
             {typeof(Origin), "Origins"},
             {typeof(Person), "People"},
             {typeof(Role), "Roles"},
-            {typeof(CompanyFilm), "CompanyFilms"}
+            {typeof(FilmCompany), "CompanyFilms"}
         };
 
         public static HashSet<Type> LoadedFiles = new ();
@@ -177,7 +177,7 @@ namespace DataEditor.Core.Services
                     await SeedDataFromGit<Role>();
                     await SeedDataFromGit<Person>();
 
-                    await SeedDataFromGit<CompanyFilm>();
+                    await SeedDataFromGit<FilmCompany>();
 
                    // await MapCompanyFilms();
                     await MapCountryFilms();
@@ -228,7 +228,7 @@ namespace DataEditor.Core.Services
 
         private async Task MapCountryFilms()
         {
-            var companyFilms = await FetchCsv<CountryFilm>("CountryFilm.csv");
+            var companyFilms = await FetchCsv<FilmCountry>("CountryFilm.csv");
 
             var filmDict = _context.Films.ToDictionary(i => i.FilmId, i => i);
             var countryDict = _context.Countries.ToDictionary(i => i.CountryId, i => i);
@@ -243,13 +243,13 @@ namespace DataEditor.Core.Services
                 //country.Films.Add(film);
             }
 
-            LoadedFiles.Add(typeof(CountryFilm));
+            LoadedFiles.Add(typeof(FilmCountry));
 
         }
 
         private async Task MapLanguageFilms()
         {
-            var languageFilms = await FetchCsv<LanguageFilm>("LanguageFilm.csv");
+            var languageFilms = await FetchCsv<FilmLanguage>("LanguageFilm.csv");
 
             var filmDict = _context.Films.ToDictionary(i => i.FilmId, i => i);
             var languageDict = _context.Languages.ToDictionary(i => i.LanguageId, i => i);
@@ -274,12 +274,12 @@ namespace DataEditor.Core.Services
               
             }
 
-            LoadedFiles.Add(typeof(LanguageFilm));
+            LoadedFiles.Add(typeof(FilmLanguage));
         }
 
         private async Task MapOriginFilms()
         {
-            var OriginFilms = await FetchCsv<OriginFilm>("OriginFilm.csv");
+            var OriginFilms = await FetchCsv<FilmOrigin>("OriginFilm.csv");
 
             var filmDict = _context.Films.ToDictionary(i => i.FilmId, i => i);
             var originDict = _context.Origins.ToDictionary(i => i.OriginId, i => i);
@@ -304,7 +304,7 @@ namespace DataEditor.Core.Services
 
             }
 
-            LoadedFiles.Add(typeof(OriginFilm));
+            LoadedFiles.Add(typeof(FilmOrigin));
         }
 
     }

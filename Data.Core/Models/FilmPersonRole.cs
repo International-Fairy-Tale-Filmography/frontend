@@ -10,10 +10,10 @@ using System.Threading.Tasks;
 namespace Data.Core.Models
 {
     [PrimaryKey("PersonId","FilmId","RoleId")]
-    public class PersonFilmRole
+    public class FilmPersonRole
     {
-        public int PersonId { get; set; }
         public int FilmId { get; set; }
+        public int PersonId { get; set; }
         public int RoleId { get; set; }
 
         //[ForeignKey("RoleId")]

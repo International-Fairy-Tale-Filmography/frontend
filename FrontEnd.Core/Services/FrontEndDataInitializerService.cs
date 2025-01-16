@@ -40,7 +40,7 @@ public class FrontEndDataInitializerService(FrontEndDataContext context, HttpCli
 
     private async Task MapCompanyFilms()
     {
-        var companyFilms = await FetchCsv<CompanyFilm>("CompanyFilm");
+        var companyFilms = await FetchCsv<FilmCompany>("CompanyFilm");
 
         var filmDict = context.Films.ToDictionary(i => i.FilmId, i => i);
         var companyDict = context.Companies.ToDictionary(i => i.CompanyId, i => i);
@@ -60,7 +60,7 @@ public class FrontEndDataInitializerService(FrontEndDataContext context, HttpCli
 
     private async Task MapCountryFilms()
     {
-        var companyFilms = await FetchCsv<CountryFilm>("CountryFilm");
+        var companyFilms = await FetchCsv<FilmCountry>("CountryFilm");
 
         var filmDict = context.Films.ToDictionary(i => i.FilmId, i => i);
         var countryDict = context.Countries.ToDictionary(i => i.CountryId, i => i);

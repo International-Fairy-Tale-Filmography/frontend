@@ -7,10 +7,11 @@ using System.Threading.Tasks;
 
 namespace Data.Core.Models
 {
-    [PrimaryKey("OriginId", "FilmId")]
-    public class OriginFilm
+    [PrimaryKey("LanguageId", "FilmId")]
+    public class FilmLanguage
     {
-        public int OriginId { get; set; }
         public int FilmId { get; set; }
+        public int LanguageId { get; set; }
+        
     }
 }

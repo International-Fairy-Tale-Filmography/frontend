@@ -4,8 +4,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Data.Core.Models;
 
-[PrimaryKey("CompanyId", "FilmId")]
-public class CompanyFilm
+[PrimaryKey("FilmId", "CompanyId")]
+public class FilmCompany
 {
     [Ignore]
     [ForeignKey("CompanyId")]
