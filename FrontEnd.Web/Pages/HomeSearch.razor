@@ -2,9 +2,11 @@
 @using FrontEnd.Core.Services
 @using Microsoft.EntityFrameworkCore
 @using Data.Core.Models
+@using System.Text.Encodings.Web
+@using System.Web
 @inject HttpClient Http
 @inject FrontEndDataContext context
-
+@inject FrontEndDataInitializerService fedis
 @* @if (ds != null)
 {
     <p>
@@ -48,9 +50,9 @@ else
         {
             <li>
 
-                <a class="nopad" href="/Home/Film/@i.FilmId"><i class="bi bi-film"></i></a>
+                <a class="nopad" href="/Film/@HttpUtility.UrlEncode(i.Title)/@i.FilmId"><i class="bi bi-film"></i></a>
                 <em>
-                    <a class="italics" href="/Home/Film/@i.FilmId">@i.Title (@i.ReleaseYear)</a>
+                    <a class="italics" href="/Film/@HttpUtility.UrlEncode(i.Title)/@i.FilmId">@i.Title (@i.ReleaseYear)</a>
                 </em>
 
                 @*   1979.
@@ -60,7 +62,7 @@ else
             <a class="nopad" href="/Search/ByCountry/996">East Germany</a>:
         *@
 
-                @foreach (var j in i.Countries)
+               @*  @foreach (var j in i.Countries)
                 {
 
                     <span> - </span>
@@ -76,7 +78,7 @@ else
                     <a class="nopad" href="/Search/ByCompany/@j.CompanyId">
                         @j.Name
                     </a>
-                }
+                } *@
 
                 .
 
@@ -95,27 +97,12 @@ else
     private string searchTitle = "";
 
     private List<Film> results = new List<Film>();
-    private async Task Fetch()
-    {
- 
-        await Task.Delay(1);
 
-
-        if (!context.Films.Any())
-        {
-            var baseUrl = "https://international-fairy-tale-filmography.github.io/data/csv/";
-            var svc = new FrontEndDataInitializerService(context, Http, baseUrl);
-            await svc.FetchData();
-        }
-        
-        
-    }
 
     protected override async Task OnInitializedAsync()
     {
         await Task.Delay(1);
-
-        await Fetch();
+        await fedis.FetchData();
         await Search();
     }
 

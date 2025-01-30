@@ -1,0 +1,199 @@
+﻿@page "/Film/{slugparam}/{idparam}"
+
+@using FrontEnd.Core.Services
+@using FrontEnd.Core.Data
+@using Data.Core.Models
+@inject FrontEndDataInitializerService fedis
+@inject FrontEndDataContext context
+<h3>Film</h3>
+
+
+@if (!isLoading)
+{
+    @if (SelectedFilm != null)
+    {
+        <div class="container" id="body">
+
+            
+
+            <div class="row">
+                <div class="span12">
+                    <h2>@SelectedFilm.Title</h2>
+                </div>
+            </div>
+
+            <div class="row">
+
+                <div class="span8">
+
+                    <div class="row film-data">
+                        <div class="span1">
+                            Director(s):
+                        </div>
+                        <div class="span7 ">
+                            <span class="film-info">
+                                <a href="/Search/ByDirector/7783">###TODO###</a>
+                            </span>
+                        </div>
+
+                    </div>
+
+
+                    <div class="row film-data">
+                        <div class="span1">
+                            Country(s):
+                        </div>
+                        <div class="span7 film-info">
+                            <span class="film-info">
+                                <a href="/Search/ByCountry/996">###TODO###</a>
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="row film-data">
+                        <div class="span1">
+                            Company(s):
+                        </div>
+                        <div class="span7 film-info">
+                            <span class="film-info">
+                                <a href="/Search/ByCompany/293">###TODO###</a>
+                            </span>
+                        </div>
+                    </div>
+
+
+
+                    <div class="row film-data">
+                        <div class="span1">
+                            Colour:
+                        </div>
+                        <div class="span7 film-info">
+                            <span class="film-info">
+                                @SelectedFilm.Color
+                            </span>
+                        </div>
+                    </div>
+
+
+                    <div class="row film-data">
+                        <div class="span1">
+                            Mode:
+                        </div>
+                        <div class="span7 film-info">
+                            <span class="film-info">
+                                @SelectedFilm.Mode
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="row film-data">
+                        <div class="span1">
+                            Duration:
+                        </div>
+                        <div class="span7 film-info">
+                            <span class="film-info">
+                                @SelectedFilm.Duration
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="row film-data">
+                        <div class="span1">
+                            Origin(s):
+                        </div>
+                        <div class="span7">
+                            <span class="film-info">
+                                <a href="/Search/ByOrigin/1456">###TODO###</a>
+                            </span>
+                        </div>
+                    </div>
+
+
+                    <div class="row film-data">
+                        <div class="span1">
+                            Language(s):
+                        </div>
+                        <div class="span7">
+                            <span class="film-info">
+                                <a href="/Search/ByLanguage/40">###TODO###</a>
+                            </span>
+                        </div>
+                    </div>
+
+
+                    <div class="row film-data">
+                        <div class="span1">
+                            Link(s):
+                        </div>
+                        <div class="span7 film-info">
+
+                            <ul class="link-list unstyled">
+                                ###TODO###
+                            </ul>
+
+
+
+                        </div>
+                    </div>
+
+
+
+                </div>
+
+                PEOPLE ###TODO###
+                <div class="span4">
+
+                    <div class="cast-container">
+
+                        <h5>Screenwriter</h5>
+                        <ul>
+                            <li>
+                                <a href="/Search/ByPerson/7783">###TODO###</a>
+                            </li>
+                        </ul>
+                        <h5>Music</h5>
+                        <ul>
+                            <li>
+                                <a href="/Search/ByPerson/25497">###TODO###</a>
+                            </li>
+                        </ul>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div id="scrollToTop"></div>
+        </div>
+
+    }
+    else
+    {
+        <p>Film Not Found</p>
+    }
+
+
+}
+
+@code {
+
+    [Parameter]
+    public string slugParam { get; set; }
+
+    [Parameter]
+    public string idParam { get; set; }
+
+    private bool isLoading = true;
+    public Film SelectedFilm { get; set; }
+    protected override async Task OnInitializedAsync()
+    {
+        
+        await Task.Delay(1);
+        await fedis.FetchData();
+
+        SelectedFilm = context.Films.FirstOrDefault(i => i.FilmId == int.Parse(idParam));
+
+        isLoading = false;
+
+    }
+}
