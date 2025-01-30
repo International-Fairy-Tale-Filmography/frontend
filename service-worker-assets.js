@@ -33,7 +33,7 @@
       "url": "_framework\/icudt_no_CJK.dat"
     },
     {
-      "hash": "sha256-alcVwae\/Qa35aPGrtZI410GpdcDTisJhO+2TYK\/+6\/8=",
+      "hash": "sha256-VMPFq9a2QcQVxjZQhDO89q8RleLdHRsoYXqVDHZT2Dc=",
       "url": "_framework\/blazor.boot.json"
     },
     {
@@ -41,15 +41,15 @@
       "url": "_framework\/CsvHelper.wasm"
     },
     {
-      "hash": "sha256-ERgRm29z5my2DQn5+VxbgFhtJvc\/xEzameaiS89vdWU=",
+      "hash": "sha256-Uc0OHTE54\/1vk6yMdp+gp7RgZD9jAitw8bi+S7h3+Ek=",
       "url": "_framework\/Data.Core.wasm"
     },
     {
-      "hash": "sha256-bVaPV\/kmGp3lGL0aavBMGbVNE4eg2zesdvgjVzzIk7o=",
+      "hash": "sha256-vxogzXvy9W0doWI08K98YbqjX83kexwdvcPii1x2fNY=",
       "url": "_framework\/FrontEnd.Core.wasm"
     },
     {
-      "hash": "sha256-sPWVpXYhl43s4AbatiwGol0vlmRaIciuLkCVzorJmU8=",
+      "hash": "sha256-UWEjXh5YQBlOwarRR08OwAr1qmKre7zC8Fsmv1x0NLk=",
       "url": "_framework\/FrontEnd.Web.wasm"
     },
     {
@@ -101,7 +101,7 @@
       "url": "_framework\/Microsoft.Extensions.Configuration.wasm"
     },
     {
-      "hash": "sha256-q9VUcW80q0N\/KrOVAeFUhXJJW10IuXNK1JPW1cI28MU=",
+      "hash": "sha256-Oy97AXXwF9gQAuZnA10bZn5EJ7yyXpVg8+9aICOCNdE=",
       "url": "_framework\/Microsoft.Extensions.DependencyInjection.Abstractions.wasm"
     },
     {
@@ -153,7 +153,7 @@
       "url": "_framework\/System.Collections.wasm"
     },
     {
-      "hash": "sha256-acZ\/O5tR2IlJP3ipal0ERlhfubpkCPnjt4l6dQNtH3s=",
+      "hash": "sha256-MbwfWEcmEQDTv1GCXO7AD7\/Orejh7zapnLnm1bCGiDg=",
       "url": "_framework\/System.ComponentModel.Annotations.wasm"
     },
     {
@@ -289,6 +289,10 @@
       "url": "_framework\/System.wasm"
     },
     {
+      "hash": "sha256-M7wJ9KFzlNxzsXl381LPHG+RL1ySearskJQWE12LEIY=",
+      "url": "_framework\/System.Web.HttpUtility.wasm"
+    },
+    {
       "hash": "sha256-GN+HczP2Dec1YsfAglejPgLvXM+hL4bCwvyOLLKBBMU=",
       "url": "FrontEnd.Web.styles.css"
     },
@@ -341,5 +345,5 @@
       "url": "sample-data\/weather.json"
     }
   ],
-  "version": "wiCRXHRW"
+  "version": "Gj2tLgFu"
 };
