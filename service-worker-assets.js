@@ -33,7 +33,7 @@
       "url": "_framework\/icudt_no_CJK.dat"
     },
     {
-      "hash": "sha256-VMPFq9a2QcQVxjZQhDO89q8RleLdHRsoYXqVDHZT2Dc=",
+      "hash": "sha256-wzgt0368MsdBrIn9RGuq5cihIA83RGZAEdpW9eHuruE=",
       "url": "_framework\/blazor.boot.json"
     },
     {
@@ -41,15 +41,15 @@
       "url": "_framework\/CsvHelper.wasm"
     },
     {
-      "hash": "sha256-Uc0OHTE54\/1vk6yMdp+gp7RgZD9jAitw8bi+S7h3+Ek=",
+      "hash": "sha256-dEVadA9cRhXK95MRorE71rtFjVIERVcSxDVeb5MDTQQ=",
       "url": "_framework\/Data.Core.wasm"
     },
     {
-      "hash": "sha256-vxogzXvy9W0doWI08K98YbqjX83kexwdvcPii1x2fNY=",
+      "hash": "sha256-BH2zzOYL0PSR5iN+m+SAo1na0V53jvBfA1twhf4M8gk=",
       "url": "_framework\/FrontEnd.Core.wasm"
     },
     {
-      "hash": "sha256-UWEjXh5YQBlOwarRR08OwAr1qmKre7zC8Fsmv1x0NLk=",
+      "hash": "sha256-AtLmsYkLbkxuSrgrB9Rlk2peVzGyZJ7GH0kqvA3L8Wk=",
       "url": "_framework\/FrontEnd.Web.wasm"
     },
     {
@@ -329,7 +329,7 @@
       "url": "img\/hugo-george-melies.png"
     },
     {
-      "hash": "sha256-I9o2cv0YUjeGn9YWw69HMm8E9g3G\/vPkXKEf6Fn\/pJQ=",
+      "hash": "sha256-aR0WVzkWs++zFBaHZVvU7xDHCNc3ZtWnucf1cORzISc=",
       "url": "index.html"
     },
     {
@@ -345,5 +345,5 @@
       "url": "sample-data\/weather.json"
     }
   ],
-  "version": "Gj2tLgFu"
+  "version": "ZIDFxzjR"
 };
