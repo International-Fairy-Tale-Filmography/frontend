@@ -1,6 +1,7 @@
 ﻿using System.Globalization;
 using CsvHelper;
 using CsvHelper.Configuration;
+using Data.Core.Configuration;
 using Data.Core.Models;
 using FrontEnd.Core.Configuration;
 using FrontEnd.Core.Data;
@@ -26,50 +27,47 @@ public class FrontEndDataInitializerService
             return;
         }
 
-        _context.Companies.AddRange(await FetchCsv<Company>("Companies"));
-        _context.Countries.AddRange(await FetchCsv<Country>("Countries"));
-        _context.Films.AddRange(await FetchCsv<Film>("Films"));
-        _context.Languages.AddRange(await FetchCsv<Language>("Languages"));
-        _context.Origins.AddRange(await FetchCsv<Origin>("Origins"));
-        _context.People.AddRange(await FetchCsv<Person>("People"));
+        _context.Companies.AddRange(await FetchCsv<Company>());
+        _context.Countries.AddRange(await FetchCsv<Country>());
+        _context.Films.AddRange(await FetchCsv<Film>());
+        _context.Languages.AddRange(await FetchCsv<Language>());
+        _context.Origins.AddRange(await FetchCsv<Origin>());
+        _context.People.AddRange(await FetchCsv<Person>());
+        _context.Roles.AddRange(await FetchCsv<Role>());
 
 
-        //await MapCompanyFilms();
+        await MapCompanyFilms();
         //await MapCountryFilms();
     }
 
-    private async Task<List<T>> FetchCsv<T>(string name)
+    private async Task<List<T>> FetchCsv<T>()
     {
-        var response = await _httpClient.GetStringAsync($"{_settings.CsvBaseUrl}/{name}.csv");
+        var response = await _httpClient.GetStringAsync($"{_settings.CsvBaseUrl}/{CoreSettings.dbSetNames[typeof(T)]}.csv");
 
         using var reader = new StringReader(response);
 
         using var csv = new CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture));
-
 
         var records = csv.GetRecords<T>();
 
         return records.ToList();
     }
 
-    //private async Task MapCompanyFilms()
-    //{
-    //    //var companyFilms = await FetchCsv<FilmCompany>("CompanyFilm");
+    private async Task MapCompanyFilms()
+    {
+        var filmCompanies = await FetchCsv<FilmCompany>();
 
-    //    //var filmDict = _context.Films.ToDictionary(i => i.FilmId, i => i);
-    //    //var companyDict = _context.Companies.ToDictionary(i => i.CompanyId, i => i);
+        var filmDict = _context.Films.ToDictionary(i => i.FilmId, i => i);
+        var companyDict = _context.Companies.ToDictionary(i => i.CompanyId, i => i);
 
-    //    //foreach (var i in companyFilms)
-    //    //{
-    //    //    var film = filmDict[i.FilmId];
+        foreach (var i in filmCompanies)
+        {
+            i.Film = filmDict[i.FilmId];
+            i.Company = companyDict[i.CompanyId];
+            i.Film.Companies.Add(i);
+        }
 
-    //    //    var company = companyDict[i.CompanyId];
-
-    //    //    film.Companies.Add(company);
-    //    //    company.Films.Add(film);
-    //    //}
-
-    //}
+    }
 
 
     //private async Task MapCountryFilms()

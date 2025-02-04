@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using System.Xml.Linq;
 using CsvHelper;
 using CsvHelper.Configuration;
+using Data.Core.Configuration;
 using Data.Core.Models;
 using Microsoft.EntityFrameworkCore;
 using Octokit;
@@ -87,7 +88,7 @@ namespace DataEditor.Core.Services
                 return "";
             }
 
-            var filename = $"{dbSetNames[typeof(T)]}.csv";
+            var filename = $"{CoreSettings.dbSetNames[typeof(T)]}.csv";
             var file = await GetFileByName(filename);
 
             //var films = await context.Films.ToListAsync();
@@ -124,22 +125,7 @@ namespace DataEditor.Core.Services
         }
 
 
-        public static Dictionary<Type, string> dbSetNames = new Dictionary<Type, string>()
-        {
-            {typeof(Company), "Companies"},
-            {typeof(Country), "Countries"},
-            {typeof(Film), "Films"},
-            {typeof(Language), "Languages"},
-            {typeof(Origin), "Origins"},
-            {typeof(Person), "People"},
-            {typeof(Role), "Roles"},
-            {typeof(FilmLink), "FilmLinks"},
-            {typeof(FilmCompany), "FilmCompanies"},
-            {typeof(FilmCountry), "FilmCountries"},
-            {typeof(FilmLanguage), "FilmLanguages"},
-            {typeof(FilmOrigin), "FilmOrigins"},
-            {typeof(FilmPersonRole), "FilmPersonRoles"}
-        };
+
 
         public static HashSet<Type> LoadedFiles = new ();
 
@@ -148,10 +134,10 @@ namespace DataEditor.Core.Services
         {
             if (!LoadedFiles.Contains(typeof(T)))
             {
-                var entities = await FetchCsv<T>($"{dbSetNames[typeof(T)]}.csv");
+                var entities = await FetchCsv<T>($"{CoreSettings.dbSetNames[typeof(T)]}.csv");
 
                 //get the property method for the appropriate entity
-                var dbSetName = dbSetNames[typeof(T)];
+                var dbSetName = CoreSettings.dbSetNames[typeof(T)];
                 var dbSetProperty = _context.GetType().GetProperty(dbSetName);
 
                 var dbSet = dbSetProperty.GetValue(_context);

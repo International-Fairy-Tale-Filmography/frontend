@@ -56,7 +56,11 @@
                         </div>
                         <div class="span7 film-info">
                             <span class="film-info">
-                                <a href="/Search/ByCompany/293">###TODO###</a>
+                                @foreach (var i in SelectedFilm.Companies)
+                                {
+                                    <a href="/Search/ByCompany/@i.Company.CompanyId">@i.Company.Name</a>
+                                }
+                               
                             </span>
                         </div>
                     </div>
