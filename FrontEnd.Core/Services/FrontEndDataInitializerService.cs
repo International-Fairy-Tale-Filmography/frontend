@@ -35,9 +35,12 @@ public class FrontEndDataInitializerService
         _context.People.AddRange(await FetchCsv<Person>());
         _context.Roles.AddRange(await FetchCsv<Role>());
 
-
-        await MapCompanyFilms();
-        //await MapCountryFilms();
+        await MapFilmCompany();
+        await MapFilmCountry();
+        await MapFilmLanguage();
+        await MapFilmLink();
+        await MapFilmOrigin();
+        await MapFilmPersonRole();
     }
 
     private async Task<List<T>> FetchCsv<T>()
@@ -53,42 +56,125 @@ public class FrontEndDataInitializerService
         return records.ToList();
     }
 
-    private async Task MapCompanyFilms()
+    private async Task MapFilmCompany()
     {
-        var filmCompanies = await FetchCsv<FilmCompany>();
+        var filmCompanyList = await FetchCsv<FilmCompany>();
 
         var filmDict = _context.Films.ToDictionary(i => i.FilmId, i => i);
         var companyDict = _context.Companies.ToDictionary(i => i.CompanyId, i => i);
 
-        foreach (var i in filmCompanies)
+        foreach (var i in filmCompanyList)
         {
             i.Film = filmDict[i.FilmId];
             i.Company = companyDict[i.CompanyId];
             i.Film.Companies.Add(i);
         }
-
     }
 
+    private async Task MapFilmLink()
+    {
+        var filmLinkList = await FetchCsv<FilmLink>();
 
-    //private async Task MapCountryFilms()
-    //{
-    //    //var companyFilms = await FetchCsv<FilmCountry>("CountryFilm");
+        var filmDict = _context.Films.ToDictionary(i => i.FilmId, i => i);
 
-    //    //var filmDict = _context.Films.ToDictionary(i => i.FilmId, i => i);
-    //    //var countryDict = _context.Countries.ToDictionary(i => i.CountryId, i => i);
+        foreach (var i in filmLinkList)
+        {
+            i.Film = filmDict[i.FilmId];
+            i.Film.Links.Add(i);
+        }
+    }
 
-    //    //foreach (var i in companyFilms)
-    //    //{
-    //    //    var film = filmDict[i.FilmId];
+    private async Task MapFilmCountry()
+    {
+        var filmCountryList = await FetchCsv<FilmCountry>();
 
-    //    //    var country = countryDict[i.CountryId];
+        var filmDict = _context.Films.ToDictionary(i => i.FilmId, i => i);
+        var countryDict = _context.Countries.ToDictionary(i => i.CountryId, i => i);
 
-    //    //    film.Countries.Add(country);
-    //    //    country.Films.Add(film);
-    //    //}
+        foreach (var i in filmCountryList)
+        {
+            i.Film = filmDict[i.FilmId];
+            i.Country = countryDict[i.CountryId];
+            i.Film.Countries.Add(i);
+        }
+    }
 
-    //}
+    private async Task MapFilmLanguage()
+    {
+        var filmLanguageList = await FetchCsv<FilmLanguage>();
 
+        var filmDict = _context.Films.ToDictionary(i => i.FilmId, i => i);
+        var languageDict = _context.Languages.ToDictionary(i => i.LanguageId, i => i);
 
+        foreach (var i in filmLanguageList)
+        {
+            i.Film = filmDict[i.FilmId];
+
+            try
+            {
+                i.Language = languageDict[i.LanguageId];
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error for film {i.FilmId}: Language {i.LanguageId} not found");
+                continue;
+            }
+
+            i.Film.Languages.Add(i);
+
+        }
+    }
+
+    private async Task MapFilmOrigin()
+    {
+        var filmOriginList = await FetchCsv<FilmOrigin>();
+
+        var filmDict = _context.Films.ToDictionary(i => i.FilmId, i => i);
+        var originDict = _context.Origins.ToDictionary(i => i.OriginId, i => i);
+
+        foreach (var i in filmOriginList)
+        {
+            i.Film = filmDict[i.FilmId];
+            i.Origin = originDict[i.OriginId];
+            i.Film.Origins.Add(i);
+        }
+    }
+
+    private async Task MapFilmPersonRole()
+    {
+        var filmPersonRole = await FetchCsv<FilmPersonRole>();
+
+        var filmDict = _context.Films.ToDictionary(i => i.FilmId, i => i);
+        var peopleDict = _context.People.ToDictionary(i => i.PersonId, i => i);
+        var roleDict = _context.Roles.ToDictionary(i => i.RoleId, i => i);
+
+        foreach (var i in filmPersonRole)
+        {
+            i.Film = filmDict[i.FilmId];
+
+            try
+            {
+                i.Person = peopleDict[i.PersonId];
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error for film {i.FilmId}: Person {i.PersonId} not found");
+                continue;
+            }
+
+            try
+            {
+                i.Role = roleDict[i.RoleId];
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error for film {i.FilmId}: Role {i.RoleId} not found");
+                continue;
+            }
+
+          
+            i.Film.PeopleRoles.Add(i);
+        }
+    }
 
 }

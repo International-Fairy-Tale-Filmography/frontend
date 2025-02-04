@@ -1,5 +1,6 @@
 ﻿@page "/Film/{slugparam}/{idparam}"
 
+@using Data.Core.Configuration
 @using FrontEnd.Core.Services
 @using FrontEnd.Core.Data
 @using Data.Core.Models
@@ -32,7 +33,11 @@
                         </div>
                         <div class="span7 ">
                             <span class="film-info">
-                                <a href="/Search/ByDirector/7783">###TODO###</a>
+                                @foreach (var i in SelectedFilm.PeopleRoles.Where(j => j.RoleId == CoreSettings.DirectorRoleId))
+                                {
+                                    <a href="/Search/ByDirector/7783">@i.Person.FirstName @i.Person.LastName</a>
+                                }
+                                
                             </span>
                         </div>
 
@@ -45,7 +50,11 @@
                         </div>
                         <div class="span7 film-info">
                             <span class="film-info">
-                                <a href="/Search/ByCountry/996">###TODO###</a>
+                                @foreach (var i in SelectedFilm.Countries)
+                                {
+                                    <a href="/Search/ByCountry/996">@i.Country.Name</a>
+                                }
+                                
                             </span>
                         </div>
                     </div>
@@ -107,7 +116,10 @@
                         </div>
                         <div class="span7">
                             <span class="film-info">
-                                <a href="/Search/ByOrigin/1456">###TODO###</a>
+                                @foreach (var i in SelectedFilm.Origins)
+                                {
+                                    <a href="/">@i.Origin.Title</a>
+                                }
                             </span>
                         </div>
                     </div>
@@ -119,7 +131,10 @@
                         </div>
                         <div class="span7">
                             <span class="film-info">
-                                <a href="/Search/ByLanguage/40">###TODO###</a>
+                                @foreach (var i in SelectedFilm.Languages)
+                                {
+                                    <a href="/">@i.Language.Name</a>
+                                }
                             </span>
                         </div>
                     </div>
@@ -132,7 +147,10 @@
                         <div class="span7 film-info">
 
                             <ul class="link-list unstyled">
-                                ###TODO###
+                                @foreach (var i in SelectedFilm.Links)
+                                {
+                                    <a href="@i.Url">@i.Url</a>
+                                }
                             </ul>
 
 
@@ -144,23 +162,20 @@
 
                 </div>
 
-                PEOPLE ###TODO###
+                
                 <div class="span4">
 
                     <div class="cast-container">
+                        @foreach (var i in SelectedFilm.PeopleRoles.Where(i => i.RoleId != CoreSettings.DirectorRoleId))
+                        {
+                            <h5>@i.Role.Name</h5>
+                            <ul>
+                                <li>
+                                    <a href="/Search/ByPerson/7783">@i.Person.FirstName @i.Person.LastName</a>
+                                </li>
+                            </ul>
+                        }
 
-                        <h5>Screenwriter</h5>
-                        <ul>
-                            <li>
-                                <a href="/Search/ByPerson/7783">###TODO###</a>
-                            </li>
-                        </ul>
-                        <h5>Music</h5>
-                        <ul>
-                            <li>
-                                <a href="/Search/ByPerson/25497">###TODO###</a>
-                            </li>
-                        </ul>
                     </div>
 
                 </div>

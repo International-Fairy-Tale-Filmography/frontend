@@ -25,5 +25,7 @@ namespace Data.Core.Configuration
             {typeof(FilmOrigin), "FilmOrigins"},
             {typeof(FilmPersonRole), "FilmPersonRoles"}
         };
+
+        public const int DirectorRoleId = 52;
     }
 }
