@@ -166,7 +166,7 @@
                 <div class="span4">
 
                     <div class="cast-container">
-                        @foreach (var i in SelectedFilm.PeopleRoles.Where(i => i.RoleId != CoreSettings.DirectorRoleId))
+                        @foreach (var i in SelectedFilm.PeopleRoles.Where(i => i.RoleId != CoreSettings.DirectorRoleId).OrderBy(i => i.Role.Order))
                         {
                             <h5>@i.Role.Name</h5>
                             <ul>
