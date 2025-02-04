@@ -1,7 +1,7 @@
 {
   "mainAssemblyName": "FrontEnd.Web",
   "resources": {
-    "hash": "sha256-8dOLrg8QYR5wFeGgsB5fGdDEYtsmVt+EHzzDzKctXd0=",
+    "hash": "sha256-qiMy+HbT1UzE1kp5IcpXfpKRTxWqK2hD/d1T7bAvDWI=",
     "jsModuleNative": {
       "dotnet.native.8.0.12.5019ia6r61.js": "sha256-B6DNRvFeCUi3jbx9uKpuj+hV9cN0KG4RdZj1FgBZwj8="
     },
@@ -18,9 +18,9 @@
     },
     "assembly": {
       "CsvHelper.wasm": "sha256-BXz5RCSFBrg3KCDZD4lxgyWmw1YH6vUT0N/oIQdCKfA=",
-      "Data.Core.wasm": "sha256-Nw9mcaurPBrQAG3pEVV8ktGRXFN1hh2Hd3q7ZHYWMuM=",
-      "FrontEnd.Core.wasm": "sha256-41JhISLhFdHhK93G1kRCxkQVO9usIE8TAaPgRhU+cQw=",
-      "FrontEnd.Web.wasm": "sha256-dBAy2Q4YiubAjPFTpQsi9KTOHK07fwcqBcTBz1WHqe0=",
+      "Data.Core.wasm": "sha256-nZcVp0hF8UCCE1KPEXyxNLYbochIcl1VmozrMDOA6ko=",
+      "FrontEnd.Core.wasm": "sha256-Wvel4Xfj2AxBeAqjOutICfxjm0IFtNwKh595goq4qRs=",
+      "FrontEnd.Web.wasm": "sha256-Gtk3zZUWgXZ6UqB8gLf2AS9cfyYRbA/aQFCEfH8kkNQ=",
       "Microsoft.AspNetCore.Components.wasm": "sha256-AP26bajLXH6AFBYjcI0tB1VT07MMs87YFbBM/Kx4/0o=",
       "Microsoft.AspNetCore.Components.Web.wasm": "sha256-heJqLWtREaqMWEszlxmimrKN1WfguwODEa6pVFaSofE=",
       "Microsoft.AspNetCore.Components.WebAssembly.wasm": "sha256-jqPyVwmLHO1Fi1aVJJjvO01ndXRbEwQIhr6jm5aXhAU=",
@@ -50,7 +50,7 @@
       "System.ComponentModel.Primitives.wasm": "sha256-sAip+Es37QEynei+qJJcbfqk2D2DdORrJAwFpT2W2vE=",
       "System.ComponentModel.TypeConverter.wasm": "sha256-2G/tWD1nc51FsYZAfqaFUddFW0kUlpr3VIVioN0G2bE=",
       "System.ComponentModel.wasm": "sha256-M6CV336lxMRxg5A8IHNGBi2AxSTTuAvDYAz5hPB6LEA=",
-      "System.Console.wasm": "sha256-l4v9A93kQhIqb7bIxs3hHUAcc3c1k34PSWh2CzwTQ8s=",
+      "System.Console.wasm": "sha256-NuHSGBXkH6OGQ/V64uLUpeSqkBSeZjQ3+QF6JCXFFv0=",
       "System.Data.Common.wasm": "sha256-oZ0gaavqnASU7VxilWA+NbBMHYMFJ7YtG8QQU3noGmk=",
       "System.Diagnostics.DiagnosticSource.wasm": "sha256-mWhRtuZRjy+LHRe7juxT2VlbbqldH57kpDyRFMYnzM8=",
       "System.Diagnostics.TraceSource.wasm": "sha256-k457m+QCA0B2kgC9jMs7nxcEPCutP3kG4MhplNt+vjE=",
