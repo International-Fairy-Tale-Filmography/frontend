@@ -58,6 +58,13 @@
 
     public async Task Save()
     {
+        var validationResult = await _service.ValidateToken(_editSettings.AccessToken);
+        if (!validationResult.IsValid)
+        {
+            Snackbar.Add(validationResult.ErrorMessage, Severity.Error);
+            return;
+        }
+
         await _service.SaveConfiguration(_editSettings);
         Snackbar.Add("Token Saved!", Severity.Success);
     }
