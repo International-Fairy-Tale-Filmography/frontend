@@ -3,7 +3,32 @@
 @inject GitService _service
 @inject ISnackbar Snackbar
 
-<MudTextField T="string" Label="Access Token" @bind-Value="_editSettings.AccessToken"></MudTextField>
+<MudTextField T="string" Label="Enter Access Token" @bind-Value="_editSettings.AccessToken"></MudTextField>
+
+<MudPaper Class="mt-4" Elevation="1" Style="max-width: 600px; margin: 0 auto;">
+    <MudText Typo="Typo.h6">How to Obtain a GitHub Access Token</MudText>
+    <MudList T="string">
+        <MudListItem>
+            <MudText>1. Navigate to your GitHub account settings: <MudLink Href="https://github.com/settings/tokens" Target="_blank">Generate a new token</MudLink></MudText>
+        </MudListItem>
+        <MudListItem>
+            <MudText>2. Click on <strong>Generate new token (classic)</strong>.</MudText>
+        </MudListItem>
+        <MudListItem>
+            <MudText>3. Provide a name for the token, e.g., "DataEditor Access".</MudText>
+        </MudListItem>
+        <MudListItem>
+            <MudText>4. Checkbox <strong>public_repo</strong> (under repo) to grant write access to public repositories.</MudText>
+        </MudListItem>
+        <MudListItem>
+            <MudText>5. Click <strong>Generate token</strong> at the bottom of the page.</MudText>
+        </MudListItem>
+        <MudListItem>
+            <MudText>6. Copy the generated token and paste it into the <strong>Access Token</strong> field above.</MudText>
+        </MudListItem>
+    </MudList>
+</MudPaper>
+
 <MudSelect T="string" Label="Branch" @bind-Value="_editSettings.Branch">
     @if (_branches != null)
     {
@@ -14,7 +39,8 @@
     }
 </MudSelect>
 
-<MudButton OnClick="Save" Variant="Variant.Filled" Color="Color.Primary">Save</MudButton>
+<MudButton OnClick="Save" Variant="Variant.Filled" Color="Color.Primary" Class="mt-4">Save</MudButton>
+
 @code {
 
     CoreSettingsModel _settings;
@@ -35,4 +61,5 @@
         await _service.SaveConfiguration(_editSettings);
         Snackbar.Add("Token Saved!", Severity.Success);
     }
+    
 }
