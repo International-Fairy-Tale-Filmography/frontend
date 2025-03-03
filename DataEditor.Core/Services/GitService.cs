@@ -70,4 +70,15 @@ public class GitService
 
         return updateResult;
     }
+
+    public async Task<List<string>> GetBranches()
+    {
+        await GetConfiguration();
+
+        var branches = await _gitHubClient.Repository.Branch.GetAll(_coreSettings.Owner, _coreSettings.RepoName);
+        return branches
+            .Where(b => !b.Name.StartsWith("gh-pages-"))
+            .Select(b => b.Name)
+            .ToList();
+    }
 }

@@ -4,27 +4,30 @@
 @inject ISnackbar Snackbar
 
 <MudTextField T="string" Label="Access Token" @bind-Value="_editSettings.AccessToken"></MudTextField>
-<MudTextField T="string" Label="Owner" @bind-Value="_editSettings.Owner"></MudTextField>
-<MudTextField T="string" Label="Repo Name" @bind-Value="_editSettings.RepoName"></MudTextField>
-<MudTextField T="string" Label="Branch" @bind-Value="_editSettings.Branch"></MudTextField>
-<MudTextField T="string" Label="Folder" @bind-Value="_editSettings.Folder"></MudTextField>
-
+<MudSelect T="string" Label="Branch" @bind-Value="_editSettings.Branch">
+    @if (_branches != null)
+    {
+        @foreach (var branch in _branches)
+        {
+            <MudSelectItem Value="@branch">@branch</MudSelectItem>
+        }
+    }
+</MudSelect>
 
 <MudButton OnClick="Save" Variant="Variant.Filled" Color="Color.Primary">Save</MudButton>
 @code {
 
     CoreSettingsModel _settings;
     CoreSettingsModel _editSettings = new();
+    List<string> _branches = new();
 
     protected override async Task OnInitializedAsync()
     {
         _settings = await _service.GetConfiguration();
-
         _editSettings.AccessToken = _settings.AccessToken;
-        _editSettings.Owner = _settings.Owner;
-        _editSettings.RepoName = _settings.RepoName;
         _editSettings.Branch = _settings.Branch;
-        _editSettings.Folder = _settings.Folder;
+
+        _branches = await _service.GetBranches();
     }
 
     public async Task Save()
