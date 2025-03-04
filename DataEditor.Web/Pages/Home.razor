@@ -1,23 +1,29 @@
 ﻿@page "/"
 @inject GitService service
+@inject NavigationManager Navigation
 <PageTitle>Home</PageTitle>
 
 <h1>Hello, @name!</h1>
 
 Welcome to your new app.
 
-
-
-@code
-{
-
+@code {
     string name;
-    
-    
+
     protected override async Task OnInitializedAsync()
     {
+        // Retrieve the configuration to access the AccessToken
+        await service.GetConfiguration();
+
+        // Check if the AccessToken is null or empty
+        if (string.IsNullOrWhiteSpace(service._coreSettings.AccessToken))
+        {
+            // Redirect to the Settings page if AccessToken is missing
+            Navigation.NavigateTo("/settings");
+            return;
+        }
+
+        // Proceed to get the user's name if AccessToken is valid
         name = await service.GetUser();
     }
-
-
 }
