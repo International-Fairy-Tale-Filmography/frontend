@@ -69,7 +69,7 @@
       "url": "_framework\/icudt_no_CJK.dat"
     },
     {
-      "hash": "sha256-eDfrHRbuLrFXjwg1Lgc5O4MpXMAkk2\/nC7kFZzLTGUk=",
+      "hash": "sha256-muEibjXT6paqsZT\/Zs2QcRMwSG7oH0xjuqSi3YC8mps=",
       "url": "_framework\/blazor.boot.json"
     },
     {
@@ -77,15 +77,15 @@
       "url": "_framework\/CsvHelper.wasm"
     },
     {
-      "hash": "sha256-1oRIgLN2C97p951C56r+LfK237DXw564tzxIl0H2Bns=",
+      "hash": "sha256-osDBusZyYwd\/3QCRhxfV4xIpbx1nYipNFSibj6H51+M=",
       "url": "_framework\/Data.Core.wasm"
     },
     {
-      "hash": "sha256-aJb7ogb+0StKnqy7EpnywfhnL2ezHR3rJ4tbfLUfXCY=",
+      "hash": "sha256-k7BIVnRBPycqFudyHgSSy\/TbrFeuFgTJrnF+FKUnUjY=",
       "url": "_framework\/DataEditor.Core.wasm"
     },
     {
-      "hash": "sha256-eN1uUhdVevZalrxpJqYGxcMzimjeZtbD\/+zE86SX0r8=",
+      "hash": "sha256-cixOz\/a0iVlmD9m3sjEIYLfHEYXxN11qvqy6Bk06+E8=",
       "url": "_framework\/DataEditor.Web.wasm"
     },
     {
@@ -273,11 +273,7 @@
       "url": "_framework\/System.Memory.wasm"
     },
     {
-      "hash": "sha256-8oJ\/JhcrJFvJC+A\/I+UX2LxAHfclePYm1m4RAl20Z64=",
-      "url": "_framework\/System.Net.Http.Json.wasm"
-    },
-    {
-      "hash": "sha256-fNabEJJoiEleSN4rVjbNDfw0EZhfriktedf8V9vxw7A=",
+      "hash": "sha256-kI5g4ROCaB3UP58TccC63P7Z5XJG1\/IrokS+DvlR+q4=",
       "url": "_framework\/System.Net.Http.wasm"
     },
     {
@@ -293,7 +289,7 @@
       "url": "_framework\/System.ObjectModel.wasm"
     },
     {
-      "hash": "sha256-PNq0avsbEhv3RJtX3vYpRYDZuPk633+DaA9UVIw7UsQ=",
+      "hash": "sha256-jHrp9tn40Q6w0tAoi\/pRDHzDw7Y57OH1CLoAWh3C6TY=",
       "url": "_framework\/System.Private.CoreLib.wasm"
     },
     {
@@ -329,7 +325,7 @@
       "url": "_framework\/System.Text.Encodings.Web.wasm"
     },
     {
-      "hash": "sha256-jJX69MnkGnfMgb9BYvdzdf\/\/FbP2Kf1MEDRWSfQrIMg=",
+      "hash": "sha256-uuOBpgBFu+QNVIjxVUQe64ggl0x09rg\/\/K8itLLO3+c=",
       "url": "_framework\/System.Text.Json.wasm"
     },
     {
@@ -365,5 +361,5 @@
       "url": "_content\/MudBlazor\/MudBlazor.min.js"
     }
   ],
-  "version": "mIt11I3E"
+  "version": "+I4HHnIa"
 };

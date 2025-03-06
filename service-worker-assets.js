@@ -33,7 +33,7 @@
       "url": "_framework\/icudt_no_CJK.dat"
     },
     {
-      "hash": "sha256-S580ZpL+lkr\/\/4UBQ\/2jRoez522BBtGkZMwz3k+1LPk=",
+      "hash": "sha256-Vkv\/LlAuGmnbicv\/XSnfU+0+WpUGs5e9y541WmwgihI=",
       "url": "_framework\/blazor.boot.json"
     },
     {
@@ -41,15 +41,15 @@
       "url": "_framework\/CsvHelper.wasm"
     },
     {
-      "hash": "sha256-1oRIgLN2C97p951C56r+LfK237DXw564tzxIl0H2Bns=",
+      "hash": "sha256-osDBusZyYwd\/3QCRhxfV4xIpbx1nYipNFSibj6H51+M=",
       "url": "_framework\/Data.Core.wasm"
     },
     {
-      "hash": "sha256-+xSjEfQ1Nf1aPDp2ULfYzV79hsnhsfZUOQLWWLWZe7k=",
+      "hash": "sha256-OeqRBSzLsnUUBWXtzqS\/ohVnOD7GrHWzDND5CPGWJLs=",
       "url": "_framework\/FrontEnd.Core.wasm"
     },
     {
-      "hash": "sha256-zr99yW2fZwItb+CZ9hqwV5palFeN1B6+725ZND+YuJE=",
+      "hash": "sha256-nXGajiWmvz\/1dDiTrbcdfNjOkbgOTCp8KcMVTI167ls=",
       "url": "_framework\/FrontEnd.Web.wasm"
     },
     {
@@ -213,11 +213,7 @@
       "url": "_framework\/System.Memory.wasm"
     },
     {
-      "hash": "sha256-8oJ\/JhcrJFvJC+A\/I+UX2LxAHfclePYm1m4RAl20Z64=",
-      "url": "_framework\/System.Net.Http.Json.wasm"
-    },
-    {
-      "hash": "sha256-bvLoxxo9\/39zlk7y9obnEB8szwlPI4WL7HtSsp8uCrg=",
+      "hash": "sha256-F3eOfvAXTDplBOZJNsxApaqH3XXFSzcHb2ut0g+4eGM=",
       "url": "_framework\/System.Net.Http.wasm"
     },
     {
@@ -233,7 +229,7 @@
       "url": "_framework\/System.ObjectModel.wasm"
     },
     {
-      "hash": "sha256-Ay0J4K1SwRWJ+zFlTeTst\/A7CfLihU0\/rjKxsi67EFQ=",
+      "hash": "sha256-jxQrEdToGG2\/Elr7DG4d8NmplRKpFnOQTao9kGvSu9k=",
       "url": "_framework\/System.Private.CoreLib.wasm"
     },
     {
@@ -269,7 +265,7 @@
       "url": "_framework\/System.Text.Encodings.Web.wasm"
     },
     {
-      "hash": "sha256-41ipK5ZpF2xCX03R4zY2XTuJ\/U6MAAJZAdiefTNM1V8=",
+      "hash": "sha256-s0LSg9AZCnVDioSPDAPjS8qAAlVVPQm+0JnR2L63Rcc=",
       "url": "_framework\/System.Text.Json.wasm"
     },
     {
@@ -345,5 +341,5 @@
       "url": "sample-data\/weather.json"
     }
   ],
-  "version": "5Uf4oZOr"
+  "version": "eEHqyJDX"
 };
