@@ -29,31 +29,18 @@
     </MudList>
 </MudPaper>
 
-<MudSelect T="string" Label="Branch" @bind-Value="_editSettings.Branch">
-    @if (_branches != null)
-    {
-        @foreach (var branch in _branches)
-        {
-            <MudSelectItem Value="@branch">@branch</MudSelectItem>
-        }
-    }
-</MudSelect>
-
 <MudButton OnClick="Save" Variant="Variant.Filled" Color="Color.Primary" Class="mt-4">Save</MudButton>
 
 @code {
 
     CoreSettingsModel _settings;
     CoreSettingsModel _editSettings = new();
-    List<string> _branches = new();
 
     protected override async Task OnInitializedAsync()
     {
         _settings = await _service.GetConfiguration();
         _editSettings.AccessToken = _settings.AccessToken;
-        _editSettings.Branch = _settings.Branch;
 
-        _branches = await _service.GetBranches();
     }
 
     public async Task Save()
