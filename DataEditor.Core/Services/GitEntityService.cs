@@ -165,21 +165,175 @@ namespace DataEditor.Core.Services
                     await SeedDataFromGit<FilmLanguage>();
                     await SeedDataFromGit<FilmOrigin>();
                     await SeedDataFromGit<FilmPersonRole>();
+                    //await FillInGuids();
                 }
             }
-            
+
+
             await _context.SaveChangesAsync();
+           
         }
 
+        private async Task FillInGuids()
+        {
+            await _context.SaveChangesAsync();
+      
+            foreach (var item in _context.Films.ToList())
+            {
+                if (item.Guid == null)
+                {
+                    item.Guid = Guid.NewGuid();
+                }
+            }
+
+            foreach (var item in _context.People.ToList())
+            {
+                if (item.Guid == null)
+                {
+                    item.Guid = Guid.NewGuid();
+                }
+            }
+
+            foreach (var item in _context.Roles.ToList())
+            {
+                if (item.Guid == null)
+                {
+                    item.Guid = Guid.NewGuid();
+                }
+            }
+
+            foreach (var item in _context.Origins.ToList())
+            {
+                if (item.Guid == null)
+                {
+                    item.Guid = Guid.NewGuid();
+                }
+            }
+
+            foreach (var item in _context.Languages.ToList())
+            {
+                if (item.Guid == null)
+                {
+                    item.Guid = Guid.NewGuid();
+                }
+            }
+
+            foreach (var item in _context.Countries.ToList())
+            {
+                if (item.Guid == null)
+                {
+                    item.Guid = Guid.NewGuid();
+                }
+            }
+
+            foreach (var item in _context.Companies.ToList())
+            {
+                if (item.Guid == null)
+                {
+                    item.Guid = Guid.NewGuid();
+                }
+            }
+
+            foreach (var item in _context.FilmCompanies.ToList())
+            {
+                if (item.FilmGuid == null)
+                {
+                    item.FilmGuid = item.Film.Guid;
+                }
+
+                if (item.CompanyGuid == null)
+                {
+                    item.CompanyGuid = item.Company.Guid;
+                }
+            }
+
+            foreach (var item in _context.FilmLinks.ToList())
+            {
+                if (item.FilmGuid == null)
+                {
+                    item.FilmGuid = item.Film.Guid;
+                }
+
+                if (item.Guid == null)
+                {
+                    item.Guid = Guid.NewGuid();
+                }
+            }
+
+            foreach (var item in _context.FilmCountries.ToList())
+            {
+                if (item.FilmGuid == null)
+                {
+                    item.FilmGuid = item.Film.Guid;
+                }
+
+                if (item.CountryGuid == null)
+                {
+                    item.CountryGuid = item.Country.Guid;
+                }
+            }
+
+
+            foreach (var item in _context.FilmLanguages.ToList())
+            {
+                if (item.FilmGuid == null)
+                {
+                    item.FilmGuid = item.Film.Guid;
+                }
+
+                if (item.LanguageGuid == null && item.Language != null)
+                {
+                    item.LanguageGuid = item.Language.Guid;
+                }
+            }
+
+            foreach (var item in _context.FilmOrigins.ToList())
+            {
+                if (item.FilmGuid == null)
+                {
+                    item.FilmGuid = item.Film.Guid;
+                }
+
+                if (item.OriginGuid == null)
+                {
+                    item.OriginGuid = item.Origin.Guid;
+                }
+            }
+
+            foreach (var item in _context.FilmPersonRoles.ToList())
+            {
+                if (item.FilmGuid == null)
+                {
+                    item.FilmGuid = item.Film.Guid;
+                }
+
+                if (item.PersonGuid == null)
+                {
+                    item.PersonGuid = item.Person.Guid;
+                }
+
+                if (item.RoleGuid == null)
+                {
+                    item.RoleGuid = item.Role.Guid;
+                }
+            }
+
+
+
+
+            await _context.SaveChangesAsync();
+        }
 
         private async Task<List<T>> FetchCsv<T>(string name)
         {
             var file = await GetFileByName(name);
 
             using var reader = new StringReader(file.Content);
+            var config = new CsvHelper.Configuration.CsvConfiguration(System.Globalization.CultureInfo.InvariantCulture);
+            config.MissingFieldFound = null;
 
-            using var csv = new CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture));
-
+            using var csv = new CsvReader(reader, config);
+            
             var records = csv.GetRecords<T>();
 
             return records.ToList();

@@ -23,5 +23,9 @@ namespace Data.Core.Models
         public int FilmId { get; set; }
         public int OriginId { get; set; }
         
+        public Guid? FilmGuid { get; set; }
+        
+        public Guid? OriginGuid { get; set; }
+
     }
 }

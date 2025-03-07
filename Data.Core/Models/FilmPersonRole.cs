@@ -29,5 +29,12 @@ namespace Data.Core.Models
         public int FilmId { get; set; }
         public int PersonId { get; set; }
         public int RoleId { get; set; }
+
+        
+        public Guid? FilmGuid { get; set; }
+        
+        public Guid? PersonGuid { get; set; }
+        
+        public Guid? RoleGuid { get; set; }
     }
 }

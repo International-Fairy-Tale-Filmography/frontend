@@ -18,7 +18,11 @@ namespace Data.Core.Models
         [ForeignKey("FilmId")]
         public virtual Film Film { get; set; }
         public int FilmId { get; set; }
+        
+        public Guid? Guid { get; set; }
 
+        
+        public Guid? FilmGuid { get; set; }
         public string Url { get; set; }
     }
 }

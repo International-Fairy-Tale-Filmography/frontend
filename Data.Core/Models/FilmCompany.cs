@@ -16,5 +16,9 @@ public class FilmCompany
     public virtual Film Film { get; set; }
     public int FilmId { get; set; }
     public int CompanyId { get; set; }
-   
+    
+    public Guid? FilmGuid { get; set; }
+    
+    public Guid? CompanyGuid { get; set; }
+
 }

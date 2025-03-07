@@ -8,6 +8,7 @@ public class Film
     [Key]
     [Name("FilmId")]
     public int FilmId { get; set; }
+    public Guid? Guid { get; set; }
     public string Title { get; set; }
     public string OtherTitle { get; set; }
     public string Color { get; set; }

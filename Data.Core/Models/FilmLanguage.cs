@@ -23,5 +23,10 @@ namespace Data.Core.Models
         public int FilmId { get; set; }
         public int LanguageId { get; set; }
         
+        public Guid? FilmGuid { get; set; }
+        
+        public Guid? LanguageGuid { get; set; }
+
+
     }
 }

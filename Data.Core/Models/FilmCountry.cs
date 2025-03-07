@@ -17,5 +17,9 @@ public class FilmCountry
 
     public int FilmId { get; set; }
     public int CountryId { get; set; }
+    
+    public Guid? FilmGuid { get; set; }
+    
+    public Guid? CountryGuid { get; set; }
 
 }
