@@ -15,14 +15,14 @@ namespace Data.Core.Models
         public int LinkId { get; set; }
 
         [Ignore]
-        [ForeignKey("FilmId")]
+        [ForeignKey("FilmGuid")]
         public virtual Film Film { get; set; }
-        public int FilmId { get; set; }
+       // public int FilmId { get; set; }
         
-        public Guid? Guid { get; set; }
+        public Guid Guid { get; set; }
 
         
-        public Guid? FilmGuid { get; set; }
+        public Guid FilmGuid { get; set; }
         public string Url { get; set; }
     }
 }

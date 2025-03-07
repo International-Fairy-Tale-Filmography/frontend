@@ -9,23 +9,23 @@ using CsvHelper.Configuration.Attributes;
 
 namespace Data.Core.Models
 {
-    [PrimaryKey("FilmId", "LanguageId")]
+    [PrimaryKey("FilmGuid", "LanguageGuid")]
     public class FilmLanguage
     {
         [Ignore]
-        [ForeignKey("FilmId")]
+        [ForeignKey("FilmGuid")]
         public virtual Film Film { get; set; }
 
         [Ignore]
-        [ForeignKey("LanguageId")]
+        [ForeignKey("LanguageGuid")]
         public virtual Language Language { get; set; }
 
-        public int FilmId { get; set; }
-        public int LanguageId { get; set; }
+       // public int FilmId { get; set; }
+        //public int LanguageId { get; set; }
         
-        public Guid? FilmGuid { get; set; }
+        public Guid FilmGuid { get; set; }
         
-        public Guid? LanguageGuid { get; set; }
+        public Guid LanguageGuid { get; set; }
 
 
     }

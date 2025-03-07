@@ -5,10 +5,11 @@ namespace Data.Core.Models;
 
 public class Film
 {
+    
+   
+    //public int FilmId { get; set; }
     [Key]
-    [Name("FilmId")]
-    public int FilmId { get; set; }
-    public Guid? Guid { get; set; }
+    public Guid Guid { get; set; }
     public string Title { get; set; }
     public string OtherTitle { get; set; }
     public string Color { get; set; }

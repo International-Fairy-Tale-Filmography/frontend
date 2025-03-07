@@ -57,20 +57,20 @@ namespace DataEditor.Core.Services
 
             Dictionary<Type, Func<Task<string>>> handlers = new Dictionary<Type, Func<Task<string>>>
             {
-                { typeof(Company), () => CommitChangesToGit( _context.Companies.OrderBy(i => i.CompanyId).ToList()) },
-                { typeof(Country), () => CommitChangesToGit( _context.Countries.OrderBy(i => i.CountryId).ToList()) },
-                { typeof(Film), () => CommitChangesToGit( _context.Films.OrderBy(i => i.FilmId).ToList()) },
-                { typeof(Language), () => CommitChangesToGit( _context.Languages.OrderBy(i => i.LanguageId).ToList()) },
-                { typeof(Origin), () => CommitChangesToGit( _context.Origins.OrderBy(i => i.OriginId).ToList()) },
-                { typeof(Person), () => CommitChangesToGit( _context.People.OrderBy(i => i.PersonId).ToList()) },
-                { typeof(Role), () => CommitChangesToGit( _context.Roles.OrderBy(i => i.RoleId).ToList()) },
+                { typeof(Company), () => CommitChangesToGit( _context.Companies.OrderBy(i => i.Guid).ToList()) },
+                { typeof(Country), () => CommitChangesToGit( _context.Countries.OrderBy(i => i.Guid).ToList()) },
+                { typeof(Film), () => CommitChangesToGit( _context.Films.OrderBy(i => i.Guid).ToList()) },
+                { typeof(Language), () => CommitChangesToGit( _context.Languages.OrderBy(i => i.Guid).ToList()) },
+                { typeof(Origin), () => CommitChangesToGit( _context.Origins.OrderBy(i => i.Guid).ToList()) },
+                { typeof(Person), () => CommitChangesToGit( _context.People.OrderBy(i => i.Guid).ToList()) },
+                { typeof(Role), () => CommitChangesToGit( _context.Roles.OrderBy(i => i.Guid).ToList()) },
 
-                { typeof(FilmLink), () => CommitChangesToGit( _context.FilmLinks.OrderBy(i => i.LinkId).ThenBy(i => i.FilmId).ToList()) },
-                { typeof(FilmCompany), () => CommitChangesToGit( _context.FilmCompanies.OrderBy(i => i.FilmId).ThenBy(i => i.CompanyId).ToList()) },
-                { typeof(FilmCountry), () => CommitChangesToGit( _context.FilmCountries.OrderBy(i => i.FilmId).ThenBy(i => i.CountryId).ToList()) },
-                { typeof(FilmLanguage), () => CommitChangesToGit( _context.FilmLanguages.OrderBy(i => i.FilmId).ThenBy(i => i.LanguageId).ToList()) },
-                { typeof(FilmOrigin), () => CommitChangesToGit( _context.FilmOrigins.OrderBy(i => i.FilmId).ThenBy(i => i.OriginId).ToList()) },
-                { typeof(FilmPersonRole), () => CommitChangesToGit( _context.FilmPersonRoles.OrderBy(i => i.Film).ThenBy(i => i.Person).ThenBy(i => i.RoleId).ToList()) } 
+                { typeof(FilmLink), () => CommitChangesToGit( _context.FilmLinks.OrderBy(i => i.LinkId).ThenBy(i => i.FilmGuid).ToList()) },
+                { typeof(FilmCompany), () => CommitChangesToGit( _context.FilmCompanies.OrderBy(i => i.FilmGuid).ThenBy(i => i.CompanyGuid).ToList()) },
+                { typeof(FilmCountry), () => CommitChangesToGit( _context.FilmCountries.OrderBy(i => i.FilmGuid).ThenBy(i => i.CountryGuid).ToList()) },
+                { typeof(FilmLanguage), () => CommitChangesToGit( _context.FilmLanguages.OrderBy(i => i.FilmGuid).ThenBy(i => i.LanguageGuid).ToList()) },
+                { typeof(FilmOrigin), () => CommitChangesToGit( _context.FilmOrigins.OrderBy(i => i.FilmGuid).ThenBy(i => i.OriginGuid).ToList()) },
+                { typeof(FilmPersonRole), () => CommitChangesToGit( _context.FilmPersonRoles.OrderBy(i => i.Film).ThenBy(i => i.Person).ThenBy(i => i.RoleGuid).ToList()) } 
             };
 
             if (handlers.ContainsKey(typeof(T)))

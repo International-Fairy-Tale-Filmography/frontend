@@ -60,13 +60,13 @@ public class FrontEndDataInitializerService
     {
         var filmCompanyList = await FetchCsv<FilmCompany>();
 
-        var filmDict = _context.Films.ToDictionary(i => i.FilmId, i => i);
-        var companyDict = _context.Companies.ToDictionary(i => i.CompanyId, i => i);
+        var filmDict = _context.Films.ToDictionary(i => i.Guid, i => i);
+        var companyDict = _context.Companies.ToDictionary(i => i.Guid, i => i);
 
         foreach (var i in filmCompanyList)
         {
-            i.Film = filmDict[i.FilmId];
-            i.Company = companyDict[i.CompanyId];
+            i.Film = filmDict[i.FilmGuid];
+            i.Company = companyDict[i.CompanyGuid];
             i.Film.Companies.Add(i);
         }
     }
@@ -75,11 +75,11 @@ public class FrontEndDataInitializerService
     {
         var filmLinkList = await FetchCsv<FilmLink>();
 
-        var filmDict = _context.Films.ToDictionary(i => i.FilmId, i => i);
+        var filmDict = _context.Films.ToDictionary(i => i.Guid, i => i);
 
         foreach (var i in filmLinkList)
         {
-            i.Film = filmDict[i.FilmId];
+            i.Film = filmDict[i.FilmGuid];
             i.Film.Links.Add(i);
         }
     }
@@ -88,13 +88,13 @@ public class FrontEndDataInitializerService
     {
         var filmCountryList = await FetchCsv<FilmCountry>();
 
-        var filmDict = _context.Films.ToDictionary(i => i.FilmId, i => i);
-        var countryDict = _context.Countries.ToDictionary(i => i.CountryId, i => i);
+        var filmDict = _context.Films.ToDictionary(i => i.Guid, i => i);
+        var countryDict = _context.Countries.ToDictionary(i => i.Guid, i => i);
 
         foreach (var i in filmCountryList)
         {
-            i.Film = filmDict[i.FilmId];
-            i.Country = countryDict[i.CountryId];
+            i.Film = filmDict[i.FilmGuid];
+            i.Country = countryDict[i.CountryGuid];
             i.Film.Countries.Add(i);
         }
     }
@@ -103,20 +103,20 @@ public class FrontEndDataInitializerService
     {
         var filmLanguageList = await FetchCsv<FilmLanguage>();
 
-        var filmDict = _context.Films.ToDictionary(i => i.FilmId, i => i);
-        var languageDict = _context.Languages.ToDictionary(i => i.LanguageId, i => i);
+        var filmDict = _context.Films.ToDictionary(i => i.Guid, i => i);
+        var languageDict = _context.Languages.ToDictionary(i => i.Guid, i => i);
 
         foreach (var i in filmLanguageList)
         {
-            i.Film = filmDict[i.FilmId];
+            i.Film = filmDict[i.FilmGuid];
 
             try
             {
-                i.Language = languageDict[i.LanguageId];
+                i.Language = languageDict[i.LanguageGuid];
             }
             catch (Exception e)
             {
-                Console.WriteLine($"Error for film {i.FilmId}: Language {i.LanguageId} not found");
+                Console.WriteLine($"Error for film {i.FilmGuid}: Language {i.LanguageGuid} not found");
                 continue;
             }
 
@@ -129,13 +129,13 @@ public class FrontEndDataInitializerService
     {
         var filmOriginList = await FetchCsv<FilmOrigin>();
 
-        var filmDict = _context.Films.ToDictionary(i => i.FilmId, i => i);
-        var originDict = _context.Origins.ToDictionary(i => i.OriginId, i => i);
+        var filmDict = _context.Films.ToDictionary(i => i.Guid, i => i);
+        var originDict = _context.Origins.ToDictionary(i => i.Guid, i => i);
 
         foreach (var i in filmOriginList)
         {
-            i.Film = filmDict[i.FilmId];
-            i.Origin = originDict[i.OriginId];
+            i.Film = filmDict[i.FilmGuid];
+            i.Origin = originDict[i.OriginGuid];
             i.Film.Origins.Add(i);
         }
     }
@@ -144,31 +144,31 @@ public class FrontEndDataInitializerService
     {
         var filmPersonRole = await FetchCsv<FilmPersonRole>();
 
-        var filmDict = _context.Films.ToDictionary(i => i.FilmId, i => i);
-        var peopleDict = _context.People.ToDictionary(i => i.PersonId, i => i);
-        var roleDict = _context.Roles.ToDictionary(i => i.RoleId, i => i);
+        var filmDict = _context.Films.ToDictionary(i => i.Guid, i => i);
+        var peopleDict = _context.People.ToDictionary(i => i.Guid, i => i);
+        var roleDict = _context.Roles.ToDictionary(i => i.Guid, i => i);
 
         foreach (var i in filmPersonRole)
         {
-            i.Film = filmDict[i.FilmId];
+            i.Film = filmDict[i.FilmGuid];
 
             try
             {
-                i.Person = peopleDict[i.PersonId];
+                i.Person = peopleDict[i.PersonGuid];
             }
             catch (Exception e)
             {
-                Console.WriteLine($"Error for film {i.FilmId}: Person {i.PersonId} not found");
+                Console.WriteLine($"Error for film {i.FilmGuid}: Person {i.PersonGuid} not found");
                 continue;
             }
 
             try
             {
-                i.Role = roleDict[i.RoleId];
+                i.Role = roleDict[i.RoleGuid];
             }
             catch (Exception e)
             {
-                Console.WriteLine($"Error for film {i.FilmId}: Role {i.RoleId} not found");
+                Console.WriteLine($"Error for film {i.FilmGuid}: Role {i.RoleGuid} not found");
                 continue;
             }
 

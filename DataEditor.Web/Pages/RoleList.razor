@@ -47,16 +47,16 @@
 
     async Task<EventCallback> EditCell(Role cell)
     {
-        await EditItem(cell.RoleId);
+        await EditItem(cell.Guid);
         return EventCallback.Empty;
     }
 
     async Task AddItem()
     {
-        await EditItem(0);
+        await EditItem(null);
     }
 
-    async Task EditItem(int id)
+    async Task EditItem(Guid? id)
     {
         var parameters = new DialogParameters<RoleEdit> { { x => x.Id, id } };
         var dialog = await DialogService.ShowAsync<RoleEdit>("Edit", parameters);

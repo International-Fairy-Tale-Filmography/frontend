@@ -4,21 +4,21 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Data.Core.Models;
 
-[PrimaryKey("FilmId", "CompanyId")]
+[PrimaryKey("FilmGuid", "CompanyGuid")]
 public class FilmCompany
 {
     [Ignore]
-    [ForeignKey("CompanyId")]
+    [ForeignKey("CompanyGuid")]
     public virtual Company Company { get; set; }
 
     [Ignore]
-    [ForeignKey("FilmId")]
+    [ForeignKey("FilmGuid")]
     public virtual Film Film { get; set; }
-    public int FilmId { get; set; }
-    public int CompanyId { get; set; }
+   //public int FilmId { get; set; }
+    //public int CompanyId { get; set; }
     
-    public Guid? FilmGuid { get; set; }
+    public Guid FilmGuid { get; set; }
     
-    public Guid? CompanyGuid { get; set; }
+    public Guid CompanyGuid { get; set; }
 
 }

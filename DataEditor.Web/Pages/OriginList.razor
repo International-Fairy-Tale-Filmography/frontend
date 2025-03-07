@@ -49,16 +49,16 @@
 
     async Task<EventCallback> EditCell(Origin cell)
     {
-        await EditItem(cell.OriginId);
+        await EditItem(cell.Guid);
         return EventCallback.Empty;
     }
 
     async Task AddItem()
     {
-        await EditItem(0);
+        await EditItem(null);
     }
 
-    async Task EditItem(int id)
+    async Task EditItem(Guid? id)
     {
         var parameters = new DialogParameters<OriginEdit> { { x => x.Id, id } };
         var dialog = await DialogService.ShowAsync<OriginEdit>("Edit", parameters);

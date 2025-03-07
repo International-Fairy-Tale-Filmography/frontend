@@ -48,16 +48,16 @@
 
     async Task<EventCallback> EditCell(Language cell)
     {
-        await EditItem(cell.LanguageId);
+        await EditItem(cell.Guid);
         return EventCallback.Empty;
     }
 
     async Task AddItem()
     {
-        await EditItem(0);
+        await EditItem(null);
     }
 
-    async Task EditItem(int id)
+    async Task EditItem(Guid? id)
     {
         var parameters = new DialogParameters<LanguageEdit> { { x => x.Id, id } };
         var dialog = await DialogService.ShowAsync<LanguageEdit>("Edit", parameters);

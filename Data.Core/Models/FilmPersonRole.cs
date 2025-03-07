@@ -10,31 +10,31 @@ using System.Threading.Tasks;
 
 namespace Data.Core.Models
 {
-    [PrimaryKey("FilmId", "PersonId","RoleId")]
+    [PrimaryKey("FilmGuid", "PersonGuid","RoleGuid")]
     public class FilmPersonRole
     {
         [Ignore]
-        [ForeignKey("FilmId")]
+        [ForeignKey("FilmGuid")]
         public virtual Film Film { get; set; }
 
         [Ignore]
-        [ForeignKey("PersonId")]
+        [ForeignKey("PersonGuid")]
         public virtual Person Person { get; set; }
 
         [Ignore]
-        [ForeignKey("RoleId")]
+        [ForeignKey("RoleGuid")]
         public virtual Role Role { get; set; }
 
 
-        public int FilmId { get; set; }
-        public int PersonId { get; set; }
-        public int RoleId { get; set; }
+        //public int FilmId { get; set; }
+        //public int PersonId { get; set; }
+        //public int RoleId { get; set; }
 
         
-        public Guid? FilmGuid { get; set; }
+        public Guid FilmGuid { get; set; }
         
-        public Guid? PersonGuid { get; set; }
+        public Guid PersonGuid { get; set; }
         
-        public Guid? RoleGuid { get; set; }
+        public Guid RoleGuid { get; set; }
     }
 }
