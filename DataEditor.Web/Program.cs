@@ -18,7 +18,7 @@ builder.Services.AddScoped<GitService>();
 builder.Services.AddScoped<GitEntityService>();
 builder.Services.AddSingleton<CoreSettingsModel>(i => new CoreSettingsModel()
 {
-    Branch = "features/devtests",
+    Branch = "drafts",
     Folder = "csv",
     Owner = "International-Fairy-Tale-Filmography",
     RepoName = "data"
