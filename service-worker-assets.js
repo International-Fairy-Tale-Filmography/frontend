@@ -33,7 +33,7 @@
       "url": "_framework\/icudt_no_CJK.dat"
     },
     {
-      "hash": "sha256-Vkv\/LlAuGmnbicv\/XSnfU+0+WpUGs5e9y541WmwgihI=",
+      "hash": "sha256-pF1rN\/4U17Z2uF\/9fOcB9K3Rv4C1tr8m1I9WheRZiOw=",
       "url": "_framework\/blazor.boot.json"
     },
     {
@@ -41,15 +41,15 @@
       "url": "_framework\/CsvHelper.wasm"
     },
     {
-      "hash": "sha256-osDBusZyYwd\/3QCRhxfV4xIpbx1nYipNFSibj6H51+M=",
+      "hash": "sha256-yXPtWanSZxWVlG7wz5ycRBpMp++xL59d9KpWqoRNDsI=",
       "url": "_framework\/Data.Core.wasm"
     },
     {
-      "hash": "sha256-OeqRBSzLsnUUBWXtzqS\/ohVnOD7GrHWzDND5CPGWJLs=",
+      "hash": "sha256-jFr7IUUk4MR7vAW41bvgq545bzElzU6E0RAC9mp3bOk=",
       "url": "_framework\/FrontEnd.Core.wasm"
     },
     {
-      "hash": "sha256-nXGajiWmvz\/1dDiTrbcdfNjOkbgOTCp8KcMVTI167ls=",
+      "hash": "sha256-hDCE6ioSCEsXocwGhsNqt3Rh1Vpew+\/VEK+zXQNkPsU=",
       "url": "_framework\/FrontEnd.Web.wasm"
     },
     {
@@ -341,5 +341,5 @@
       "url": "sample-data\/weather.json"
     }
   ],
-  "version": "eEHqyJDX"
+  "version": "nHCjWpwE"
 };

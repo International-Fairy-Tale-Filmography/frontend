@@ -69,7 +69,7 @@
       "url": "_framework\/icudt_no_CJK.dat"
     },
     {
-      "hash": "sha256-muEibjXT6paqsZT\/Zs2QcRMwSG7oH0xjuqSi3YC8mps=",
+      "hash": "sha256-3ypu9I\/peLqhkBKTGEQYECmhzMrKkdcJS2dvKVQ0zk8=",
       "url": "_framework\/blazor.boot.json"
     },
     {
@@ -77,15 +77,15 @@
       "url": "_framework\/CsvHelper.wasm"
     },
     {
-      "hash": "sha256-osDBusZyYwd\/3QCRhxfV4xIpbx1nYipNFSibj6H51+M=",
+      "hash": "sha256-yXPtWanSZxWVlG7wz5ycRBpMp++xL59d9KpWqoRNDsI=",
       "url": "_framework\/Data.Core.wasm"
     },
     {
-      "hash": "sha256-k7BIVnRBPycqFudyHgSSy\/TbrFeuFgTJrnF+FKUnUjY=",
+      "hash": "sha256-+dvYDiE1ZUqHwo4qBI2NPvE5QyFZYlthVpdM3Bv5auw=",
       "url": "_framework\/DataEditor.Core.wasm"
     },
     {
-      "hash": "sha256-cixOz\/a0iVlmD9m3sjEIYLfHEYXxN11qvqy6Bk06+E8=",
+      "hash": "sha256-rWtx\/Sfo33Le+POYNaDOdHU8H8iVoeqQ8qA+Ozc7Hcw=",
       "url": "_framework\/DataEditor.Web.wasm"
     },
     {
@@ -273,7 +273,7 @@
       "url": "_framework\/System.Memory.wasm"
     },
     {
-      "hash": "sha256-kI5g4ROCaB3UP58TccC63P7Z5XJG1\/IrokS+DvlR+q4=",
+      "hash": "sha256-ecpduKdLlZZkqmS0Ay+LTpEb\/mI8Pmws6RBkc2zcXHw=",
       "url": "_framework\/System.Net.Http.wasm"
     },
     {
@@ -361,5 +361,5 @@
       "url": "_content\/MudBlazor\/MudBlazor.min.js"
     }
   ],
-  "version": "+I4HHnIa"
+  "version": "TRvW7PtZ"
 };
