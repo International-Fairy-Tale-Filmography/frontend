@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml;
 
 namespace Data.Core.Configuration
 {
@@ -26,6 +27,6 @@ namespace Data.Core.Configuration
             {typeof(FilmPersonRole), "FilmPersonRoles"}
         };
 
-        public const int DirectorRoleId = 52;
+        public static Guid DirectorRoleId = new("33a0105e-7920-4e0e-9298-68be8fcb56fd");
     }
 }

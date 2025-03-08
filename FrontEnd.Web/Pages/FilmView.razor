@@ -33,7 +33,7 @@
                         </div>
                         <div class="span7 ">
                             <span class="film-info">
-                                @foreach (var i in SelectedFilm.PeopleRoles.Where(j => j.RoleId == CoreSettings.DirectorRoleId))
+                                @foreach (var i in SelectedFilm.PeopleRoles.Where(j => j.RoleGuid == CoreSettings.DirectorRoleId))
                                 {
                                     <a href="/Search/ByDirector/7783">@i.Person.FirstName @i.Person.LastName</a>
                                 }
@@ -67,7 +67,7 @@
                             <span class="film-info">
                                 @foreach (var i in SelectedFilm.Companies)
                                 {
-                                    <a href="/Search/ByCompany/@i.Company.CompanyId">@i.Company.Name</a>
+                                    <a href="/Search/ByCompany/@i.Company.Guid">@i.Company.Name</a>
                                 }
                                
                             </span>
@@ -166,7 +166,7 @@
                 <div class="span4">
 
                     <div class="cast-container">
-                        @foreach (var i in SelectedFilm.PeopleRoles.Where(i => i.RoleId != CoreSettings.DirectorRoleId).OrderBy(i => i.Role.Order))
+                        @foreach (var i in SelectedFilm.PeopleRoles.Where(i => i.RoleGuid != CoreSettings.DirectorRoleId).OrderBy(i => i.Role.Order))
                         {
                             <h5>@i.Role.Name</h5>
                             <ul>
@@ -209,8 +209,8 @@
         
         await Task.Delay(1);
         await fedis.FetchData();
-
-        SelectedFilm = context.Films.FirstOrDefault(i => i.FilmId == int.Parse(idParam));
+        var guid = new Guid(idParam);
+        SelectedFilm = context.Films.First(i => i.Guid == guid);
 
         isLoading = false;
 
