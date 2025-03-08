@@ -22,15 +22,15 @@
     private MudDialogInstance MudDialog { get; set; }
 
     [Parameter]
-    public int Id { get; set; } = 0;
+    public Guid? Id { get; set; } = null;
 
     public Person item { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
-        if (Id != 0)
+        if (Id != null)
         {
-            item = await ctx.People.FirstAsync(i => i.PersonId == Id);
+            item = await ctx.People.FirstAsync(i => i.Guid == Id);
         }
         else
         {
@@ -41,7 +41,7 @@
 
     private async Task Save()
     {
-        if (Id == 0)
+        if (Id == null)
         {
             
             await ctx.People.AddAsync(item);

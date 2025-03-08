@@ -10,7 +10,7 @@
 
 <MudButton OnClick="@AddItem" Color="@Color.Success" Class="add-item-btn">Add Item</MudButton>
 
-<MudDataGrid T="Origin" Items="@Items" ReadOnly="true" Virtualize="true"
+<MudDataGrid T="Origin" Items="@Items" ReadOnly="true" Virtualize="true" Filterable="true" FilterCaseSensitivity="DataGridFilterCaseSensitivity.CaseInsensitive"
              Bordered="true" Dense="true" Loading="_loading">
     <Columns>
         <TemplateColumn CellClass="d-flex justify-end">
@@ -49,16 +49,16 @@
 
     async Task<EventCallback> EditCell(Origin cell)
     {
-        await EditItem(cell.OriginId);
+        await EditItem(cell.Guid);
         return EventCallback.Empty;
     }
 
     async Task AddItem()
     {
-        await EditItem(0);
+        await EditItem(null);
     }
 
-    async Task EditItem(int id)
+    async Task EditItem(Guid? id)
     {
         var parameters = new DialogParameters<OriginEdit> { { x => x.Id, id } };
         var dialog = await DialogService.ShowAsync<OriginEdit>("Edit", parameters);
