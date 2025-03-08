@@ -14,8 +14,6 @@ public class FilmCompany
     [Ignore]
     [ForeignKey("FilmGuid")]
     public virtual Film Film { get; set; }
-   //public int FilmId { get; set; }
-    //public int CompanyId { get; set; }
     
     public Guid FilmGuid { get; set; }
     

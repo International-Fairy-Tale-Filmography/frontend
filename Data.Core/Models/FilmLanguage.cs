@@ -19,9 +19,6 @@ namespace Data.Core.Models
         [Ignore]
         [ForeignKey("LanguageGuid")]
         public virtual Language Language { get; set; }
-
-       // public int FilmId { get; set; }
-        //public int LanguageId { get; set; }
         
         public Guid FilmGuid { get; set; }
         

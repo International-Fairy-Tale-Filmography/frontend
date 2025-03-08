@@ -6,7 +6,6 @@ namespace Data.Core.Models;
 public class Origin
 {
     
-    //public int OriginId { get; set; }
     [Key]
     public Guid Guid { get; set; }
     public string Title { get; set; }

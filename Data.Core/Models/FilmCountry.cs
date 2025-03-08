@@ -14,9 +14,6 @@ public class FilmCountry
     [Ignore]
     [ForeignKey("FilmGuid")]
     public virtual Film Film { get; set; }
-
-    //public int FilmId { get; set; }
-    //public int CountryId { get; set; }
     
     public Guid FilmGuid { get; set; }
     

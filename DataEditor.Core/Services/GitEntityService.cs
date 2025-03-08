@@ -69,7 +69,7 @@ namespace DataEditor.Core.Services
                 { typeof(Person), () => CommitChangesToGit( _context.People.OrderBy(i => i.Guid).ToList()) },
                 { typeof(Role), () => CommitChangesToGit( _context.Roles.OrderBy(i => i.Guid).ToList()) },
 
-                { typeof(FilmLink), () => CommitChangesToGit( _context.FilmLinks.OrderBy(i => i.LinkId).ThenBy(i => i.FilmGuid).ToList()) },
+                { typeof(FilmLink), () => CommitChangesToGit( _context.FilmLinks.OrderBy(i => i.Guid).ThenBy(i => i.FilmGuid).ToList()) },
                 { typeof(FilmCompany), () => CommitChangesToGit( _context.FilmCompanies.OrderBy(i => i.FilmGuid).ThenBy(i => i.CompanyGuid).ToList()) },
                 { typeof(FilmCountry), () => CommitChangesToGit( _context.FilmCountries.OrderBy(i => i.FilmGuid).ThenBy(i => i.CountryGuid).ToList()) },
                 { typeof(FilmLanguage), () => CommitChangesToGit( _context.FilmLanguages.OrderBy(i => i.FilmGuid).ThenBy(i => i.LanguageGuid).ToList()) },
@@ -105,7 +105,7 @@ namespace DataEditor.Core.Services
 
             if (content != file.Content)
             {
-                //var result = await _gitService.UpdateFile(filename, file, content, $"test update at {DateTime.Now}");
+                var result = await _gitService.UpdateFile(filename, file, content, $"test update at {DateTime.Now}");
                 return filename + "; ";
             }
             else

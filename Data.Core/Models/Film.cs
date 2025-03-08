@@ -6,8 +6,6 @@ namespace Data.Core.Models;
 public class Film
 {
     
-   
-    //public int FilmId { get; set; }
     [Key]
     public Guid Guid { get; set; }
     public string Title { get; set; }

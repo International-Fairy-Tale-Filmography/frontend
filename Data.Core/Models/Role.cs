@@ -10,8 +10,7 @@ namespace Data.Core.Models
 {
     public class Role
     {
-       
-        //public int RoleId { get; set; }
+        
         [Key]
         public Guid Guid { get; set; }
         public string Name { get; set; }

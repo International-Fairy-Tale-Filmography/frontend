@@ -20,9 +20,6 @@ namespace Data.Core.Models
         [ForeignKey("OriginGuid")]
         public virtual Origin Origin { get; set; }
 
-        //public int FilmId { get; set; }
-        //public int OriginId { get; set; }
-        
         public Guid FilmGuid { get; set; }
         
         public Guid OriginGuid { get; set; }

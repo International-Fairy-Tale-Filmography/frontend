@@ -5,8 +5,6 @@ namespace Data.Core.Models;
 
 public class Language
 {
-    
-    //public int LanguageId { get; set; }
 
     [Key]
     public Guid Guid { get; set; }

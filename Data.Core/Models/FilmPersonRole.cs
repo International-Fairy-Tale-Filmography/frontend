@@ -24,12 +24,6 @@ namespace Data.Core.Models
         [Ignore]
         [ForeignKey("RoleGuid")]
         public virtual Role Role { get; set; }
-
-
-        //public int FilmId { get; set; }
-        //public int PersonId { get; set; }
-        //public int RoleId { get; set; }
-
         
         public Guid FilmGuid { get; set; }
         
