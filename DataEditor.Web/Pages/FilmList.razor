@@ -2,21 +2,36 @@
 
 @using Microsoft.EntityFrameworkCore
 @using Data.Core.Models
+@using System.Threading
 @inject DataEditorDataContext ctx
 @inject IDialogService DialogService
 @inject GitEntityService ges
+@implements IDisposable
 
 <h3>Film List</h3>
 
-<MudButton OnClick="@AddItem" Color="@Color.Success" Class="add-item-btn">Add Item</MudButton>
+<MudButton OnClick="@AddItem" Color="@Color.Success" Class="add-item-btn" Disabled="@_backgroundLoading">Add Item</MudButton>
 
 @if (_loading)
 {
     <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-2" />
-    @if (!string.IsNullOrEmpty(_loadingStatus))
-    {
-        <MudText Typo="Typo.body2" Color="Color.Info">@_loadingStatus</MudText>
-    }
+    <MudText Typo="Typo.body2" Color="Color.Info">@_loadingStatus</MudText>
+}
+else if (_backgroundLoading)
+{
+    <MudAlert Severity="Severity.Info" Dense="true" Class="my-2">
+        <div class="d-flex align-center">
+            <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-3" />
+            <MudText>@_loadingStatus</MudText>
+            
+            @if (_currentFileCount > 0 && _totalFileCount > 0)
+            {
+                <MudText Class="ml-2">(@_currentFileCount/@_totalFileCount)</MudText>
+                <MudProgressLinear Value="@((_currentFileCount * 100) / _totalFileCount)" 
+                                  Color="Color.Secondary" Class="ml-4 flex-grow-1" />
+            }
+        </div>
+    </MudAlert>
 }
 
 <MudDataGrid T="Film" Items="@Items" ReadOnly="true" Virtualize="true" Filterable="true" FilterCaseSensitivity="DataGridFilterCaseSensitivity.CaseInsensitive"
@@ -24,17 +39,18 @@
     <Columns>
         <TemplateColumn CellClass="d-flex justify-end">
             <CellTemplate>
-                <MudIconButton Size="@Size.Small" Icon="@Icons.Material.Outlined.Edit" OnClick="@((e) => EditCell(context.Item))" />
+                <MudIconButton Size="@Size.Small" Icon="@Icons.Material.Outlined.Edit" 
+                               OnClick="@((e) => EditCell(context.Item))" 
+                               Disabled="@_backgroundLoading" />
             </CellTemplate>
         </TemplateColumn>
-        <PropertyColumn Property="x => x.Title"  />
-        <PropertyColumn Property="x => x.OtherTitle" Required="false"/>
-        <PropertyColumn Property="x => x.Color"/>
-        <PropertyColumn Property="x => x.ReleaseYear"/>
-        <PropertyColumn Property="x => x.Duration"/> 
-        <PropertyColumn Property="x => x.Mode"/>
-        <PropertyColumn Property="x => x.Published"/>
-
+        <PropertyColumn Property="x => x.Title" />
+        <PropertyColumn Property="x => x.OtherTitle" Required="false" />
+        <PropertyColumn Property="x => x.Color" />
+        <PropertyColumn Property="x => x.ReleaseYear" />
+        <PropertyColumn Property="x => x.Duration" /> 
+        <PropertyColumn Property="x => x.Mode" />
+        <PropertyColumn Property="x => x.Published" />
     </Columns>
     <PagerContent>
         <MudDataGridPager T="Film" />
@@ -43,41 +59,95 @@
 
 
 @code {
-    public bool _loading { get; set; }
-    public string _loadingStatus { get; set; } = string.Empty;
+    private bool _loading = true;
+    private bool _backgroundLoading = false;
+    private string _loadingStatus = "Loading films...";
+    private CancellationTokenSource _cts = new CancellationTokenSource();
+    private int _currentFileCount = 0;
+    private int _totalFileCount = 0;
 
     public List<Film> Items { get; set; } = new();
+    
     protected override async Task OnInitializedAsync()
     {
-        await Refresh();
+        await LoadInitialData();
     }
-
-    async Task Refresh()
+    
+    private async Task LoadInitialData()
     {
         _loading = true;
-        _loadingStatus = "Starting data load...";
+        _loadingStatus = "Loading film data...";
         StateHasChanged();
         
-        // Use the progress callback to update the loading status
-        await ges.SeedDataFromGit<Film>(status => 
+        try
         {
-            _loadingStatus = status;
-            InvokeAsync(StateHasChanged);
-        });
+            // Load only Film data initially
+            await ges.SeedFilmDataOnly(status =>
+            {
+                _loadingStatus = status;
+                InvokeAsync(StateHasChanged);
+            });
+            
+            // Load films into UI
+            Items = await ctx.Films.ToListAsync();
+            _loading = false;
+            
+            // Start loading related data in the background
+            await LoadRelatedDataInBackground();
+        }
+        catch (Exception ex)
+        {
+            _loadingStatus = $"Error loading data: {ex.Message}";
+        }
+        finally
+        {
+            _loading = false;
+            StateHasChanged();
+        }
+    }
+    
+    private async Task LoadRelatedDataInBackground()
+    {
+        _backgroundLoading = true;
+        _loadingStatus = "Loading additional data in background...";
+        _currentFileCount = 0;
+        _totalFileCount = 0;
+        StateHasChanged();
         
-        Items = await ctx.Films.ToListAsync();
-        _loading = false;
+        try
+        {
+            await ges.SeedRelatedDataInBackground((status, current, total) =>
+            {
+                _loadingStatus = status;
+                _currentFileCount = current;
+                _totalFileCount = total;
+                InvokeAsync(StateHasChanged);
+            });
+        }
+        catch (Exception ex)
+        {
+            _loadingStatus = $"Error loading background data: {ex.Message}";
+        }
+        finally
+        {
+            _backgroundLoading = false;
+            StateHasChanged();
+        }
     }
 
     async Task<EventCallback> EditCell(Film cell)
     {
+        if (_backgroundLoading) return EventCallback.Empty;
+        
         await EditItem(cell.Guid);
         return EventCallback.Empty;
     }
     
     async Task AddItem()
     {
-         await EditItem(null);
+        if (_backgroundLoading) return;
+        
+        await EditItem(null);
     }
 
     async Task EditItem(Guid? id)
@@ -89,5 +159,22 @@
         {
             await Refresh();
         }
+    }
+    
+    async Task Refresh()
+    {
+        _loading = true;
+        _loadingStatus = "Refreshing data...";
+        StateHasChanged();
+        
+        Items = await ctx.Films.ToListAsync();
+        
+        _loading = false;
+    }
+
+    public void Dispose()
+    {
+        _cts.Cancel();
+        _cts.Dispose();
     }
 }

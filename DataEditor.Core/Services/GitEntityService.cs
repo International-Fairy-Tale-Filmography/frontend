@@ -158,25 +158,9 @@ namespace DataEditor.Core.Services
 
                 //mark the file as loaded
                 LoadedFiles.Add(typeof(T));
-
-                //if the file is FILM, then load everything and map everything
-                if (typeof(T) == typeof(Film))
-                {
-                    await SeedDataFromGit<Company>(progressCallback);
-                    await SeedDataFromGit<Country>(progressCallback);
-                    await SeedDataFromGit<Language>(progressCallback);
-                    await SeedDataFromGit<Origin>(progressCallback);
-                    await SeedDataFromGit<Role>(progressCallback);
-                    await SeedDataFromGit<Person>(progressCallback);
-
-                    await SeedDataFromGit<FilmCompany>(progressCallback);
-                    await SeedDataFromGit<FilmLink>(progressCallback);
-                    await SeedDataFromGit<FilmCountry>(progressCallback);
-                    await SeedDataFromGit<FilmLanguage>(progressCallback);
-                    await SeedDataFromGit<FilmOrigin>(progressCallback);
-                    await SeedDataFromGit<FilmPersonRole>(progressCallback);
-                    //await FillInGuids();
-                }
+                
+                // Remove the automatic loading of related tables for Film to avoid recursive calls
+                // We'll handle this separately through SeedRelatedDataInBackground
             }
 
             await _context.SaveChangesAsync();
@@ -375,6 +359,99 @@ namespace DataEditor.Core.Services
             {
                 throw new Exception($"Error downloading file content from URL: {repositoryContent.DownloadUrl}", ex);
             }
+        }
+
+        // Add a new method to load only Film data initially
+        public async Task SeedFilmDataOnly(Action<string> progressCallback = null)
+        {
+            progressCallback?.Invoke("Loading Films...");
+            
+            if (!LoadedFiles.Contains(typeof(Film)))
+            {
+                var fileName = $"{CoreSettings.dbSetNames[typeof(Film)]}.csv";
+                progressCallback?.Invoke($"Loading {fileName}...");
+                
+                var entities = await FetchCsv<Film>(fileName);
+
+                var dbSetProperty = _context.GetType().GetProperty("Films");
+                var dbSet = dbSetProperty.GetValue(_context);
+                
+                var addRangeMethod = dbSet.GetType().GetMethod("AddRange", new[] { typeof(IEnumerable<Film>) });
+                addRangeMethod.Invoke(dbSet, new object[] { entities });
+                
+                LoadedFiles.Add(typeof(Film));
+                await _context.SaveChangesAsync();
+            }
+            
+            progressCallback?.Invoke("Films loaded successfully");
+        }
+
+        // Add a method to load related data in the background
+        private static readonly List<Type> _relatedEntityTypes = new List<Type>
+        {
+            typeof(Company),
+            typeof(Country),
+            typeof(Language),
+            typeof(Origin),
+            typeof(Role),
+            typeof(Person),
+            typeof(FilmCompany),
+            typeof(FilmLink),
+            typeof(FilmCountry),
+            typeof(FilmLanguage),
+            typeof(FilmOrigin),
+            typeof(FilmPersonRole)
+        };
+
+        // Modify the method to load related data in the background with progress tracking
+        public async Task SeedRelatedDataInBackground(Action<string, int, int> progressCallback = null)
+        {
+            // Calculate total files to load
+            int totalFiles = _relatedEntityTypes.Count;
+            int currentFile = 0;
+            
+            progressCallback?.Invoke("Starting background data load...", currentFile, totalFiles);
+            
+            foreach (var entityType in _relatedEntityTypes)
+            {
+                // Skip if already loaded
+                if (LoadedFiles.Contains(entityType))
+                {
+                    currentFile++;
+                    progressCallback?.Invoke($"Skipping {CoreSettings.dbSetNames[entityType]}.csv (already loaded)", currentFile, totalFiles);
+                    continue;
+                }
+                
+                var fileName = $"{CoreSettings.dbSetNames[entityType]}.csv";
+                currentFile++;
+                progressCallback?.Invoke($"Loading {fileName}...", currentFile, totalFiles);
+                
+                try
+                {
+                    // Use reflection to call the generic SeedDataFromGit method
+                    var method = typeof(GitEntityService).GetMethod(nameof(SeedDataFromGit));
+                    var genericMethod = method.MakeGenericMethod(entityType);
+                    
+                    // Create a progress callback wrapper that preserves the counting context
+                    Action<string> entityProgressCallback = (message) => 
+                        progressCallback?.Invoke(message, currentFile, totalFiles);
+                        
+                    await (Task)genericMethod.Invoke(this, new object[] { entityProgressCallback });
+                }
+                catch (Exception ex)
+                {
+                    progressCallback?.Invoke($"Error loading {fileName}: {ex.Message}", currentFile, totalFiles);
+                }
+            }
+            
+            progressCallback?.Invoke("All related data loaded successfully", totalFiles, totalFiles);
+        }
+
+        // An overload of SeedRelatedDataInBackground that works with the old signature for backward compatibility
+        public async Task SeedRelatedDataInBackground(Action<string> progressCallback = null)
+        {
+            await SeedRelatedDataInBackground((message, current, total) => 
+                progressCallback?.Invoke($"{message} ({current}/{total})"));
         }
     }
 }
