@@ -4,6 +4,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
+using System.Net.Http.Json;
 using System.Reflection.PortableExecutable;
 using System.Text;
 using System.Threading.Tasks;
@@ -42,6 +43,9 @@ namespace DataEditor.Core.Services
             sb.AppendLine(await CommitChangesToGit<Origin>());
             sb.AppendLine(await CommitChangesToGit<Person>());
             sb.AppendLine(await CommitChangesToGit<Role>());
+            sb.AppendLine(await CommitChangesToGit<Language>());
+            sb.AppendLine(await CommitChangesToGit<Company>());
+
 
             sb.AppendLine(await CommitChangesToGit<FilmLink>());
             sb.AppendLine(await CommitChangesToGit<FilmCompany>());
@@ -91,8 +95,6 @@ namespace DataEditor.Core.Services
             var filename = $"{CoreSettings.dbSetNames[typeof(T)]}.csv";
             var file = await GetFileByName(filename);
 
-            //var films = await context.Films.ToListAsync();
-
             await using var writer = new StringWriter();
             await using var csv = new CsvWriter(writer, new CsvConfiguration(CultureInfo.InvariantCulture));
             csv.WriteHeader<T>();
@@ -103,7 +105,7 @@ namespace DataEditor.Core.Services
 
             if (content != file.Content)
             {
-                var result = await _gitService.UpdateFile(filename, file, content, $"test update at {DateTime.Now}");
+                //var result = await _gitService.UpdateFile(filename, file, content, $"test update at {DateTime.Now}");
                 return filename + "; ";
             }
             else
@@ -134,7 +136,8 @@ namespace DataEditor.Core.Services
         {
             if (!LoadedFiles.Contains(typeof(T)))
             {
-                var entities = await FetchCsv<T>($"{CoreSettings.dbSetNames[typeof(T)]}.csv");
+                var fileName = $"{CoreSettings.dbSetNames[typeof(T)]}.csv";
+                var entities = await FetchCsv<T>(fileName);
 
                 //get the property method for the appropriate entity
                 var dbSetName = CoreSettings.dbSetNames[typeof(T)];
@@ -326,11 +329,16 @@ namespace DataEditor.Core.Services
 
         private async Task<List<T>> FetchCsv<T>(string name)
         {
-            var file = await GetFileByName(name);
+            var repositoryFile = await GetFileByName(name);
 
-            using var reader = new StringReader(file.Content);
-            var config = new CsvHelper.Configuration.CsvConfiguration(System.Globalization.CultureInfo.InvariantCulture);
-            config.MissingFieldFound = null;
+            var content = await GetFileContentFromDownloadUrl(repositoryFile);
+            using var reader = new StringReader(content);
+
+            var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+            {
+                MissingFieldFound = null,
+                HeaderValidated = null
+            };
 
             using var csv = new CsvReader(reader, config);
             
@@ -339,5 +347,28 @@ namespace DataEditor.Core.Services
             return records.ToList();
         }
 
+        public async Task<string> GetFileContentFromDownloadUrl(RepositoryContent repositoryContent)
+        {
+            if (repositoryContent == null)
+                throw new ArgumentNullException(nameof(repositoryContent));
+                
+            if (string.IsNullOrEmpty(repositoryContent.DownloadUrl))
+                throw new InvalidOperationException("DownloadUrl is null or empty for the repository content");
+            
+            using var httpClient = new HttpClient();
+            try
+            {
+                // Download the content directly from the DownloadUrl
+                var response = await httpClient.GetAsync(repositoryContent.DownloadUrl);
+                response.EnsureSuccessStatusCode();
+                
+                // Return the content as a string
+                return await response.Content.ReadAsStringAsync();
+            }
+            catch (HttpRequestException ex)
+            {
+                throw new Exception($"Error downloading file content from URL: {repositoryContent.DownloadUrl}", ex);
+            }
+        }
     }
 }
