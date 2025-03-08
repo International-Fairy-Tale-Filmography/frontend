@@ -63,8 +63,8 @@
                 </MudChipSet>
                
                 
-                <MudAutocomplete ToStringFunc="@(e => e == null ? null : $"{e.Guid}: {e.FirstName} {e.LastName}")" T="Person" Label="Search People" @bind-Value="selectedPerson" SearchFunc="@SearchPeople" Variant="Variant.Text" ShowProgressIndicator="true" ResetValueOnEmptyText="true" Clearable="true" Dense="true"/>
-                <MudAutocomplete ToStringFunc="@(e => e == null ? null : $"{e.Name}")" T="Role" Label="Search People" @bind-Value="selectedRole" SearchFunc="@SearchRoles" Variant="Variant.Text" ShowProgressIndicator="true" ResetValueOnEmptyText="true" Clearable="true" Dense="true"/>
+                <MudAutocomplete ToStringFunc="@(e => e == null ? null : $"{e.FirstName} {e.LastName}")" T="Person" Label="Search People" @bind-Value="selectedPerson" SearchFunc="@SearchPeople" Variant="Variant.Text" ShowProgressIndicator="true" ResetValueOnEmptyText="true" Clearable="true" Dense="true"/>
+                <MudAutocomplete ToStringFunc="@(e => e == null ? null : $"{e.Name}")" T="Role" Label="Search Roles" @bind-Value="selectedRole" SearchFunc="@SearchRoles" Variant="Variant.Text" ShowProgressIndicator="true" ResetValueOnEmptyText="true" Clearable="true" Dense="true"/>
                 <MudButton StartIcon="@Icons.Material.Filled.Add" OnClick="AddPersonRole">Add Person</MudButton>
 
                 <MudChipSet T="FilmPersonRole" AllClosable OnClose="RemovePersonRole">
@@ -285,21 +285,18 @@
     private Person selectedPerson = null;
     private async Task<IEnumerable<Person>> SearchPeople(string value, CancellationToken token)
     {
-        throw new NotImplementedException();
-        // var query = ctx.People.AsQueryable();
+        var query = ctx.People.AsQueryable();
 
-        // if (!string.IsNullOrEmpty(value))
-        // {
-        //     int.TryParse(value, out var valueInt);
+        if (!string.IsNullOrEmpty(value))
+        {
 
-        //     query = query.Where(i => 
-        //         i.FirstName.Contains(value, StringComparison.InvariantCultureIgnoreCase) ||
-        //         i.LastName.Contains(value, StringComparison.InvariantCultureIgnoreCase) ||
-        //         i.Guid == valueInt
-        //         );
-        // }
+            query = query.Where(i => 
+                i.FirstName.Contains(value, StringComparison.InvariantCultureIgnoreCase) ||
+                i.LastName.Contains(value, StringComparison.InvariantCultureIgnoreCase)
+                );
+        }
 
-        // return await query.OrderBy(i => i.FirstName).ThenBy(i => i.LastName).Take(10).ToListAsync(cancellationToken: token);
+        return await query.OrderBy(i => i.FirstName).ThenBy(i => i.LastName).Take(10).ToListAsync(cancellationToken: token);
     }
 
     private Role selectedRole = null;

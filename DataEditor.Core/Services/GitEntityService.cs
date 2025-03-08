@@ -101,11 +101,15 @@ namespace DataEditor.Core.Services
             await csv.NextRecordAsync();
             await csv.WriteRecordsAsync(objects);
 
-            var content = writer.ToString();
+            //get the content on the server
+            var oldContent = await GetFileContentFromDownloadUrl(file);
 
-            if (content != file.Content)
+            var newContent = writer.ToString();
+            //check if theres any differences
+            if (oldContent != newContent)
             {
-                var result = await _gitService.UpdateFile(filename, file, content, $"test update at {DateTime.Now}");
+                //update the server with latest if theres any differences
+                var result = await _gitService.UpdateFile(filename, file, newContent, $"updating {filename}");
                 return filename + "; ";
             }
             else
