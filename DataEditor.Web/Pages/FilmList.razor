@@ -10,6 +10,15 @@
 
 <MudButton OnClick="@AddItem" Color="@Color.Success" Class="add-item-btn">Add Item</MudButton>
 
+@if (_loading)
+{
+    <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-2" />
+    @if (!string.IsNullOrEmpty(_loadingStatus))
+    {
+        <MudText Typo="Typo.body2" Color="Color.Info">@_loadingStatus</MudText>
+    }
+}
+
 <MudDataGrid T="Film" Items="@Items" ReadOnly="true" Virtualize="true" Filterable="true" FilterCaseSensitivity="DataGridFilterCaseSensitivity.CaseInsensitive"
              Bordered="true" Dense="true" Loading="_loading">
     <Columns>
@@ -35,6 +44,7 @@
 
 @code {
     public bool _loading { get; set; }
+    public string _loadingStatus { get; set; } = string.Empty;
 
     public List<Film> Items { get; set; } = new();
     protected override async Task OnInitializedAsync()
@@ -45,8 +55,16 @@
     async Task Refresh()
     {
         _loading = true;
-        Thread.Sleep(10);
-        await ges.SeedDataFromGit<Film>();
+        _loadingStatus = "Starting data load...";
+        StateHasChanged();
+        
+        // Use the progress callback to update the loading status
+        await ges.SeedDataFromGit<Film>(status => 
+        {
+            _loadingStatus = status;
+            InvokeAsync(StateHasChanged);
+        });
+        
         Items = await ctx.Films.ToListAsync();
         _loading = false;
     }
@@ -56,12 +74,13 @@
         await EditItem(cell.Guid);
         return EventCallback.Empty;
     }
+    
     async Task AddItem()
     {
          await EditItem(null);
     }
 
-    async Task  EditItem(Guid? id)
+    async Task EditItem(Guid? id)
     {
         var parameters = new DialogParameters<FilmEdit> { { x => x.Id, id } };
         var dialog = await DialogService.ShowAsync<FilmEdit>("Edit", parameters);
@@ -70,8 +89,5 @@
         {
             await Refresh();
         }
-        
     }
-    
-
 }

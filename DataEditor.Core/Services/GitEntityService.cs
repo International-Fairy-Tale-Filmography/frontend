@@ -136,11 +136,14 @@ namespace DataEditor.Core.Services
         public static HashSet<Type> LoadedFiles = new ();
 
 
-        public async Task SeedDataFromGit<T>()
+        // Modify the SeedDataFromGit method to accept a progress callback
+        public async Task SeedDataFromGit<T>(Action<string> progressCallback = null)
         {
             if (!LoadedFiles.Contains(typeof(T)))
             {
                 var fileName = $"{CoreSettings.dbSetNames[typeof(T)]}.csv";
+                progressCallback?.Invoke($"Loading {fileName}...");
+                
                 var entities = await FetchCsv<T>(fileName);
 
                 //get the property method for the appropriate entity
@@ -159,26 +162,25 @@ namespace DataEditor.Core.Services
                 //if the file is FILM, then load everything and map everything
                 if (typeof(T) == typeof(Film))
                 {
-                    await SeedDataFromGit<Company>();
-                    await SeedDataFromGit<Country>();
-                    await SeedDataFromGit<Language>();
-                    await SeedDataFromGit<Origin>();
-                    await SeedDataFromGit<Role>();
-                    await SeedDataFromGit<Person>();
+                    await SeedDataFromGit<Company>(progressCallback);
+                    await SeedDataFromGit<Country>(progressCallback);
+                    await SeedDataFromGit<Language>(progressCallback);
+                    await SeedDataFromGit<Origin>(progressCallback);
+                    await SeedDataFromGit<Role>(progressCallback);
+                    await SeedDataFromGit<Person>(progressCallback);
 
-                    await SeedDataFromGit<FilmCompany>();
-                    await SeedDataFromGit<FilmLink>();
-                    await SeedDataFromGit<FilmCountry>();
-                    await SeedDataFromGit<FilmLanguage>();
-                    await SeedDataFromGit<FilmOrigin>();
-                    await SeedDataFromGit<FilmPersonRole>();
+                    await SeedDataFromGit<FilmCompany>(progressCallback);
+                    await SeedDataFromGit<FilmLink>(progressCallback);
+                    await SeedDataFromGit<FilmCountry>(progressCallback);
+                    await SeedDataFromGit<FilmLanguage>(progressCallback);
+                    await SeedDataFromGit<FilmOrigin>(progressCallback);
+                    await SeedDataFromGit<FilmPersonRole>(progressCallback);
                     //await FillInGuids();
                 }
             }
 
-
             await _context.SaveChangesAsync();
-           
+            progressCallback?.Invoke("Data loading complete");
         }
 
         private async Task FillInGuids()
