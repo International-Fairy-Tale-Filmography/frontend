@@ -11,6 +11,11 @@
         <MudTextField @bind-Value="item.Title" Label="Title"></MudTextField>
         <MudTextField @bind-Value="item.Code" Label="Code"></MudTextField>
         <MudTextField @bind-Value="item.Author" Label="Author"></MudTextField>
+        
+        <MudTextField @bind-Value="item.CreatedBy" Label="Created By"></MudTextField>
+        <MudDatePicker @bind-Date="item.CreatedOn" Label="Created On" Clearable="true" ShowToolbar="false" />
+        <MudTextField @bind-Value="item.UpdatedBy" Label="Updated By"></MudTextField>
+        <MudDatePicker @bind-Date="item.UpdatedOn" Label="Updated On" Clearable="true" ShowToolbar="false" />
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="Cancel">Cancel</MudButton>
