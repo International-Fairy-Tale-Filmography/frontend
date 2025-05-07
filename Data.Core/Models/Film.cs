@@ -17,6 +17,11 @@ public class Film
     public string Comment { get; set; }
     public bool? Published { get; set; }
 
+    public DateTime? CreatedOn { get; set; }
+    public string? CreatedBy { get; set; }
+    public DateTime? UpdatedOn { get; set; }
+    public string? UpdatedBy { get; set; }
+
     public List<FilmLink> Links { get; set; } = new();
     public List<FilmCompany> Companies { get; set; } = new();
     public List<FilmCountry> Countries { get; set; } = new();
