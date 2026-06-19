@@ -11,5 +11,6 @@ namespace FrontEnd.Core.Data
         public List<Language> Languages { get; set; } = [];
         public List<Origin> Origins { get; set; } = [];
         public List<Person> People { get; set; } = [];
+        public List<Role> Roles { get; set; } = [];
     }
 }

@@ -18,48 +18,67 @@
                 <MudTextField @bind-Value="item.Duration" Label="Duration"></MudTextField>
                 <MudTextField @bind-Value="item.Mode" Label="Mode"></MudTextField>
                 <MudTextField @bind-Value="item.Comment" Label="Comment"></MudTextField>
+                
+                <MudTextField @bind-Value="item.CreatedBy" Label="Created By"></MudTextField>
+                <MudDatePicker @bind-Date="item.CreatedOn" Label="Created On" Clearable="true" ShowToolbar="false" />
+                <MudTextField @bind-Value="item.UpdatedBy" Label="Updated By"></MudTextField>
+                <MudDatePicker @bind-Date="item.UpdatedOn" Label="Updated On" Clearable="true" ShowToolbar="false" />
             </MudItem>
             <MudItem xs="12" md="6">
-                <MudChipSet T="string" AllClosable OnClose="RemoveCompany">
-                    @foreach (var value in item.Companies)
-                    {
-                        <MudChip Text="@value.Name" Value="value.CompanyId.ToString()"></MudChip>
-                    }
-                </MudChipSet>
                 <MudAutocomplete ToStringFunc="@(e => e == null ? null : $"{e.Name}")" T="Company" Label="Search Company" @bind-Value="selectedCompany" SearchFunc="@SearchCompanies" Variant="Variant.Text" ShowProgressIndicator="true" ResetValueOnEmptyText="true" Clearable="true" Dense="true"/>
                 <MudButton StartIcon="@Icons.Material.Filled.Add" OnClick="AddCompany">Add Company</MudButton>
- 
-                <MudChipSet T="string" AllClosable OnClose="RemoveCountry">
-                    @foreach (var value in item.Countries)
+
+                <MudChipSet T="Guid" AllClosable OnClose="RemoveCompany">
+                    @foreach (var value in item.Companies)
                     {
-                        <MudChip Text="@value.Name" Value="value.CountryId.ToString()"></MudChip>
+                        <MudChip Text="@value.Company.Name" Value="value.CompanyGuid.ToString()"></MudChip>
                     }
                 </MudChipSet>
+                
                 <MudAutocomplete ToStringFunc="@(e => e == null ? null : $"{e.Name}")" T="Country" Label="Search Country" @bind-Value="selectedCountry" SearchFunc="@SearchCountries" Variant="Variant.Text" ShowProgressIndicator="true" ResetValueOnEmptyText="true" Clearable="true" Dense="true"/>
                 <MudButton StartIcon="@Icons.Material.Filled.Add" OnClick="AddCountry">Add Country</MudButton>
-                
-                
-                <MudChipSet T="string" AllClosable OnClose="RemoveLanguage">
+
+
+                <MudChipSet T="Guid" AllClosable OnClose="RemoveCountry">
+                    @foreach (var value in item.Countries)
+                    {
+                        <MudChip Text="@value.Country.Name" Value="value.CountryGuid.ToString()"></MudChip>
+                    }
+                </MudChipSet>
+               
+                <MudAutocomplete ToStringFunc="@(e => e == null ? null : $"{e.Name}")" T="Language" Label="Search Language" @bind-Value="selectedLanguage" SearchFunc="@SearchLanguages" Variant="Variant.Text" ShowProgressIndicator="true" ResetValueOnEmptyText="true" Clearable="true" Dense="true"/>
+                <MudButton StartIcon="@Icons.Material.Filled.Add" OnClick="AddLanguage">Add Language</MudButton>
+
+                <MudChipSet T="Guid" AllClosable OnClose="RemoveLanguage">
                     @foreach (var value in item.Languages)
                     {
-                        <MudChip Text="@value.Name" Value="value.LanguageId.ToString()"></MudChip>
+                        <MudChip Text="@value.Language.Name" Value="value.LanguageGuid.ToString()"></MudChip>
                     }
                 </MudChipSet>
-                <MudAutocomplete ToStringFunc="@(e => e == null ? null : $"{e.Name}")" T="Language" Label="Search Language" @bind-Value="selectedLanguage" SearchFunc="@SearchLanguages" Variant="Variant.Text" ShowProgressIndicator="true" ResetValueOnEmptyText="true" Clearable="true" Dense="true" />
-                <MudButton StartIcon="@Icons.Material.Filled.Add" OnClick="AddLanguage">Add Language</MudButton>
-                
-                
-                 
-                <MudChipSet T="string" AllClosable OnClose="RemoveOrigin">
-                    @foreach (var value in item.Origins)
-                    {
-                        <MudChip Text="@value.Title" Value="value.OriginId.ToString()"></MudChip>
-                    }
-                </MudChipSet>
-                <MudAutocomplete ToStringFunc="@(e => e == null ? null : $"{e.Title}")" T="Origin" Label="Search Origin" @bind-Value="selectedOrigin" SearchFunc="@SearchOrigins" Variant="Variant.Text" ShowProgressIndicator="true" ResetValueOnEmptyText="true" Clearable="true" Dense="true" />
+               
+
+                <MudAutocomplete ToStringFunc="@(e => e == null ? null : $"{e.Title}")" T="Origin" Label="Search Origin" @bind-Value="selectedOrigin" SearchFunc="@SearchOrigins" Variant="Variant.Text" ShowProgressIndicator="true" ResetValueOnEmptyText="true" Clearable="true" Dense="true"/>
                 <MudButton StartIcon="@Icons.Material.Filled.Add" OnClick="AddOrigin">Add Origin</MudButton>
 
+                <MudChipSet T="Guid" AllClosable OnClose="RemoveOrigin">
+                    @foreach (var value in item.Origins)
+                    {
+                        <MudChip Text="@value.Origin.Title" Value="value.OriginGuid.ToString()"></MudChip>
+                    }
+                </MudChipSet>
+               
                 
+                <MudAutocomplete ToStringFunc="@(e => e == null ? null : $"{e.FirstName} {e.LastName}")" T="Person" Label="Search People" @bind-Value="selectedPerson" SearchFunc="@SearchPeople" Variant="Variant.Text" ShowProgressIndicator="true" ResetValueOnEmptyText="true" Clearable="true" Dense="true"/>
+                <MudAutocomplete ToStringFunc="@(e => e == null ? null : $"{e.Name}")" T="Role" Label="Search Roles" @bind-Value="selectedRole" SearchFunc="@SearchRoles" Variant="Variant.Text" ShowProgressIndicator="true" ResetValueOnEmptyText="true" Clearable="true" Dense="true"/>
+                <MudButton StartIcon="@Icons.Material.Filled.Add" OnClick="AddPersonRole">Add Person</MudButton>
+
+                <MudChipSet T="FilmPersonRole" AllClosable OnClose="RemovePersonRole">
+                    @foreach (var value in item.PeopleRoles.OrderBy(i => i.Role.Guid))
+                    {
+                        <MudChip Text="@( $"{value.Role.Name} {value.Person.FirstName} {value.Person.LastName}")" Value="value"></MudChip>
+                    }
+                </MudChipSet>
+
 
             </MudItem>
 
@@ -82,20 +101,22 @@
     private MudDialogInstance MudDialog { get; set; }
 
     [Parameter]
-    public int Id { get; set; } = 0;
+    public Guid? Id { get; set; } = null;
 
     public Film item { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
-        if (Id != 0)
+        if (Id != null)
         {
             item = await ctx.Films
-                .Include(i => i.Companies)
-                .Include(i => i.Countries)
-                .Include(i => i.Languages)
-                .Include(i => i.Origins)
-                .FirstAsync(i => i.FilmId == Id);
+                .Include(i => i.Companies).ThenInclude(fc => fc.Company)
+                .Include(i => i.Countries).ThenInclude(fc => fc.Country)
+                .Include(i => i.Languages).ThenInclude(fl => fl.Language)
+                .Include(i => i.Origins).ThenInclude(fo => fo.Origin)
+                .Include(i => i.PeopleRoles).ThenInclude(fpr => fpr.Role)
+                .Include(i => i.PeopleRoles).ThenInclude(fpr => fpr.Person)
+                .FirstAsync(i => i.Guid == Id);
         }
         else
         {
@@ -106,7 +127,7 @@
 
     private async Task Save()
     {
-        if (Id == 0)
+        if (Id == null)
         {
             
             await ctx.Films.AddAsync(item);
@@ -128,7 +149,11 @@
     private Company selectedCompany = null;
     public void AddCompany()
     {
-        item.Companies.Add(selectedCompany);
+        item.Companies.Add(new FilmCompany()
+        {
+            Film = item,
+            Company = selectedCompany
+        });
         selectedCompany = null;
     }
 
@@ -145,9 +170,9 @@
         return await query.OrderBy( i=> i.Name).Take(10).ToListAsync(cancellationToken: token);
     }
 
-    public void RemoveCompany(MudChip<string> chip)
+    public void RemoveCompany(MudChip<Guid> chip)
     {
-        var selected = item.Companies.First(i => i.CompanyId == int.Parse(chip.Value!));
+        var selected = item.Companies.First(i => i.CompanyGuid == chip.Value);
         item.Companies.Remove(selected);
     }
 
@@ -155,7 +180,11 @@
     private Country selectedCountry = null;
     public void AddCountry()
     {
-        item.Countries.Add(selectedCountry);
+        item.Countries.Add(new FilmCountry()
+        {
+            Film = item,
+            Country = selectedCountry
+        });
         selectedCountry = null;
     }
 
@@ -172,9 +201,9 @@
         return await query.OrderBy(i => i.Name).Take(10).ToListAsync(cancellationToken: token);
     }
 
-    public void RemoveCountry(MudChip<string> chip)
+    public void RemoveCountry(MudChip<Guid> chip)
     {
-        var selected = item.Countries.First(i => i.CountryId == int.Parse(chip.Value!));
+        var selected = item.Countries.First(i => i.CountryGuid == chip.Value!);
         item.Countries.Remove(selected);
     }
 
@@ -183,7 +212,11 @@
     private Language selectedLanguage = null;
     public void AddLanguage()
     {
-        item.Languages.Add(selectedLanguage);
+        item.Languages.Add(new FilmLanguage()
+        {
+            Film = item,
+            Language = selectedLanguage
+        });
         selectedLanguage = null;
     }
 
@@ -200,9 +233,9 @@
         return await query.OrderBy(i => i.Name).Take(10).ToListAsync(cancellationToken: token);
     }
 
-    public void RemoveLanguage(MudChip<string> chip)
+    public void RemoveLanguage(MudChip<Guid> chip)
     {
-        var selected = item.Languages.First(i => i.LanguageId == int.Parse(chip.Value!));
+        var selected = item.Languages.First(i => i.LanguageGuid == chip.Value!);
         item.Languages.Remove(selected);
     }
 
@@ -210,7 +243,11 @@
     private Origin selectedOrigin = null;
     public void AddOrigin()
     {
-        item.Origins.Add(selectedOrigin);
+        item.Origins.Add(new FilmOrigin()
+        {
+            Film = item,
+            Origin = selectedOrigin
+        });
         selectedOrigin = null;
     }
 
@@ -227,10 +264,63 @@
         return await query.OrderBy(i => i.Title).Take(10).ToListAsync(cancellationToken: token);
     }
 
-    public void RemoveOrigin(MudChip<string> chip)
+    public void RemoveOrigin(MudChip<Guid> chip)
     {
-        var selected = item.Origins.First(i => i.OriginId == int.Parse(chip.Value!));
+        var selected = item.Origins.First(i => i.OriginGuid == chip.Value!);
         item.Origins.Remove(selected);
+    }
+
+    //people
+    public void RemovePersonRole(MudChip<FilmPersonRole> chip)
+    {
+        item.PeopleRoles.Remove(chip.Value);
+    }
+
+    public void AddPersonRole()
+    {
+        item.PeopleRoles.Add(new FilmPersonRole()
+        {
+            Film = item,
+            Person = selectedPerson,
+            Role = selectedRole
+        });
+        selectedPerson = null;
+        selectedRole = null;
+    }
+
+    private Person selectedPerson = null;
+    private async Task<IEnumerable<Person>> SearchPeople(string value, CancellationToken token)
+    {
+        var query = ctx.People.AsQueryable();
+
+        if (!string.IsNullOrEmpty(value))
+        {
+
+            query = query.Where(i => 
+                i.FirstName.Contains(value, StringComparison.InvariantCultureIgnoreCase) ||
+                i.LastName.Contains(value, StringComparison.InvariantCultureIgnoreCase)
+                );
+        }
+
+        return await query.OrderBy(i => i.FirstName).ThenBy(i => i.LastName).Take(10).ToListAsync(cancellationToken: token);
+    }
+
+    private Role selectedRole = null;
+    private async Task<IEnumerable<Role>> SearchRoles(string value, CancellationToken token)
+    {
+
+        var query = ctx.Roles.AsQueryable();
+
+        if (!string.IsNullOrEmpty(value))
+        {
+            int.TryParse(value, out var valueInt);
+
+            query = query.Where(i => 
+                i.Name.Contains(value, StringComparison.InvariantCultureIgnoreCase)
+            );
+        }
+
+        return await query.OrderBy(i => i.Name).Take(10).ToListAsync(cancellationToken: token);
     }
 
 }

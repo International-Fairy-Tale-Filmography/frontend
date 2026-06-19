@@ -9,6 +9,12 @@
 <MudDialog>
     <DialogContent>
         <MudTextField @bind-Value="item.Name" Label="Name"></MudTextField>
+        
+        <MudTextField @bind-Value="item.CreatedBy" Label="Created By"></MudTextField>
+        <MudDatePicker @bind-Date="item.CreatedOn" Label="Created On" Clearable="true" ShowToolbar="false" />
+        <MudTextField @bind-Value="item.UpdatedBy" Label="Updated By"></MudTextField>
+        <MudDatePicker @bind-Date="item.UpdatedOn" Label="Updated On" Clearable="true" ShowToolbar="false" />
+
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="Cancel">Cancel</MudButton>
@@ -22,15 +28,15 @@
     private MudDialogInstance MudDialog { get; set; }
 
     [Parameter]
-    public int Id { get; set; } = 0;
+    public Guid? Id { get; set; } = null;
 
     public Role item { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
-        if (Id != 0)
+        if (Id != null)
         {
-            item = await ctx.Roles.FirstAsync(i => i.RoleId == Id);
+            item = await ctx.Roles.FirstAsync(i => i.Guid == Id);
         }
         else
         {
@@ -41,7 +47,7 @@
 
     private async Task Save()
     {
-        if (Id == 0)
+        if (Id == null)
         {
             
             await ctx.Roles.AddAsync(item);

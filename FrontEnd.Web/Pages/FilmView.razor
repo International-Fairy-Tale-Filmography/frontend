@@ -1,0 +1,218 @@
+﻿@page "/Film/{slugparam}/{idparam}"
+
+@using Data.Core.Configuration
+@using FrontEnd.Core.Services
+@using FrontEnd.Core.Data
+@using Data.Core.Models
+@inject FrontEndDataInitializerService fedis
+@inject FrontEndDataContext context
+<h3>Film</h3>
+
+
+@if (!isLoading)
+{
+    @if (SelectedFilm != null)
+    {
+        <div class="container" id="body">
+
+            
+
+            <div class="row">
+                <div class="span12">
+                    <h2>@SelectedFilm.Title</h2>
+                </div>
+            </div>
+
+            <div class="row">
+
+                <div class="span8">
+
+                    <div class="row film-data">
+                        <div class="span1">
+                            Director(s):
+                        </div>
+                        <div class="span7 ">
+                            <span class="film-info">
+                                @foreach (var i in SelectedFilm.PeopleRoles.Where(j => j.RoleGuid == CoreSettings.DirectorRoleId))
+                                {
+                                    <a href="/Search/ByDirector/7783">@i.Person.FirstName @i.Person.LastName</a>
+                                }
+                                
+                            </span>
+                        </div>
+
+                    </div>
+
+
+                    <div class="row film-data">
+                        <div class="span1">
+                            Country(s):
+                        </div>
+                        <div class="span7 film-info">
+                            <span class="film-info">
+                                @foreach (var i in SelectedFilm.Countries)
+                                {
+                                    <a href="/Search/ByCountry/996">@i.Country.Name</a>
+                                }
+                                
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="row film-data">
+                        <div class="span1">
+                            Company(s):
+                        </div>
+                        <div class="span7 film-info">
+                            <span class="film-info">
+                                @foreach (var i in SelectedFilm.Companies)
+                                {
+                                    <a href="/Search/ByCompany/@i.Company.Guid">@i.Company.Name</a>
+                                }
+                               
+                            </span>
+                        </div>
+                    </div>
+
+
+
+                    <div class="row film-data">
+                        <div class="span1">
+                            Colour:
+                        </div>
+                        <div class="span7 film-info">
+                            <span class="film-info">
+                                @SelectedFilm.Color
+                            </span>
+                        </div>
+                    </div>
+
+
+                    <div class="row film-data">
+                        <div class="span1">
+                            Mode:
+                        </div>
+                        <div class="span7 film-info">
+                            <span class="film-info">
+                                @SelectedFilm.Mode
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="row film-data">
+                        <div class="span1">
+                            Duration:
+                        </div>
+                        <div class="span7 film-info">
+                            <span class="film-info">
+                                @SelectedFilm.Duration
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="row film-data">
+                        <div class="span1">
+                            Origin(s):
+                        </div>
+                        <div class="span7">
+                            <span class="film-info">
+                                @foreach (var i in SelectedFilm.Origins)
+                                {
+                                    <a href="/">@i.Origin.Title</a>
+                                }
+                            </span>
+                        </div>
+                    </div>
+
+
+                    <div class="row film-data">
+                        <div class="span1">
+                            Language(s):
+                        </div>
+                        <div class="span7">
+                            <span class="film-info">
+                                @foreach (var i in SelectedFilm.Languages)
+                                {
+                                    <a href="/">@i.Language.Name</a>
+                                }
+                            </span>
+                        </div>
+                    </div>
+
+
+                    <div class="row film-data">
+                        <div class="span1">
+                            Link(s):
+                        </div>
+                        <div class="span7 film-info">
+
+                            <ul class="link-list unstyled">
+                                @foreach (var i in SelectedFilm.Links)
+                                {
+                                    <a href="@i.Url">@i.Url</a>
+                                }
+                            </ul>
+
+
+
+                        </div>
+                    </div>
+
+
+
+                </div>
+
+                
+                <div class="span4">
+
+                    <div class="cast-container">
+                        @foreach (var i in SelectedFilm.PeopleRoles.Where(i => i.RoleGuid != CoreSettings.DirectorRoleId).OrderBy(i => i.Role.Order))
+                        {
+                            <h5>@i.Role.Name</h5>
+                            <ul>
+                                <li>
+                                    <a href="/Search/ByPerson/7783">@i.Person.FirstName @i.Person.LastName</a>
+                                </li>
+                            </ul>
+                        }
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div id="scrollToTop"></div>
+        </div>
+
+    }
+    else
+    {
+        <p>Film Not Found</p>
+    }
+
+
+}
+
+@code {
+
+    [Parameter]
+    public string slugParam { get; set; }
+
+    [Parameter]
+    public string idParam { get; set; }
+
+    private bool isLoading = true;
+    public Film SelectedFilm { get; set; }
+    protected override async Task OnInitializedAsync()
+    {
+        
+        await Task.Delay(1);
+        await fedis.FetchData();
+        var guid = new Guid(idParam);
+        SelectedFilm = context.Films.First(i => i.Guid == guid);
+
+        isLoading = false;
+
+    }
+}

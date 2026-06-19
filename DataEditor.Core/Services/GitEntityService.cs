@@ -4,12 +4,14 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
+using System.Net.Http.Json;
 using System.Reflection.PortableExecutable;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using CsvHelper;
 using CsvHelper.Configuration;
+using Data.Core.Configuration;
 using Data.Core.Models;
 using Microsoft.EntityFrameworkCore;
 using Octokit;
@@ -19,6 +21,7 @@ namespace DataEditor.Core.Services
 {
     public class GitEntityService
     {
+        
         private readonly DataEditorDataContext _context;
         private readonly CoreSettingsModel _settings;
         private readonly GitService _gitService;
@@ -30,16 +33,185 @@ namespace DataEditor.Core.Services
             _gitService = gitService;
         }
 
+        public async Task<string> CommitAllChangesToGit(Action<string> progressCallback = null)
+        {
+            var sb = new StringBuilder();
+
+            var entitiesToCommit = new List<Func<Task<string>>>
+            {
+                () => CommitChangesToGit<Country>(),
+                () => CommitChangesToGit<Film>(),
+                () => CommitChangesToGit<Origin>(),
+                () => CommitChangesToGit<Person>(),
+                () => CommitChangesToGit<Role>(),
+                () => CommitChangesToGit<Language>(),
+                () => CommitChangesToGit<Company>(),
+                () => CommitChangesToGit<FilmLink>(),
+                () => CommitChangesToGit<FilmCompany>(),
+                () => CommitChangesToGit<FilmCountry>(),
+                () => CommitChangesToGit<FilmLanguage>(),
+                () => CommitChangesToGit<FilmOrigin>(),
+                () => CommitChangesToGit<FilmPersonRole>()
+            };
+
+            int totalFiles = entitiesToCommit.Count;
+            int currentFile = 0;
+
+            foreach (var commitAction in entitiesToCommit)
+            {
+                currentFile++;
+                var result = await commitAction();
+                sb.AppendLine(result);
+
+                // Report progress
+                progressCallback?.Invoke($"Committed {currentFile}/{totalFiles} files.");
+            }
+
+            // After successful commit, reset caches to reflect the new state
+            progressCallback?.Invoke("Resetting caches to reflect latest changes...");
+            await ResetCaches();
+            progressCallback?.Invoke("Cache reset completed.");
+
+            return sb.ToString();
+        }
+
+        public async Task<List<FileDifference>> GetAllDifferences()
+        {
+            var differences = new List<FileDifference>();
+
+            // Same entities from CommitAllChangesToGit
+            differences.Add(await GetDifferences<Country>());
+            differences.Add(await GetDifferences<Film>());
+            differences.Add(await GetDifferences<Origin>());
+            differences.Add(await GetDifferences<Person>());
+            differences.Add(await GetDifferences<Role>());
+            differences.Add(await GetDifferences<Language>());
+            differences.Add(await GetDifferences<Company>());
+
+            differences.Add(await GetDifferences<FilmLink>());
+            differences.Add(await GetDifferences<FilmCompany>());
+            differences.Add(await GetDifferences<FilmCountry>());
+            differences.Add(await GetDifferences<FilmLanguage>());
+            differences.Add(await GetDifferences<FilmOrigin>());
+            differences.Add(await GetDifferences<FilmPersonRole>());
+
+            return differences;
+        }
+
+        public async Task<FileDifference> GetDifferences<T>()
+        {
+            Dictionary<Type, Func<Task<FileDifference>>> handlers = new Dictionary<Type, Func<Task<FileDifference>>>
+            {
+                { typeof(Company), () => GetDifferences(_context.Companies.OrderBy(i => i.Guid).ToList()) },
+                { typeof(Country), () => GetDifferences(_context.Countries.OrderBy(i => i.Guid).ToList()) },
+                { typeof(Film), () => GetDifferences(_context.Films.OrderBy(i => i.Guid).ToList()) },
+                { typeof(Language), () => GetDifferences(_context.Languages.OrderBy(i => i.Guid).ToList()) },
+                { typeof(Origin), () => GetDifferences(_context.Origins.OrderBy(i => i.Guid).ToList()) },
+                { typeof(Person), () => GetDifferences(_context.People.OrderBy(i => i.Guid).ToList()) },
+                { typeof(Role), () => GetDifferences(_context.Roles.OrderBy(i => i.Guid).ToList()) },
+
+                { typeof(FilmLink), () => GetDifferences(_context.FilmLinks.OrderBy(i => i.Guid).ThenBy(i => i.FilmGuid).ToList()) },
+                { typeof(FilmCompany), () => GetDifferences(_context.FilmCompanies.OrderBy(i => i.FilmGuid).ThenBy(i => i.CompanyGuid).ToList()) },
+                { typeof(FilmCountry), () => GetDifferences(_context.FilmCountries.OrderBy(i => i.FilmGuid).ThenBy(i => i.CountryGuid).ToList()) },
+                { typeof(FilmLanguage), () => GetDifferences(_context.FilmLanguages.OrderBy(i => i.FilmGuid).ThenBy(i => i.LanguageGuid).ToList()) },
+                { typeof(FilmOrigin), () => GetDifferences(_context.FilmOrigins.OrderBy(i => i.FilmGuid).ThenBy(i => i.OriginGuid).ToList()) },
+                { typeof(FilmPersonRole), () => GetDifferences(_context.FilmPersonRoles.OrderBy(i => i.Film).ThenBy(i => i.Person).ThenBy(i => i.RoleGuid).ToList()) } 
+            };
+
+            if (handlers.ContainsKey(typeof(T)))
+            {
+                return await handlers[typeof(T)]();
+            }
+
+            return new FileDifference 
+            { 
+                FileName = "unknown",
+                OldContent = string.Empty,
+                NewContent = string.Empty,
+                ChangedLinesCount = 0
+            };
+        }
+
+        public async Task<FileDifference> GetDifferences<T>(List<T> objects)
+        {
+            var filename = $"{CoreSettings.dbSetNames[typeof(T)]}.csv";
+            var fileDiff = new FileDifference
+            {
+                FileName = filename,
+                OldContent = string.Empty,
+                NewContent = string.Empty,
+                ChangedLinesCount = 0
+            };
+
+            if (!LoadedFiles.Contains(typeof(T)))
+            {
+                return fileDiff;
+            }
+
+            try
+            {
+                var file = await GetFileByName(filename);
+
+                await using var writer = new StringWriter();
+                await using var csv = new CsvWriter(writer, new CsvConfiguration(CultureInfo.InvariantCulture));
+                csv.WriteHeader<T>();
+                await csv.NextRecordAsync();
+                await csv.WriteRecordsAsync(objects);
+
+                // Get the content on the server
+                var oldContent = await GetFileContentFromDownloadUrl(file);
+                var newContent = writer.ToString();
+
+                fileDiff.OldContent = oldContent;
+                fileDiff.NewContent = newContent;
+
+                // Simple way to calculate differences (line by line)
+                var oldLines = oldContent.Split('\n');
+                var newLines = newContent.Split('\n');
+
+                // Count changed lines
+                int changedLines = 0;
+                for (int i = 0; i < Math.Max(oldLines.Length, newLines.Length); i++)
+                {
+                    var oldLine = i < oldLines.Length ? oldLines[i] : null;
+                    var newLine = i < newLines.Length ? newLines[i] : null;
+
+                    if (oldLine != newLine)
+                    {
+                        changedLines++;
+                    }
+                }
+
+                fileDiff.ChangedLinesCount = changedLines;
+            }
+            catch (Exception ex)
+            {
+                // Handle exceptions - log, return empty differences, etc.
+                System.Diagnostics.Debug.WriteLine($"Error getting differences for {filename}: {ex.Message}");
+            }
+
+            return fileDiff;
+        }
 
         public async Task<string> CommitChangesToGit<T>()
         {
 
-            var handlers = new Dictionary<Type, Func<Task<string>>>
+            Dictionary<Type, Func<Task<string>>> handlers = new Dictionary<Type, Func<Task<string>>>
             {
-                //{ typeof(Film), () => CommitChangesToGit( context.People.ToList(), "Person.csv") },
-                //{ typeof(Film), () => CommitChangesToGit( context.Films.ToList(), "Film.csv") },
-                //{ typeof(Origin), () => CommitChangesToGit( context.Origins.ToList(), "Origin.csv") }
-                { typeof(Role), () => CommitChangesToGit( _context.Roles.ToList(), "Role.csv") }
+                { typeof(Company), () => CommitChangesToGit( _context.Companies.OrderBy(i => i.Guid).ToList()) },
+                { typeof(Country), () => CommitChangesToGit( _context.Countries.OrderBy(i => i.Guid).ToList()) },
+                { typeof(Film), () => CommitChangesToGit( _context.Films.OrderBy(i => i.Guid).ToList()) },
+                { typeof(Language), () => CommitChangesToGit( _context.Languages.OrderBy(i => i.Guid).ToList()) },
+                { typeof(Origin), () => CommitChangesToGit( _context.Origins.OrderBy(i => i.Guid).ToList()) },
+                { typeof(Person), () => CommitChangesToGit( _context.People.OrderBy(i => i.Guid).ToList()) },
+                { typeof(Role), () => CommitChangesToGit( _context.Roles.OrderBy(i => i.Guid).ToList()) },
+
+                { typeof(FilmLink), () => CommitChangesToGit( _context.FilmLinks.OrderBy(i => i.Guid).ThenBy(i => i.FilmGuid).ToList()) },
+                { typeof(FilmCompany), () => CommitChangesToGit( _context.FilmCompanies.OrderBy(i => i.FilmGuid).ThenBy(i => i.CompanyGuid).ToList()) },
+                { typeof(FilmCountry), () => CommitChangesToGit( _context.FilmCountries.OrderBy(i => i.FilmGuid).ThenBy(i => i.CountryGuid).ToList()) },
+                { typeof(FilmLanguage), () => CommitChangesToGit( _context.FilmLanguages.OrderBy(i => i.FilmGuid).ThenBy(i => i.LanguageGuid).ToList()) },
+                { typeof(FilmOrigin), () => CommitChangesToGit( _context.FilmOrigins.OrderBy(i => i.FilmGuid).ThenBy(i => i.OriginGuid).ToList()) },
+                { typeof(FilmPersonRole), () => CommitChangesToGit( _context.FilmPersonRoles.OrderBy(i => i.Film).ThenBy(i => i.Person).ThenBy(i => i.RoleGuid).ToList()) } 
             };
 
             if (handlers.ContainsKey(typeof(T)))
@@ -50,11 +222,15 @@ namespace DataEditor.Core.Services
             return "unknown";
         }
 
-        public async Task<string> CommitChangesToGit<T>(List<T> objects, string filename)
+        public async Task<string> CommitChangesToGit<T>(List<T> objects)
         {
-            var file = await GetFileByName(filename);
+            if (!LoadedFiles.Contains(typeof(T)))
+            {
+                return "";
+            }
 
-            //var films = await context.Films.ToListAsync();
+            var filename = $"{CoreSettings.dbSetNames[typeof(T)]}.csv";
+            var file = await GetFileByName(filename);
 
             await using var writer = new StringWriter();
             await using var csv = new CsvWriter(writer, new CsvConfiguration(CultureInfo.InvariantCulture));
@@ -62,12 +238,25 @@ namespace DataEditor.Core.Services
             await csv.NextRecordAsync();
             await csv.WriteRecordsAsync(objects);
 
-            var content = writer.ToString();
+            //get the content on the server
+            var oldContent = await GetFileContentFromDownloadUrl(file);
 
-            var result = await _gitService.UpdateFile(filename, file, content, $"test update at {DateTime.Now}");
+            var newContent = writer.ToString();
+            //check if theres any differences
+            if (oldContent != newContent)
+            {
+                //update the server with latest if theres any differences
+                var result = await _gitService.UpdateFile(filename, file, newContent, $"updating {filename}");
+                return filename + "; ";
+            }
+            else
+            {
+                return "";
+            }
 
-             return result.Commit.Sha;
-             // Snackbar.Add("Saved commit " + result.Commit.Sha, Severity.Success);
+
+            
+              
         }
 
 
@@ -75,185 +264,368 @@ namespace DataEditor.Core.Services
         {
             var filePath = Path.Combine(_settings.Folder, name);
             var file = await _gitService.GetFile(filePath);
+
             return file;
         }
-
-
-
-        public static Dictionary<Type, string> fileName = new Dictionary<Type, string>()
-        {
-            {typeof(Film), "Film" },
-            {typeof(Company), "Company"},
-            {typeof(Country), "Country"},
-            {typeof(Language), "Language"},
-            {typeof(Origin), "Origin"},
-            {typeof(Role), "Role"},
-            {typeof(Person), "Person"},
-        };
-
-        public static Dictionary<Type, string> dbSetNames = new Dictionary<Type, string>()
-        {
-            {typeof(Company), "Companies"},
-            {typeof(Country), "Countries"},
-            {typeof(Film), "Films"},
-            {typeof(Language), "Languages"},
-            {typeof(Origin), "Origins"},
-            {typeof(Person), "People"},
-            {typeof(Role), "Roles"}
-        };
 
         public static HashSet<Type> LoadedFiles = new ();
 
 
-        public async Task SeedDataFromGit<T>()
+        // Modify the SeedDataFromGit method to accept a progress callback
+        public async Task SeedDataFromGit<T>(Action<string> progressCallback = null) where T : class
         {
             if (!LoadedFiles.Contains(typeof(T)))
             {
-                var entities = await FetchCsv<T>($"{fileName[typeof(T)]}.csv");
+                var fileName = $"{CoreSettings.dbSetNames[typeof(T)]}.csv";
+                progressCallback?.Invoke($"Loading {fileName}...");
 
-                //get the property method for the appropriate entity
-                var dbSetName = dbSetNames[typeof(T)];
-                var dbSetProperty = _context.GetType().GetProperty(dbSetName);
-                var dbSet = dbSetProperty.GetValue(_context);
+                var entities = await FetchCsv<T>(fileName);
 
-                //call the dbset's addrange method
-                var addRangeMethod = dbSet.GetType().GetMethod("AddRange", new[] { typeof(IEnumerable<T>) });
-                addRangeMethod.Invoke(dbSet, new object[] { entities });
+                await BulkInsertAsync(entities);
 
                 //mark the file as loaded
                 LoadedFiles.Add(typeof(T));
+            }
 
-                //if the file is FILM, then load everything and map everything
-                if (typeof(T) == typeof(Film))
+            progressCallback?.Invoke("Data loading complete");
+        }
+
+        private async Task FillInGuids()
+        {
+            await _context.SaveChangesAsync();
+      
+            foreach (var item in _context.Films.ToList())
+            {
+                if (item.Guid == null)
                 {
-                    await SeedDataFromGit<Company>();
-                    await SeedDataFromGit<Country>();
-                    await SeedDataFromGit<Language>();
-                    await SeedDataFromGit<Origin>();
-                    await SeedDataFromGit<Role>();
-                    await SeedDataFromGit<Person>();
-
-                    await MapCompanyFilms();
-                    await MapCountryFilms();
-                    await MapLanguageFilms();
-                    await MapOriginFilms();
+                    item.Guid = Guid.NewGuid();
                 }
             }
-            
+
+            foreach (var item in _context.People.ToList())
+            {
+                if (item.Guid == null)
+                {
+                    item.Guid = Guid.NewGuid();
+                }
+            }
+
+            foreach (var item in _context.Roles.ToList())
+            {
+                if (item.Guid == null)
+                {
+                    item.Guid = Guid.NewGuid();
+                }
+            }
+
+            foreach (var item in _context.Origins.ToList())
+            {
+                if (item.Guid == null)
+                {
+                    item.Guid = Guid.NewGuid();
+                }
+            }
+
+            foreach (var item in _context.Languages.ToList())
+            {
+                if (item.Guid == null)
+                {
+                    item.Guid = Guid.NewGuid();
+                }
+            }
+
+            foreach (var item in _context.Countries.ToList())
+            {
+                if (item.Guid == null)
+                {
+                    item.Guid = Guid.NewGuid();
+                }
+            }
+
+            foreach (var item in _context.Companies.ToList())
+            {
+                if (item.Guid == null)
+                {
+                    item.Guid = Guid.NewGuid();
+                }
+            }
+
+            foreach (var item in _context.FilmCompanies.ToList())
+            {
+                if (item.FilmGuid == null)
+                {
+                    item.FilmGuid = item.Film.Guid;
+                }
+
+                if (item.CompanyGuid == null)
+                {
+                    item.CompanyGuid = item.Company.Guid;
+                }
+            }
+
+            foreach (var item in _context.FilmLinks.ToList())
+            {
+                if (item.FilmGuid == null)
+                {
+                    item.FilmGuid = item.Film.Guid;
+                }
+
+                if (item.Guid == null)
+                {
+                    item.Guid = Guid.NewGuid();
+                }
+            }
+
+            foreach (var item in _context.FilmCountries.ToList())
+            {
+                if (item.FilmGuid == null)
+                {
+                    item.FilmGuid = item.Film.Guid;
+                }
+
+                if (item.CountryGuid == null)
+                {
+                    item.CountryGuid = item.Country.Guid;
+                }
+            }
+
+
+            foreach (var item in _context.FilmLanguages.ToList())
+            {
+                if (item.FilmGuid == null)
+                {
+                    item.FilmGuid = item.Film.Guid;
+                }
+
+                if (item.LanguageGuid == null && item.Language != null)
+                {
+                    item.LanguageGuid = item.Language.Guid;
+                }
+            }
+
+            foreach (var item in _context.FilmOrigins.ToList())
+            {
+                if (item.FilmGuid == null)
+                {
+                    item.FilmGuid = item.Film.Guid;
+                }
+
+                if (item.OriginGuid == null)
+                {
+                    item.OriginGuid = item.Origin.Guid;
+                }
+            }
+
+            foreach (var item in _context.FilmPersonRoles.ToList())
+            {
+                if (item.FilmGuid == null)
+                {
+                    item.FilmGuid = item.Film.Guid;
+                }
+
+                if (item.PersonGuid == null)
+                {
+                    item.PersonGuid = item.Person.Guid;
+                }
+
+                if (item.RoleGuid == null)
+                {
+                    item.RoleGuid = item.Role.Guid;
+                }
+            }
+
+
+
+
             await _context.SaveChangesAsync();
         }
 
+        private async Task BulkInsertAsync<T>(IReadOnlyList<T> entities, int batchSize = 2000) where T : class
+        {
+            if (entities.Count == 0)
+            {
+                return;
+            }
+
+            var previousAutoDetect = _context.ChangeTracker.AutoDetectChangesEnabled;
+
+            try
+            {
+                _context.ChangeTracker.AutoDetectChangesEnabled = false;
+
+                for (int i = 0; i < entities.Count; i += batchSize)
+                {
+                    var batch = entities.Skip(i).Take(batchSize);
+                    await _context.Set<T>().AddRangeAsync(batch);
+                    await _context.SaveChangesAsync();
+                    _context.ChangeTracker.Clear();
+                }
+            }
+            finally
+            {
+                _context.ChangeTracker.AutoDetectChangesEnabled = previousAutoDetect;
+            }
+        }
 
         private async Task<List<T>> FetchCsv<T>(string name)
         {
-            var file = await GetFileByName(name);
+            var repositoryFile = await GetFileByName(name);
 
-            using var reader = new StringReader(file.Content);
+            // Get file content with cache-busting parameter
+            var content = await GetFileContentFromDownloadUrl(repositoryFile);
+            using var reader = new StringReader(content);
 
-            using var csv = new CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture));
+            var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+            {
+                MissingFieldFound = null,
+                HeaderValidated = null
+            };
 
+            using var csv = new CsvReader(reader, config);
+            
             var records = csv.GetRecords<T>();
 
             return records.ToList();
         }
 
-        private async Task MapCompanyFilms()
+        public async Task<string> GetFileContentFromDownloadUrl(RepositoryContent repositoryContent)
         {
-            var companyFilms = await FetchCsv<CompanyFilm>("CompanyFilm.csv");
-
-            var filmDict = _context.Films.ToDictionary(i => i.FilmId, i => i);
-            var companyDict = _context.Companies.ToDictionary(i => i.CompanyId, i => i);
-
-            foreach (var i in companyFilms)
+            if (repositoryContent == null)
+                throw new ArgumentNullException(nameof(repositoryContent));
+                
+            if (string.IsNullOrEmpty(repositoryContent.DownloadUrl))
+                throw new InvalidOperationException("DownloadUrl is null or empty for the repository content");
+            
+            using var httpClient = new HttpClient();
+            try
             {
-              
-                 var film = filmDict[i.FilmId];
+                // Extract the download URL and append the commit SHA for cache-busting
+                string downloadUrl = repositoryContent.DownloadUrl;
+                
+                downloadUrl += $"?ref={repositoryContent.Sha}";
 
-                var company = companyDict[i.CompanyId];
-
-                film.Companies.Add(company);
-                //company.Films.Add(film);
+                // Download the content
+                var response = await httpClient.GetAsync(downloadUrl);
+                response.EnsureSuccessStatusCode();
+                
+                // Return the content as a string
+                return await response.Content.ReadAsStringAsync();
             }
-
+            catch (HttpRequestException ex)
+            {
+                throw new Exception($"Error downloading file content from URL: {repositoryContent.DownloadUrl}", ex);
+            }
         }
 
-
-        private async Task MapCountryFilms()
+        // Add a new method to load only Film data initially
+        public async Task SeedFilmDataOnly(Action<string> progressCallback = null)
         {
-            var companyFilms = await FetchCsv<CountryFilm>("CountryFilm.csv");
+            progressCallback?.Invoke("Loading Films...");
 
-            var filmDict = _context.Films.ToDictionary(i => i.FilmId, i => i);
-            var countryDict = _context.Countries.ToDictionary(i => i.CountryId, i => i);
-
-            foreach (var i in companyFilms)
+            if (!LoadedFiles.Contains(typeof(Film)))
             {
-                var film = filmDict[i.FilmId];
+                var fileName = $"{CoreSettings.dbSetNames[typeof(Film)]}.csv";
+                progressCallback?.Invoke($"Loading {fileName}...");
 
-                var country = countryDict[i.CountryId];
+                var entities = await FetchCsv<Film>(fileName);
 
-                film.Countries.Add(country);
-                //country.Films.Add(film);
+                await BulkInsertAsync(entities);
+
+                LoadedFiles.Add(typeof(Film));
             }
 
+            progressCallback?.Invoke("Films loaded successfully");
         }
 
-        private async Task MapLanguageFilms()
+        // Add a method to load related data in the background
+        private static readonly List<Type> _relatedEntityTypes = new List<Type>
         {
-            var languageFilms = await FetchCsv<LanguageFilm>("LanguageFilm.csv");
+            typeof(Company),
+            typeof(Country),
+            typeof(Language),
+            typeof(Origin),
+            typeof(Role),
+            typeof(Person),
+            typeof(FilmCompany),
+            typeof(FilmLink),
+            typeof(FilmCountry),
+            typeof(FilmLanguage),
+            typeof(FilmOrigin),
+            typeof(FilmPersonRole)
+        };
 
-            var filmDict = _context.Films.ToDictionary(i => i.FilmId, i => i);
-            var languageDict = _context.Languages.ToDictionary(i => i.LanguageId, i => i);
-
-            foreach (var i in languageFilms)
-            {
-                if (!filmDict.ContainsKey(i.FilmId))
-                {
-                    continue;
-                }
-
-                if (!languageDict.ContainsKey(i.LanguageId))
-                {
-                    continue;
-                }
-
-                var film = filmDict[i.FilmId];
-
-                var language = languageDict[i.LanguageId];
-
-                film.Languages.Add(language);
-              
-            }
-
-        }
-
-        private async Task MapOriginFilms()
+        // Modify the method to load related data in the background with progress tracking
+        public async Task SeedRelatedDataInBackground(Action<string, int, int> progressCallback = null)
         {
-            var OriginFilms = await FetchCsv<OriginFilm>("OriginFilm.csv");
-
-            var filmDict = _context.Films.ToDictionary(i => i.FilmId, i => i);
-            var originDict = _context.Origins.ToDictionary(i => i.OriginId, i => i);
-
-            foreach (var i in OriginFilms)
+            // Calculate total files to load
+            int totalFiles = _relatedEntityTypes.Count;
+            int currentFile = 0;
+            
+            progressCallback?.Invoke("Starting background data load...", currentFile, totalFiles);
+            
+            foreach (var entityType in _relatedEntityTypes)
             {
-                if (!filmDict.ContainsKey(i.FilmId))
+                // Skip if already loaded
+                if (LoadedFiles.Contains(entityType))
                 {
+                    currentFile++;
+                    progressCallback?.Invoke($"Skipping {CoreSettings.dbSetNames[entityType]}.csv (already loaded)", currentFile, totalFiles);
                     continue;
                 }
-
-                if (!originDict.ContainsKey(i.OriginId))
+                
+                var fileName = $"{CoreSettings.dbSetNames[entityType]}.csv";
+                currentFile++;
+                progressCallback?.Invoke($"Loading {fileName}...", currentFile, totalFiles);
+                
+                try
                 {
-                    continue;
+                    // Use reflection to call the generic SeedDataFromGit method
+                    var method = typeof(GitEntityService).GetMethod(nameof(SeedDataFromGit));
+                    var genericMethod = method.MakeGenericMethod(entityType);
+                    
+                    // Create a progress callback wrapper that preserves the counting context
+                    Action<string> entityProgressCallback = (message) => 
+                        progressCallback?.Invoke(message, currentFile, totalFiles);
+                        
+                    await (Task)genericMethod.Invoke(this, new object[] { entityProgressCallback });
                 }
-
-                var film = filmDict[i.FilmId];
-
-                var Origin = originDict[i.OriginId];
-
-                film.Origins.Add(Origin);
-
+                catch (Exception ex)
+                {
+                    progressCallback?.Invoke($"Error loading {fileName}: {ex.Message}", currentFile, totalFiles);
+                }
             }
-
+            
+            progressCallback?.Invoke("All related data loaded successfully", totalFiles, totalFiles);
         }
 
+        // An overload of SeedRelatedDataInBackground that works with the old signature for backward compatibility
+        public async Task SeedRelatedDataInBackground(Action<string> progressCallback = null)
+        {
+            await SeedRelatedDataInBackground((message, current, total) => 
+                progressCallback?.Invoke($"{message} ({current}/{total})"));
+        }
+
+        public class FileDifference
+        {
+            public string FileName { get; set; }
+            public string OldContent { get; set; }
+            public string NewContent { get; set; }
+            public int ChangedLinesCount { get; set; }
+        }
+
+        // Add this new method after the CommitAllChangesToGit method
+        public async Task ResetCaches()
+        {
+            // Clear all DbSets to avoid duplicate key conflicts
+            _context.ClearAllDbSets();
+
+            // Detach all tracked entities to avoid tracking conflicts
+            _context.DetachAllEntities();
+
+            // Clear the LoadedFiles collection to force reloading all data from Git
+            LoadedFiles.Clear();
+            
+     
+        }
     }
 }

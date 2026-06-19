@@ -11,6 +11,11 @@
         <MudTextField @bind-Value="item.Title" Label="Title"></MudTextField>
         <MudTextField @bind-Value="item.Code" Label="Code"></MudTextField>
         <MudTextField @bind-Value="item.Author" Label="Author"></MudTextField>
+        
+        <MudTextField @bind-Value="item.CreatedBy" Label="Created By"></MudTextField>
+        <MudDatePicker @bind-Date="item.CreatedOn" Label="Created On" Clearable="true" ShowToolbar="false" />
+        <MudTextField @bind-Value="item.UpdatedBy" Label="Updated By"></MudTextField>
+        <MudDatePicker @bind-Date="item.UpdatedOn" Label="Updated On" Clearable="true" ShowToolbar="false" />
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="Cancel">Cancel</MudButton>
@@ -24,15 +29,15 @@
     private MudDialogInstance MudDialog { get; set; }
 
     [Parameter]
-    public int Id { get; set; } = 0;
+    public Guid? Id { get; set; } = null;
 
     public Origin item { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
-        if (Id != 0)
+        if (Id != null)
         {
-            item = await ctx.Origins.FirstAsync(i => i.OriginId == Id);
+            item = await ctx.Origins.FirstAsync(i => i.Guid == Id);
         }
         else
         {
@@ -43,7 +48,7 @@
 
     private async Task Save()
     {
-        if (Id == 0)
+        if (Id == null)
         {
             
             await ctx.Origins.AddAsync(item);

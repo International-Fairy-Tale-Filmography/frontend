@@ -2,6 +2,8 @@
 @using Data.Core.Models
 @inherits LayoutComponentBase
 @inject GitEntityService ges
+@inject ISnackbar Snackbar
+@inject NavigationManager NavigationManager
 <MudThemeProvider />
 <MudSnackbarProvider />
 <MudPopoverProvider />
@@ -11,9 +13,9 @@
 <MudLayout>
     <MudAppBar Elevation="1">
         <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
-        <MudText Typo="Typo.h5" Class="ml-3">Application</MudText>
+        <MudText Typo="Typo.h5" Class="ml-3">IFTF Data Editor</MudText>
         <MudSpacer />
-        <MudButton Variant="Variant.Filled" Color="Color.Success" OnClick="CommitChanges" Disabled="_isCommitting">Commit Changes</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Success" OnClick="ViewChanges" Disabled="_isCommitting">Commit Changes</MudButton>
     </MudAppBar>
     <MudDrawer @bind-Open="_drawerOpen" ClipMode="DrawerClipMode.Always" Elevation="2">
         <NavMenu/>
@@ -31,11 +33,24 @@
     }
 
     bool _isCommitting = false;
+    
+    // Renamed method from CommitChanges to ViewChanges to better reflect its new purpose
+    private void ViewChanges()
+    {
+        // Navigate to the new GitDifferences page instead of immediately committing
+        NavigationManager.NavigateTo("/git-differences");
+    }
+    
+    // Keep original CommitChanges method for reference but mark as obsolete
+    // This can be removed once the new approach is verified
+    [Obsolete("Use ViewChanges instead to navigate to the differences page")]
     private async Task CommitChanges()
     {
         _isCommitting = true;
 
-        await ges.CommitChangesToGit<Role>();
+        var result = await ges.CommitAllChangesToGit();
+
+        Snackbar.Add(result, Severity.Success);
         _isCommitting = false;
     }
 }

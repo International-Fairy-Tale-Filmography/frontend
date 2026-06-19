@@ -1,0 +1,192 @@
+@page "/git-differences"
+@using DataEditor.Core.Services
+@using Data.Core.Models
+@using System.Text
+@inject GitEntityService GitEntityService
+@inject NavigationManager NavigationManager
+@inject ISnackbar Snackbar
+
+<PageTitle>Git Differences</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4">
+    <MudPaper Elevation="3" Class="pa-4">
+        <MudText Typo="Typo.h4">Changes to Commit</MudText>
+        <MudText Typo="Typo.body1" Class="mb-4">Review the differences between your current data and what's in Git.</MudText>
+        
+        <MudDivider Class="my-4" />
+        
+        @if (IsLoading)
+        {
+            <MudProgressLinear Indeterminate="true" Class="my-4" />
+            <MudText>Calculating differences...</MudText>
+        }
+        else if (Differences.Count == 0)
+        {
+            <MudAlert Severity="Severity.Info" Class="my-4">No differences found. All data is synchronized with Git.</MudAlert>
+        }
+        else
+        {
+            <MudButton Variant="Variant.Filled" 
+                       Color="Color.Success" 
+                       OnClick="CommitChanges"
+                       Disabled="IsCommitting"
+                       StartIcon="@Icons.Material.Filled.Save"
+                       Class="mb-4">
+                @(IsCommitting ? "Committing..." : "Commit All Changes")
+            </MudButton>
+            
+            <MudButton Variant="Variant.Outlined" 
+                       Color="Color.Secondary" 
+                       OnClick="GoBack"
+                       Class="mb-4 ml-2">
+                Cancel
+            </MudButton>
+            
+            <MudExpansionPanels>
+                @foreach (var diff in Differences)
+                {
+                    <MudExpansionPanel 
+                        @key="diff.FileName" 
+                        IsInitiallyExpanded="@(diff.ChangedLinesCount > 0)" 
+                        Class="@(diff.ChangedLinesCount > 0 ? "mud-border-success" : "")">
+                        <TitleContent>
+                            <MudText>
+                                <MudIcon Icon="@Icons.Material.Filled.Description" Class="mr-2" />
+                                @diff.FileName
+                                @if (diff.ChangedLinesCount > 0)
+                                {
+                                    <MudChip T="string" Color="Color.Success" Size="Size.Small" Class="ml-2">@diff.ChangedLinesCount changes</MudChip>
+                                }
+                                else
+                                {
+                                    <MudChip T="string" Color="Color.Default" Size="Size.Small" Class="ml-2">No changes</MudChip>
+                                }
+                            </MudText>
+                        </TitleContent>
+                        <ChildContent>
+                            <MudDivider />
+                            @if (diff.ChangedLinesCount > 0)
+                            {
+                                <MudText Typo="Typo.subtitle2" Class="mt-2">
+                                    Showing differences in @diff.FileName:
+                                </MudText>
+                                <MudPaper Elevation="0" Class="pa-2 mt-2" Style="background-color: #f5f5f5; max-height: 300px; overflow: auto; font-family: monospace;">
+                                    @((MarkupString)FormatDifference(diff.OldContent, diff.NewContent))
+                                </MudPaper>
+                            }
+                            else
+                            {
+                                <MudText Typo="Typo.body2" Class="mt-2">
+                                    No differences found in this file.
+                                </MudText>
+                            }
+                        </ChildContent>
+                    </MudExpansionPanel>
+                }
+            </MudExpansionPanels>
+        }
+    </MudPaper>
+</MudContainer>
+
+<div>
+    <p>@ProgressMessage</p>
+</div>
+
+@code {
+    private bool IsLoading { get; set; } = true;
+    private bool IsCommitting { get; set; } = false;
+    private List<GitEntityService.FileDifference> Differences { get; set; } = new List<GitEntityService.FileDifference>();
+    private string ProgressMessage = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDifferences();
+    }
+
+    private async Task LoadDifferences()
+    {
+        IsLoading = true;
+        Differences = await GitEntityService.GetAllDifferences();
+        IsLoading = false;
+    }
+
+    private async Task CommitChanges()
+    {
+        IsCommitting = true;
+        ProgressMessage = "Starting commit process...";
+        await GitEntityService.CommitAllChangesToGit((message) =>
+        {
+            InvokeAsync(() =>
+            {
+                ProgressMessage = message;
+                StateHasChanged();
+            });
+        });
+        ProgressMessage = "All changes committed successfully. Caches have been reset.";
+        Snackbar.Add("All changes committed successfully. Caches have been reset.", Severity.Success);
+        IsCommitting = false;
+
+        // Navigate to a different page after committing changes
+        NavigationManager.NavigateTo("/");
+    }
+
+    // Optional: Add a separate method for manually resetting caches if needed
+    private async Task ResetCaches()
+    {
+        ProgressMessage = "Resetting caches...";
+        await GitEntityService.ResetCaches();
+        ProgressMessage = "Caches reset successfully.";
+        Snackbar.Add("All caches have been reset.", Severity.Success);
+        await LoadDifferences(); // Refresh differences after cache reset
+    }
+
+    private void GoBack()
+    {
+        NavigationManager.NavigateTo("/");
+    }
+
+    private string FormatDifference(string oldContent, string newContent)
+    {
+        if (string.IsNullOrEmpty(oldContent) && !string.IsNullOrEmpty(newContent))
+        {
+            // New file
+            return $"<span style='color: green;'>+ {newContent.Replace("\n", "<br/>+ ")}</span>";
+        }
+        else if (!string.IsNullOrEmpty(oldContent) && string.IsNullOrEmpty(newContent))
+        {
+            // Deleted file 
+            return $"<span style='color: red;'>- {oldContent.Replace("\n", "<br/>- ")}</span>";
+        }
+
+        // This is a simple comparison, in a real-world application you might want
+        // to use a more sophisticated diff algorithm
+        var oldLines = oldContent.Split('\n');
+        var newLines = newContent.Split('\n');
+        var result = new StringBuilder();
+
+        for (int i = 0; i < Math.Max(oldLines.Length, newLines.Length); i++)
+        {
+            var oldLine = i < oldLines.Length ? oldLines[i] : null;
+            var newLine = i < newLines.Length ? newLines[i] : null;
+
+            if (oldLine == newLine)
+            {
+                result.AppendLine($"&nbsp;&nbsp;{System.Net.WebUtility.HtmlEncode(oldLine ?? "")}<br/>");
+            }
+            else
+            {
+                if (oldLine != null)
+                {
+                    result.AppendLine($"<span style='color: red;'>- {System.Net.WebUtility.HtmlEncode(oldLine)}</span><br/>");
+                }
+                if (newLine != null)
+                {
+                    result.AppendLine($"<span style='color: green;'>+ {System.Net.WebUtility.HtmlEncode(newLine)}</span><br/>");
+                }
+            }
+        }
+
+        return result.ToString();
+    }
+
+}
