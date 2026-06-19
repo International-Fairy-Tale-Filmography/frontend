@@ -18,6 +18,11 @@
                 <MudTextField @bind-Value="item.Duration" Label="Duration"></MudTextField>
                 <MudTextField @bind-Value="item.Mode" Label="Mode"></MudTextField>
                 <MudTextField @bind-Value="item.Comment" Label="Comment"></MudTextField>
+                
+                <MudTextField @bind-Value="item.CreatedBy" Label="Created By"></MudTextField>
+                <MudDatePicker @bind-Date="item.CreatedOn" Label="Created On" Clearable="true" ShowToolbar="false" />
+                <MudTextField @bind-Value="item.UpdatedBy" Label="Updated By"></MudTextField>
+                <MudDatePicker @bind-Date="item.UpdatedOn" Label="Updated On" Clearable="true" ShowToolbar="false" />
             </MudItem>
             <MudItem xs="12" md="6">
                 <MudAutocomplete ToStringFunc="@(e => e == null ? null : $"{e.Name}")" T="Company" Label="Search Company" @bind-Value="selectedCompany" SearchFunc="@SearchCompanies" Variant="Variant.Text" ShowProgressIndicator="true" ResetValueOnEmptyText="true" Clearable="true" Dense="true"/>
@@ -105,11 +110,12 @@
         if (Id != null)
         {
             item = await ctx.Films
-                .Include(i => i.Companies)
-                .Include(i => i.Countries)
-                .Include(i => i.Languages)
-                .Include(i => i.Origins)
-                .Include(i => i.PeopleRoles)
+                .Include(i => i.Companies).ThenInclude(fc => fc.Company)
+                .Include(i => i.Countries).ThenInclude(fc => fc.Country)
+                .Include(i => i.Languages).ThenInclude(fl => fl.Language)
+                .Include(i => i.Origins).ThenInclude(fo => fo.Origin)
+                .Include(i => i.PeopleRoles).ThenInclude(fpr => fpr.Role)
+                .Include(i => i.PeopleRoles).ThenInclude(fpr => fpr.Person)
                 .FirstAsync(i => i.Guid == Id);
         }
         else

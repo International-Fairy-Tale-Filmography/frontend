@@ -64,15 +64,18 @@ public class GitService
     public async Task<RepositoryContent> GetFile(string filePath)
     {
         await GetConfiguration();
-
+        
         var fileDetails = await _gitHubClient.Repository.Content.GetAllContentsByRef(
             _coreSettings.Owner,
             _coreSettings.RepoName,
             filePath, _coreSettings.Branch);
 
-        return fileDetails.First();
+        var firstContent = fileDetails.First();
+        
+   
+        return firstContent;
     }
-
+    
     public async Task<RepositoryContentChangeSet> UpdateFile(string filename, RepositoryContent lastCommit, string newContent, string summary)
     {
         await GetConfiguration();
