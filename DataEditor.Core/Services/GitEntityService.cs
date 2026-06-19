@@ -272,33 +272,21 @@ namespace DataEditor.Core.Services
 
 
         // Modify the SeedDataFromGit method to accept a progress callback
-        public async Task SeedDataFromGit<T>(Action<string> progressCallback = null)
+        public async Task SeedDataFromGit<T>(Action<string> progressCallback = null) where T : class
         {
             if (!LoadedFiles.Contains(typeof(T)))
             {
                 var fileName = $"{CoreSettings.dbSetNames[typeof(T)]}.csv";
                 progressCallback?.Invoke($"Loading {fileName}...");
-                
+
                 var entities = await FetchCsv<T>(fileName);
 
-                //get the property method for the appropriate entity
-                var dbSetName = CoreSettings.dbSetNames[typeof(T)];
-                var dbSetProperty = _context.GetType().GetProperty(dbSetName);
-
-                var dbSet = dbSetProperty.GetValue(_context);
-
-                //call the dbset's addrange method
-                var addRangeMethod = dbSet.GetType().GetMethod("AddRange", new[] { typeof(IEnumerable<T>) });
-                addRangeMethod.Invoke(dbSet, new object[] { entities });
+                await BulkInsertAsync(entities);
 
                 //mark the file as loaded
                 LoadedFiles.Add(typeof(T));
-                
-                // Remove the automatic loading of related tables for Film to avoid recursive calls
-                // We'll handle this separately through SeedRelatedDataInBackground
             }
 
-            await _context.SaveChangesAsync();
             progressCallback?.Invoke("Data loading complete");
         }
 
@@ -452,6 +440,33 @@ namespace DataEditor.Core.Services
             await _context.SaveChangesAsync();
         }
 
+        private async Task BulkInsertAsync<T>(IReadOnlyList<T> entities, int batchSize = 2000) where T : class
+        {
+            if (entities.Count == 0)
+            {
+                return;
+            }
+
+            var previousAutoDetect = _context.ChangeTracker.AutoDetectChangesEnabled;
+
+            try
+            {
+                _context.ChangeTracker.AutoDetectChangesEnabled = false;
+
+                for (int i = 0; i < entities.Count; i += batchSize)
+                {
+                    var batch = entities.Skip(i).Take(batchSize);
+                    await _context.Set<T>().AddRangeAsync(batch);
+                    await _context.SaveChangesAsync();
+                    _context.ChangeTracker.Clear();
+                }
+            }
+            finally
+            {
+                _context.ChangeTracker.AutoDetectChangesEnabled = previousAutoDetect;
+            }
+        }
+
         private async Task<List<T>> FetchCsv<T>(string name)
         {
             var repositoryFile = await GetFileByName(name);
@@ -506,24 +521,19 @@ namespace DataEditor.Core.Services
         public async Task SeedFilmDataOnly(Action<string> progressCallback = null)
         {
             progressCallback?.Invoke("Loading Films...");
-            
+
             if (!LoadedFiles.Contains(typeof(Film)))
             {
                 var fileName = $"{CoreSettings.dbSetNames[typeof(Film)]}.csv";
                 progressCallback?.Invoke($"Loading {fileName}...");
-                
+
                 var entities = await FetchCsv<Film>(fileName);
 
-                var dbSetProperty = _context.GetType().GetProperty("Films");
-                var dbSet = dbSetProperty.GetValue(_context);
-                
-                var addRangeMethod = dbSet.GetType().GetMethod("AddRange", new[] { typeof(IEnumerable<Film>) });
-                addRangeMethod.Invoke(dbSet, new object[] { entities });
-                
+                await BulkInsertAsync(entities);
+
                 LoadedFiles.Add(typeof(Film));
-                await _context.SaveChangesAsync();
             }
-            
+
             progressCallback?.Invoke("Films loaded successfully");
         }
 
