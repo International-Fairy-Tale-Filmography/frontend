@@ -281,6 +281,33 @@ namespace DataEditor.Core.Services
             return await _context.Set<T>().AsNoTracking().AnyAsync();
         }
 
+        private async Task BulkInsertAsync<T>(IReadOnlyList<T> entities, int batchSize = 2000) where T : class
+        {
+            if (entities.Count == 0)
+            {
+                return;
+            }
+
+            var previousAutoDetect = _context.ChangeTracker.AutoDetectChangesEnabled;
+
+            try
+            {
+                _context.ChangeTracker.AutoDetectChangesEnabled = false;
+
+                for (int i = 0; i < entities.Count; i += batchSize)
+                {
+                    var batch = entities.Skip(i).Take(batchSize);
+                    await _context.Set<T>().AddRangeAsync(batch);
+                    await _context.SaveChangesAsync();
+                    _context.ChangeTracker.Clear();
+                }
+            }
+            finally
+            {
+                _context.ChangeTracker.AutoDetectChangesEnabled = previousAutoDetect;
+            }
+        }
+
         public async Task SeedDataFromGit<T>(Action<string> progressCallback = null) where T : class
         {
             if (LoadedFiles.Contains(typeof(T)))
@@ -300,8 +327,7 @@ namespace DataEditor.Core.Services
             progressCallback?.Invoke($"Loading {fileName}...");
 
             var entities = await FetchCsv<T>(fileName);
-            await _context.Set<T>().AddRangeAsync(entities);
-            await _context.SaveChangesAsync();
+            await BulkInsertAsync(entities);
 
             LoadedFiles.Add(typeof(T));
             await UpdateSyncedCommitSnapshot();
@@ -529,8 +555,7 @@ namespace DataEditor.Core.Services
             progressCallback?.Invoke($"Loading {fileName}...");
 
             var entities = await FetchCsv<Film>(fileName);
-            await _context.Films.AddRangeAsync(entities);
-            await _context.SaveChangesAsync();
+            await BulkInsertAsync(entities);
 
             LoadedFiles.Add(typeof(Film));
             await UpdateSyncedCommitSnapshot();
