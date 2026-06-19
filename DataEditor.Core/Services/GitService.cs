@@ -11,6 +11,8 @@ public class ValidationResult
 //https://www.daveabrock.com/2021/03/14/upload-files-to-github-repository/
 public class GitService
 {
+    private const string SyncedCommitShaStorageKey = "dataeditor_synced_commit_sha";
+
     private readonly GitHubClient _gitHubClient;
     public CoreSettingsModel _coreSettings;
     private readonly IJSRuntime _jsRuntime;
@@ -98,6 +100,30 @@ public class GitService
             .Where(b => !b.Name.StartsWith("gh-pages-"))
             .Select(b => b.Name)
             .ToList();
+    }
+
+    public async Task<string?> GetLatestBranchCommitSha()
+    {
+        await GetConfiguration();
+
+        var branch = await _gitHubClient.Repository.Branch.Get(_coreSettings.Owner, _coreSettings.RepoName, _coreSettings.Branch);
+        return branch.Commit.Sha;
+    }
+
+    public async Task<string?> GetSyncedCommitSha()
+    {
+        return await _jsRuntime.InvokeAsync<string>("localStorage.getItem", SyncedCommitShaStorageKey);
+    }
+
+    public async Task SetSyncedCommitSha(string? commitSha)
+    {
+        if (string.IsNullOrWhiteSpace(commitSha))
+        {
+            await _jsRuntime.InvokeVoidAsync("localStorage.removeItem", SyncedCommitShaStorageKey);
+            return;
+        }
+
+        await _jsRuntime.InvokeVoidAsync("localStorage.setItem", SyncedCommitShaStorageKey, commitSha);
     }
 
     /// <summary>

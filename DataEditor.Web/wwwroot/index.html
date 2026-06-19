@@ -42,8 +42,26 @@
         <a href="" class="reload">Reload</a>
         <a class="dismiss">🗙</a>
     </div>
-    <script src="_framework/blazor.webassembly.js"></script>
-    <script>navigator.serviceWorker.register('service-worker.js');</script>
+    <script>
+        (async function () {
+            const isLocalDev = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+
+            if ('serviceWorker' in navigator) {
+                if (isLocalDev) {
+                    const registrations = await navigator.serviceWorker.getRegistrations();
+                    for (const registration of registrations) {
+                        await registration.unregister();
+                    }
+                } else {
+                    await navigator.serviceWorker.register('service-worker.js');
+                }
+            }
+
+            const blazorScript = document.createElement('script');
+            blazorScript.src = '_framework/blazor.webassembly.js';
+            document.body.appendChild(blazorScript);
+        })();
+    </script>
     <script src="_content/MudBlazor/MudBlazor.min.js"></script>
 </body>
 

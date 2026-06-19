@@ -9,7 +9,6 @@
 <MudPopoverProvider />
 <MudDialogProvider />
 
-
 <MudLayout>
     <MudAppBar Elevation="1">
         <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
@@ -21,28 +20,76 @@
         <NavMenu/>
     </MudDrawer>
     <MudMainContent>
+        @if (_showOutdatedWarning)
+        {
+            <MudAlert Severity="Severity.Warning" Dense="true" Class="ma-4">
+                <div class="d-flex align-center">
+                    <MudText Class="mr-3">@_warningText</MudText>
+                    <MudButton Variant="Variant.Filled" Color="Color.Warning" OnClick="RefreshFromGitHub" Disabled="_isRefreshingFromGitHub">
+                        @(_isRefreshingFromGitHub ? "Refreshing..." : "Refresh from GitHub")
+                    </MudButton>
+                </div>
+            </MudAlert>
+        }
+
         @Body
     </MudMainContent>
 </MudLayout>
 @code {
     bool _drawerOpen = true;
+    bool _isCommitting = false;
+    bool _showOutdatedWarning = false;
+    bool _isRefreshingFromGitHub = false;
+    string _warningText = "A newer Git commit is available. Refresh from GitHub to update local data.";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CheckSnapshotFreshness();
+    }
 
     void DrawerToggle()
     {
         _drawerOpen = !_drawerOpen;
     }
 
-    bool _isCommitting = false;
-    
-    // Renamed method from CommitChanges to ViewChanges to better reflect its new purpose
     private void ViewChanges()
     {
-        // Navigate to the new GitDifferences page instead of immediately committing
         NavigationManager.NavigateTo("/git-differences");
     }
-    
-    // Keep original CommitChanges method for reference but mark as obsolete
-    // This can be removed once the new approach is verified
+
+    private async Task CheckSnapshotFreshness()
+    {
+        try
+        {
+            _showOutdatedWarning = await ges.IsLocalSnapshotOutdated();
+        }
+        catch
+        {
+            _showOutdatedWarning = false;
+        }
+    }
+
+    private async Task RefreshFromGitHub()
+    {
+        _isRefreshingFromGitHub = true;
+
+        try
+        {
+            await ges.RefreshFromGitHub();
+            _showOutdatedWarning = false;
+            Snackbar.Add("Local data refreshed from GitHub.", Severity.Success);
+            NavigationManager.NavigateTo(NavigationManager.Uri, forceLoad: true);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Refresh failed: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isRefreshingFromGitHub = false;
+        }
+    }
+
     [Obsolete("Use ViewChanges instead to navigate to the differences page")]
     private async Task CommitChanges()
     {

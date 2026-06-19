@@ -270,35 +270,41 @@ namespace DataEditor.Core.Services
 
         public static HashSet<Type> LoadedFiles = new ();
 
-
-        // Modify the SeedDataFromGit method to accept a progress callback
-        public async Task SeedDataFromGit<T>(Action<string> progressCallback = null)
+        private async Task UpdateSyncedCommitSnapshot()
         {
-            if (!LoadedFiles.Contains(typeof(T)))
+            var latestCommit = await _gitService.GetLatestBranchCommitSha();
+            await _gitService.SetSyncedCommitSha(latestCommit);
+        }
+
+        private async Task<bool> HasLocalData<T>() where T : class
+        {
+            return await _context.Set<T>().AsNoTracking().AnyAsync();
+        }
+
+        public async Task SeedDataFromGit<T>(Action<string> progressCallback = null) where T : class
+        {
+            if (LoadedFiles.Contains(typeof(T)))
             {
-                var fileName = $"{CoreSettings.dbSetNames[typeof(T)]}.csv";
-                progressCallback?.Invoke($"Loading {fileName}...");
-                
-                var entities = await FetchCsv<T>(fileName);
-
-                //get the property method for the appropriate entity
-                var dbSetName = CoreSettings.dbSetNames[typeof(T)];
-                var dbSetProperty = _context.GetType().GetProperty(dbSetName);
-
-                var dbSet = dbSetProperty.GetValue(_context);
-
-                //call the dbset's addrange method
-                var addRangeMethod = dbSet.GetType().GetMethod("AddRange", new[] { typeof(IEnumerable<T>) });
-                addRangeMethod.Invoke(dbSet, new object[] { entities });
-
-                //mark the file as loaded
-                LoadedFiles.Add(typeof(T));
-                
-                // Remove the automatic loading of related tables for Film to avoid recursive calls
-                // We'll handle this separately through SeedRelatedDataInBackground
+                progressCallback?.Invoke("Data loading complete");
+                return;
             }
 
+            if (await HasLocalData<T>())
+            {
+                LoadedFiles.Add(typeof(T));
+                progressCallback?.Invoke("Data loading complete");
+                return;
+            }
+
+            var fileName = $"{CoreSettings.dbSetNames[typeof(T)]}.csv";
+            progressCallback?.Invoke($"Loading {fileName}...");
+
+            var entities = await FetchCsv<T>(fileName);
+            await _context.Set<T>().AddRangeAsync(entities);
             await _context.SaveChangesAsync();
+
+            LoadedFiles.Add(typeof(T));
+            await UpdateSyncedCommitSnapshot();
             progressCallback?.Invoke("Data loading complete");
         }
 
@@ -502,28 +508,32 @@ namespace DataEditor.Core.Services
             }
         }
 
-        // Add a new method to load only Film data initially
         public async Task SeedFilmDataOnly(Action<string> progressCallback = null)
         {
             progressCallback?.Invoke("Loading Films...");
-            
-            if (!LoadedFiles.Contains(typeof(Film)))
-            {
-                var fileName = $"{CoreSettings.dbSetNames[typeof(Film)]}.csv";
-                progressCallback?.Invoke($"Loading {fileName}...");
-                
-                var entities = await FetchCsv<Film>(fileName);
 
-                var dbSetProperty = _context.GetType().GetProperty("Films");
-                var dbSet = dbSetProperty.GetValue(_context);
-                
-                var addRangeMethod = dbSet.GetType().GetMethod("AddRange", new[] { typeof(IEnumerable<Film>) });
-                addRangeMethod.Invoke(dbSet, new object[] { entities });
-                
-                LoadedFiles.Add(typeof(Film));
-                await _context.SaveChangesAsync();
+            if (LoadedFiles.Contains(typeof(Film)))
+            {
+                progressCallback?.Invoke("Films loaded successfully");
+                return;
             }
-            
+
+            if (await HasLocalData<Film>())
+            {
+                LoadedFiles.Add(typeof(Film));
+                progressCallback?.Invoke("Films loaded successfully");
+                return;
+            }
+
+            var fileName = $"{CoreSettings.dbSetNames[typeof(Film)]}.csv";
+            progressCallback?.Invoke($"Loading {fileName}...");
+
+            var entities = await FetchCsv<Film>(fileName);
+            await _context.Films.AddRangeAsync(entities);
+            await _context.SaveChangesAsync();
+
+            LoadedFiles.Add(typeof(Film));
+            await UpdateSyncedCommitSnapshot();
             progressCallback?.Invoke("Films loaded successfully");
         }
 
@@ -595,6 +605,35 @@ namespace DataEditor.Core.Services
                 progressCallback?.Invoke($"{message} ({current}/{total})"));
         }
 
+        public async Task<bool> HasLocalSnapshot()
+        {
+            return await _context.Films.AsNoTracking().AnyAsync();
+        }
+
+        public async Task<bool> IsLocalSnapshotOutdated()
+        {
+            if (!await HasLocalSnapshot())
+            {
+                return false;
+            }
+
+            var syncedCommit = await _gitService.GetSyncedCommitSha();
+            if (string.IsNullOrWhiteSpace(syncedCommit))
+            {
+                return false;
+            }
+
+            var latestCommit = await _gitService.GetLatestBranchCommitSha();
+            return !string.Equals(syncedCommit, latestCommit, StringComparison.OrdinalIgnoreCase);
+        }
+
+        public async Task RefreshFromGitHub(Action<string> progressCallback = null)
+        {
+            await ResetCaches();
+            await SeedFilmDataOnly(progressCallback);
+            await SeedRelatedDataInBackground(progressCallback);
+        }
+
         public class FileDifference
         {
             public string FileName { get; set; }
@@ -603,19 +642,12 @@ namespace DataEditor.Core.Services
             public int ChangedLinesCount { get; set; }
         }
 
-        // Add this new method after the CommitAllChangesToGit method
         public async Task ResetCaches()
         {
-            // Clear all DbSets to avoid duplicate key conflicts
             _context.ClearAllDbSets();
-
-            // Detach all tracked entities to avoid tracking conflicts
             _context.DetachAllEntities();
-
-            // Clear the LoadedFiles collection to force reloading all data from Git
             LoadedFiles.Clear();
-            
-     
+            await _gitService.SetSyncedCommitSha(null);
         }
     }
 }

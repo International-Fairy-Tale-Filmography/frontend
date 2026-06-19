@@ -1,39 +1,41 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using Data.Core.Models;
+﻿using Data.Core.Models;
 using Microsoft.EntityFrameworkCore;
-using Octokit;
 using Language = Data.Core.Models.Language;
 
 public class DataEditorDataContext : DbContext
 {
-    protected override void OnConfiguring
-        (DbContextOptionsBuilder optionsBuilder)
+    public DataEditorDataContext()
     {
-        optionsBuilder.UseInMemoryDatabase(databaseName: "db");
     }
 
- 
+    public DataEditorDataContext(DbContextOptions<DataEditorDataContext> options)
+        : base(options)
+    {
+    }
 
-    public new DbSet<Company> Companies { get; set; }
-    public new DbSet<Country> Countries { get; set; }
-    public new DbSet<Film> Films { get; set; } 
-    public new DbSet<Language> Languages { get; set; } 
-    public new DbSet<Origin> Origins { get; set; } 
-    public new DbSet<Person> People { get; set; } 
-    public new DbSet<Role> Roles { get; set; } 
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+    {
+        if (!optionsBuilder.IsConfigured)
+        {
+            optionsBuilder.UseSqlite("Data Source=data-editor.db");
+        }
+    }
 
-    public new DbSet<FilmLink> FilmLinks { get; set; } 
-    public new DbSet<FilmCompany> FilmCompanies { get; set; } 
-    public new DbSet<FilmOrigin> FilmOrigins { get; set; } 
-    public new DbSet<FilmCountry> FilmCountries { get; set; } 
-    public new DbSet<FilmLanguage> FilmLanguages { get; set; } 
-    public new DbSet<FilmPersonRole> FilmPersonRoles { get; set; } 
+    public DbSet<Company> Companies { get; set; }
+    public DbSet<Country> Countries { get; set; }
+    public DbSet<Film> Films { get; set; }
+    public DbSet<Language> Languages { get; set; }
+    public DbSet<Origin> Origins { get; set; }
+    public DbSet<Person> People { get; set; }
+    public DbSet<Role> Roles { get; set; }
 
-    /// <summary>
-    /// Detaches all tracked entities from the DbContext to avoid tracking conflicts.
-    /// </summary>
+    public DbSet<FilmLink> FilmLinks { get; set; }
+    public DbSet<FilmCompany> FilmCompanies { get; set; }
+    public DbSet<FilmOrigin> FilmOrigins { get; set; }
+    public DbSet<FilmCountry> FilmCountries { get; set; }
+    public DbSet<FilmLanguage> FilmLanguages { get; set; }
+    public DbSet<FilmPersonRole> FilmPersonRoles { get; set; }
+
     public void DetachAllEntities()
     {
         var entries = ChangeTracker.Entries().ToList();
@@ -43,25 +45,23 @@ public class DataEditorDataContext : DbContext
         }
     }
 
-    /// <summary>
-    /// Clears all DbSets by removing all entities and resetting their state.
-    /// </summary>
     public void ClearAllDbSets()
     {
-        Companies.RemoveRange(Companies);
-        Countries.RemoveRange(Countries);
+        FilmPersonRoles.RemoveRange(FilmPersonRoles);
+        FilmOrigins.RemoveRange(FilmOrigins);
+        FilmLanguages.RemoveRange(FilmLanguages);
+        FilmCountries.RemoveRange(FilmCountries);
+        FilmCompanies.RemoveRange(FilmCompanies);
+        FilmLinks.RemoveRange(FilmLinks);
+
         Films.RemoveRange(Films);
-        Languages.RemoveRange(Languages);
-        Origins.RemoveRange(Origins);
         People.RemoveRange(People);
         Roles.RemoveRange(Roles);
-        FilmLinks.RemoveRange(FilmLinks);
-        FilmCompanies.RemoveRange(FilmCompanies);
-        FilmOrigins.RemoveRange(FilmOrigins);
-        FilmCountries.RemoveRange(FilmCountries);
-        FilmLanguages.RemoveRange(FilmLanguages);
-        FilmPersonRoles.RemoveRange(FilmPersonRoles);
+        Origins.RemoveRange(Origins);
+        Languages.RemoveRange(Languages);
+        Countries.RemoveRange(Countries);
+        Companies.RemoveRange(Companies);
 
-        SaveChanges(); // Ensure changes are persisted
+        SaveChanges();
     }
 }
