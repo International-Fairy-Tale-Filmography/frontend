@@ -13,14 +13,6 @@ public class DataEditorDataContext : DbContext
     {
     }
 
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-    {
-        if (!optionsBuilder.IsConfigured)
-        {
-            optionsBuilder.UseSqlite("Data Source=data-editor.db");
-        }
-    }
-
     public DbSet<Company> Companies { get; set; }
     public DbSet<Country> Countries { get; set; }
     public DbSet<Film> Films { get; set; }
