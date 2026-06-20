@@ -33,7 +33,7 @@
       "url": "_framework\/icudt_no_CJK.dat"
     },
     {
-      "hash": "sha256-d5vrZHYvvpRhuLA8XOW5ZDCb6\/4eXR0I8LjWyuenjEQ=",
+      "hash": "sha256-IX42KKhy9JMjGajXhgAK3Z0saLnpolePKCzFvdUBkc8=",
       "url": "_framework\/blazor.boot.json"
     },
     {
@@ -41,15 +41,15 @@
       "url": "_framework\/CsvHelper.wasm"
     },
     {
-      "hash": "sha256-UicqA5+CWXspvEMkSyt6ujRWFVPjoch02Mf3fcP4M9E=",
+      "hash": "sha256-EzsX6wQ2fOGJyb0D\/Gd9NNP6qyn2rixxpbTOxixEGcI=",
       "url": "_framework\/Data.Core.wasm"
     },
     {
-      "hash": "sha256-vFtHt2JEIEhiYak2SWJ3nJtANAldhjtoyEunpb3juTs=",
+      "hash": "sha256-L6l\/\/5oEULXbEwewYnSkoxPdA5d+QFS1W4LtaTwYS5Y=",
       "url": "_framework\/FrontEnd.Core.wasm"
     },
     {
-      "hash": "sha256-sZSgQRSS4SXZTZmBBlbaS\/uuT5bbZACqfchIuuzvxug=",
+      "hash": "sha256-ASyf6uclQWENHO\/rkgTM167gmuvzkhv9NkQkzmj+erU=",
       "url": "_framework\/FrontEnd.Web.wasm"
     },
     {
@@ -293,7 +293,7 @@
       "url": "FrontEnd.Web.styles.css"
     },
     {
-      "hash": "sha256-OUfdx70dC+q68EWWI87KwQftnEmaox\/wZwx\/\/Wp9laQ=",
+      "hash": "sha256-gzOfjtXtueKA9z30MxarRjPxxtZCP7RpXmKCfZeEOMI=",
       "url": "css\/app.css"
     },
     {
@@ -325,6 +325,10 @@
       "url": "img\/hugo-george-melies.png"
     },
     {
+      "hash": "sha256-v1GLRvgtYK71S+IxMtBZxEMOQPH9T9vFi888M5O0goU=",
+      "url": "img\/JackZipes.jpg"
+    },
+    {
       "hash": "sha256-I9o2cv0YUjeGn9YWw69HMm8E9g3G\/vPkXKEf6Fn\/pJQ=",
       "url": "index.html"
     },
@@ -341,5 +345,5 @@
       "url": "sample-data\/weather.json"
     }
   ],
-  "version": "wg5qB1QV"
+  "version": "tlorFKbO"
 };
