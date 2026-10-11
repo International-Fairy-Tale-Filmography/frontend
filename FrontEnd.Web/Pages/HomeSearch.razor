@@ -1,38 +1,134 @@
-﻿@using FrontEnd.Core.Data
-@using FrontEnd.Core.Services
-@using Microsoft.EntityFrameworkCore
+﻿@using Data.Core.Configuration
 @using Data.Core.Models
-@using System.Text.Encodings.Web
-@using System.Web
-@inject HttpClient Http
-@inject FrontEndDataContext context
+@using FrontEnd.Core.Services
+@using Microsoft.AspNetCore.Components.Routing
+@using Microsoft.JSInterop
+@using System.Text
+@implements IDisposable
+@inject NavigationManager Navigation
+@inject IJSRuntime JS
 @inject FrontEndDataInitializerService fedis
-@* @if (ds != null)
-{
-    <p>
-        @ds.Companies.Count Companies -
-        @ds.Countries.Count Countries -
-        @ds.Languages.Count Languages -
-        @ds.Origins.Count Origins -
-        @ds.People.Count People -
-        @ds.Films.Count Films
-    </p>
-}
- *@
+@inject FrontEnd.Core.Data.FrontEndDataContext context
+@inject SearchService SearchService
+
 <div class="alert alert-secondary" style="margin-top:12px">
-    
-    
     <div class="input-group">
-        <button class="btn btn-secondary" type="button" @onclick="Search"><i class="bi bi-search"></i></button>
+        <button class="btn btn-secondary" type="button" @onclick="SearchFromInput"><i class="bi bi-search"></i></button>
         <input type="text" @bind-value="searchTitle" @onkeyup="Enter" class="form-control form-control-lg" placeholder="Enter film title" aria-label="Enter film title">
-
-        <button class="btn btn-secondary"  type="button">Advanced</button>
+        <button class="btn btn-secondary" type="button" @onclick="ToggleAdvanced" aria-expanded="@showAdvanced" aria-controls="advanced-search">Advanced</button>
+        <button class="btn btn-primary" type="button" @onclick="ExportResults" disabled="@isExporting" aria-label="Export search results as CSV">
+            @if (isExporting)
+            {
+                <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+                <span class="visually-hidden">Exporting results</span>
+            }
+            else
+            {
+                <i class="bi bi-download" aria-hidden="true"></i><span class="ms-1">Export</span>
+            }
+        </button>
     </div>
-    
 
-
+    @if (showAdvanced)
+    {
+        <div id="advanced-search" class="row g-2 mt-2" aria-label="Advanced search filters">
+            <div class="col-md-6">
+                <label class="form-label" for="search-director">Director</label>
+                <select id="search-director" class="form-select" @bind="directorGuid">
+                    <option value="">All directors</option>
+                    @foreach (var person in GetDirectors())
+                    {
+                        <option value="@person.Guid">@GetPersonDisplayName(person)</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label" for="search-person">Person</label>
+                <select id="search-person" class="form-select" @bind="personGuid">
+                    <option value="">All people</option>
+                    @foreach (var person in context.People.OrderBy(i => i.LastName).ThenBy(i => i.FirstName))
+                    {
+                        <option value="@person.Guid">@GetPersonDisplayName(person)</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label" for="search-country">Country</label>
+                <select id="search-country" class="form-select" @bind="countryGuid">
+                    <option value="">All countries</option>
+                    @foreach (var country in context.Countries.OrderBy(i => i.Name))
+                    {
+                        <option value="@country.Guid">@country.Name</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label" for="search-company">Company</label>
+                <select id="search-company" class="form-select" @bind="companyGuid">
+                    <option value="">All companies</option>
+                    @foreach (var company in context.Companies.OrderBy(i => i.Name))
+                    {
+                        <option value="@company.Guid">@company.Name</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label" for="search-origin">Origin</label>
+                <select id="search-origin" class="form-select" @bind="originGuid">
+                    <option value="">All origins</option>
+                    @foreach (var origin in context.Origins.OrderBy(i => i.Title))
+                    {
+                        <option value="@origin.Guid">@origin.Title</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label" for="search-language">Language</label>
+                <select id="search-language" class="form-select" @bind="languageGuid">
+                    <option value="">All languages</option>
+                    @foreach (var language in context.Languages.OrderBy(i => i.Name))
+                    {
+                        <option value="@language.Guid">@language.Name</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label" for="search-year">Release year</label>
+                <input id="search-year" class="form-control" type="number" @bind="year" />
+            </div>
+            <div class="col-md-4">
+                <label class="form-label" for="search-duration-min">Minimum duration</label>
+                <input id="search-duration-min" class="form-control" type="number" min="0" @bind="durationMin" />
+            </div>
+            <div class="col-md-4">
+                <label class="form-label" for="search-duration-max">Maximum duration</label>
+                <input id="search-duration-max" class="form-control" type="number" min="0" @bind="durationMax" />
+            </div>
+            <div class="col-md-6">
+                <label class="form-label" for="search-mode">Mode</label>
+                <select id="search-mode" class="form-select" @bind="mode">
+                    <option value="">All modes</option>
+                    @foreach (var filmMode in context.Films.Select(i => i.Mode).Where(i => !string.IsNullOrWhiteSpace(i)).Distinct().OrderBy(i => i))
+                    {
+                        <option value="@filmMode">@filmMode</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label" for="search-sort">Sort</label>
+                <select id="search-sort" class="form-select" @bind="sort">
+                    <option value="@FilmSortOption.TitleAsc">Title (A–Z)</option>
+                    <option value="@FilmSortOption.YearAsc">Year (oldest first)</option>
+                    <option value="@FilmSortOption.YearDesc">Year (newest first)</option>
+                </select>
+            </div>
+            <div class="col-12 d-flex gap-2">
+                <button class="btn btn-primary" type="button" @onclick="ApplyAdvancedSearch">Search</button>
+                <button class="btn btn-outline-secondary" type="button" @onclick="ClearAdvancedSearch">Clear all</button>
+            </div>
+        </div>
+    }
 </div>
-
 
 @if (isLoading)
 {
@@ -40,95 +136,391 @@
 }
 else
 {
-
-
-
     <ul class="unstyled list-manager">
-
-
-        @foreach (var i in results)
+        @foreach (var film in results)
         {
+            var directors = GetDirectors(film);
+            var countries = film.Countries.Where(i => i.Country != null).Select(i => i.Country).ToList();
+            var companies = film.Companies.Where(i => i.Company != null).Select(i => i.Company).ToList();
+
             <li>
-
-                <a class="nopad" href="Film/@HttpUtility.UrlEncode(i.Title)/@i.Guid"><i class="bi bi-film"></i></a>
+                <a class="nopad" href="@BuildFilmUrl(film)"><i class="bi bi-film"></i></a>
                 <em>
-                    <a class="italics" href="Film/@HttpUtility.UrlEncode(i.Title)/@i.Guid">@i.Title (@i.ReleaseYear)</a>
-                </em>
+                    <a class="italics" href="@BuildFilmUrl(film)">@GetTitleWithOther(film)</a>
+                </em>@(film.ReleaseYear).
 
-                @*   1979.
-
-            Directed by <a class="nopad" href="/Search/ByDirector/7783">Ina Rarisch</a>.
-
-            <a class="nopad" href="/Search/ByCountry/996">East Germany</a>:
-        *@
-
-               @*  @foreach (var j in i.Countries)
+                @if (directors.Count > 0)
                 {
-
-                    <span> - </span>
-                    <a class="nopad" href="/Search/ByCountry/@j.CountryId">
-                        @j.Name
-                    </a>
+                    <text> Directed by </text>
+                    @for (var index = 0; index < directors.Count; index++)
+                    {
+                        var director = directors[index];
+                        <a class="nopad" href="/Search/ByDirector/@director.Guid">@GetPersonDisplayName(director)</a>
+                        if (index < directors.Count - 1)
+                        {
+                            <text>, </text>
+                        }
+                    }
+                    <text>. </text>
                 }
 
-                @foreach (var j in i.Companies)
+                @if (countries.Count > 0)
                 {
+                    @for (var index = 0; index < countries.Count; index++)
+                    {
+                        var country = countries[index];
+                        <a class="nopad" href="/Search/ByCountry/@country.Guid">@country.Name</a>
+                        if (index < countries.Count - 1)
+                        {
+                            <text>/</text>
+                        }
+                    }
+                    <text>: </text>
+                }
 
-                    <span> - </span>
-                    <a class="nopad" href="/Search/ByCompany/@j.CompanyId">
-                        @j.Name
-                    </a>
-                } *@
-
-                .
-
-
-
+                @if (companies.Count > 0)
+                {
+                    @for (var index = 0; index < companies.Count; index++)
+                    {
+                        var company = companies[index];
+                        <a class="nopad" href="/Search/ByCompany/@company.Guid">@company.Name</a>
+                        if (index < companies.Count - 1)
+                        {
+                            <text>/</text>
+                        }
+                    }
+                    <text>. </text>
+                }
             </li>
         }
-
     </ul>
 }
 
 @code
 {
-
     private bool isLoading = true;
-    private string searchTitle = "";
-
-    private List<Film> results = new List<Film>();
-
+    private bool isExporting;
+    private bool showAdvanced;
+    private string searchTitle = string.Empty;
+    private Guid? directorGuid;
+    private Guid? countryGuid;
+    private Guid? companyGuid;
+    private Guid? personGuid;
+    private Guid? originGuid;
+    private Guid? languageGuid;
+    private int? year;
+    private int? durationMin;
+    private int? durationMax;
+    private string mode = string.Empty;
+    private FilmSortOption sort = FilmSortOption.TitleAsc;
+    private List<Film> results = new();
 
     protected override async Task OnInitializedAsync()
     {
-        await Task.Delay(1);
+        Navigation.LocationChanged += HandleLocationChanged;
+
         await fedis.FetchData();
-        await Search();
+        await ApplySearchFromUriAsync(Navigation.Uri);
     }
 
-    private async Task Search()
+    public void Dispose()
+    {
+        Navigation.LocationChanged -= HandleLocationChanged;
+    }
+
+    private void HandleLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        _ = InvokeAsync(() => ApplySearchFromUriAsync(e.Location));
+    }
+
+    private async Task SearchFromInput()
+    {
+        await NavigateToSearchAsync();
+    }
+
+    private void ToggleAdvanced()
+    {
+        showAdvanced = !showAdvanced;
+    }
+
+    private async Task ApplyAdvancedSearch()
+    {
+        await NavigateToSearchAsync();
+    }
+
+    private async Task ClearAdvancedSearch()
+    {
+        searchTitle = string.Empty;
+        directorGuid = null;
+        countryGuid = null;
+        companyGuid = null;
+        personGuid = null;
+        originGuid = null;
+        languageGuid = null;
+        year = null;
+        durationMin = null;
+        durationMax = null;
+        mode = string.Empty;
+        sort = FilmSortOption.TitleAsc;
+
+        await NavigateToSearchAsync();
+    }
+
+    private async Task NavigateToSearchAsync()
+    {
+        var destination = BuildSearchUrl();
+        var currentRelative = Navigation.ToBaseRelativePath(Navigation.Uri);
+        var destinationRelative = destination.TrimStart('/');
+
+        if (string.Equals(currentRelative, destinationRelative, StringComparison.Ordinal))
+        {
+            await ApplySearchFromUriAsync(Navigation.Uri);
+            return;
+        }
+
+        Navigation.NavigateTo(destination);
+    }
+
+    private async Task ApplySearchFromUriAsync(string uriString)
     {
         isLoading = true;
-        await Task.Delay(5);
-        if (!string.IsNullOrEmpty(searchTitle))
-        {
-            results = context.Films.Where(i => i.Title.ToLowerInvariant().Contains(searchTitle)).ToList();
-        }
-        else
-        {
-            results = context.Films.OrderBy(i => i.Title).Take(30).ToList();
-        }
+        StateHasChanged();
 
+        var uri = Navigation.ToAbsoluteUri(uriString);
 
+        searchTitle = TryGetQueryParamValue(uri.Query, "title") ?? string.Empty;
+        directorGuid = TryGetGuidQueryParamValue(uri.Query, "director");
+        countryGuid = TryGetGuidQueryParamValue(uri.Query, "country");
+        companyGuid = TryGetGuidQueryParamValue(uri.Query, "company");
+        personGuid = TryGetGuidQueryParamValue(uri.Query, "person");
+        originGuid = TryGetGuidQueryParamValue(uri.Query, "origin");
+        languageGuid = TryGetGuidQueryParamValue(uri.Query, "language");
+        year = TryGetIntQueryParamValue(uri.Query, "year");
+        durationMin = TryGetIntQueryParamValue(uri.Query, "durationMin");
+        durationMax = TryGetIntQueryParamValue(uri.Query, "durationMax");
+        mode = TryGetQueryParamValue(uri.Query, "mode") ?? string.Empty;
+        sort = TryGetSortQueryParamValue(uri.Query);
+        showAdvanced = HasAdvancedFilters();
+
+        var searchResult = SearchService.Search(CreateSearchQuery(1, 30));
+
+        results = searchResult.Items.ToList();
         isLoading = false;
+
+        await Task.CompletedTask;
+    }
+
+    private async Task ExportResults()
+    {
+        isExporting = true;
+
+        try
+        {
+            const int pageSize = 200;
+            var firstPage = SearchService.Search(CreateSearchQuery(1, pageSize));
+            var films = firstPage.Items.ToList();
+
+            for (var page = 2; (page - 1) * pageSize < firstPage.TotalCount; page++)
+            {
+                films.AddRange(SearchService.Search(CreateSearchQuery(page, pageSize)).Items);
+            }
+
+            var csv = BuildExportCsv(films);
+            await JS.InvokeVoidAsync("filmography.downloadCsv", "fairy-tale-filmography-export.csv", csv);
+        }
+        finally
+        {
+            isExporting = false;
+        }
+    }
+
+    private FilmSearchQuery CreateSearchQuery(int page, int pageSize)
+    {
+        return new FilmSearchQuery
+        {
+            Title = searchTitle,
+            DirectorGuid = directorGuid,
+            CountryGuid = countryGuid,
+            CompanyGuid = companyGuid,
+            PersonGuid = personGuid,
+            OriginGuid = originGuid,
+            LanguageGuid = languageGuid,
+            Year = year,
+            DurationMin = durationMin,
+            DurationMax = durationMax,
+            Mode = mode,
+            Sort = sort,
+            Page = page,
+            PageSize = pageSize
+        };
+    }
+
+    private string BuildExportCsv(IEnumerable<Film> films)
+    {
+        var csv = new StringBuilder();
+        csv.AppendLine($"The Fairy-Tale Filmography,\u0040COPYRIGHT {DateTime.Now.Year} - Pauline Greenhill, Kendra Magnus-Johnston, Jack Zipes");
+        csv.AppendLine("Film Title,Release Year,Director,Country,Company,Link");
+
+        foreach (var film in films)
+        {
+            var directors = string.Join(" / ", GetDirectors(film).Select(GetPersonDisplayName));
+            var countries = string.Join(" / ", film.Countries.Where(i => i.Country != null).Select(i => i.Country.Name));
+            var companies = string.Join(" / ", film.Companies.Where(i => i.Company != null).Select(i => i.Company.Name));
+            var link = Navigation.ToAbsoluteUri(BuildFilmUrl(film)).ToString();
+
+            csv.AppendLine(string.Join(",",
+                EscapeCsvValue(GetTitleWithOther(film)),
+                EscapeCsvValue(film.ReleaseYear?.ToString()),
+                EscapeCsvValue(directors),
+                EscapeCsvValue(countries),
+                EscapeCsvValue(companies),
+                EscapeCsvValue(link)));
+        }
+
+        return csv.ToString();
+    }
+
+    private static string EscapeCsvValue(string? value)
+    {
+        return "\"" + (value ?? string.Empty).Replace("\"", "\"\"") + "\"";
     }
 
     public async Task Enter(KeyboardEventArgs e)
     {
         if (e.Code == "Enter" || e.Code == "NumpadEnter")
         {
-            await Search();
+            await SearchFromInput();
         }
     }
 
+    private static List<Person> GetDirectors(Film film)
+    {
+        return film.PeopleRoles
+            .Where(i => i.RoleGuid == CoreSettings.DirectorRoleId && i.Person != null)
+            .Select(i => i.Person)
+            .GroupBy(i => i.Guid)
+            .Select(i => i.First())
+            .ToList();
+    }
+
+    private static string BuildFilmUrl(Film film)
+    {
+        return $"/Film/{Uri.EscapeDataString(film.Title ?? string.Empty)}/{film.Guid}";
+    }
+
+    private static string GetTitleWithOther(Film film)
+    {
+        if (string.IsNullOrWhiteSpace(film.OtherTitle))
+        {
+            return film.Title;
+        }
+
+        return $"{film.Title}. {film.OtherTitle}";
+    }
+
+    private static string GetPersonDisplayName(Person person)
+    {
+        return $"{person.FirstName} {person.LastName}".Trim();
+    }
+
+    private IEnumerable<Person> GetDirectors()
+    {
+        return context.Films
+            .SelectMany(i => i.PeopleRoles)
+            .Where(i => i.RoleGuid == CoreSettings.DirectorRoleId && i.Person != null)
+            .Select(i => i.Person)
+            .GroupBy(i => i.Guid)
+            .Select(i => i.First())
+            .OrderBy(i => i.LastName)
+            .ThenBy(i => i.FirstName);
+    }
+
+    private string BuildSearchUrl()
+    {
+        var query = new List<string>();
+
+        AddQueryValue(query, "title", searchTitle);
+        AddQueryValue(query, "director", directorGuid);
+        AddQueryValue(query, "country", countryGuid);
+        AddQueryValue(query, "company", companyGuid);
+        AddQueryValue(query, "person", personGuid);
+        AddQueryValue(query, "origin", originGuid);
+        AddQueryValue(query, "language", languageGuid);
+        AddQueryValue(query, "year", year);
+        AddQueryValue(query, "durationMin", durationMin);
+        AddQueryValue(query, "durationMax", durationMax);
+        AddQueryValue(query, "mode", mode);
+
+        if (sort != FilmSortOption.TitleAsc)
+        {
+            AddQueryValue(query, "sort", sort);
+        }
+
+        return query.Count == 0 ? "/" : $"/?{string.Join("&", query)}";
+    }
+
+    private bool HasAdvancedFilters()
+    {
+        return directorGuid.HasValue || countryGuid.HasValue || companyGuid.HasValue || personGuid.HasValue ||
+               originGuid.HasValue || languageGuid.HasValue || year.HasValue || durationMin.HasValue ||
+               durationMax.HasValue || !string.IsNullOrWhiteSpace(mode) || sort != FilmSortOption.TitleAsc;
+    }
+
+    private static void AddQueryValue<T>(List<string> query, string key, T? value)
+    {
+        if (value is null || string.IsNullOrWhiteSpace(value.ToString()))
+        {
+            return;
+        }
+
+        query.Add($"{Uri.EscapeDataString(key)}={Uri.EscapeDataString(value.ToString()!)}");
+    }
+
+    private static Guid? TryGetGuidQueryParamValue(string queryString, string key)
+    {
+        return Guid.TryParse(TryGetQueryParamValue(queryString, key), out var value) ? value : null;
+    }
+
+    private static int? TryGetIntQueryParamValue(string queryString, string key)
+    {
+        return int.TryParse(TryGetQueryParamValue(queryString, key), out var value) ? value : null;
+    }
+
+    private static FilmSortOption TryGetSortQueryParamValue(string queryString)
+    {
+        return Enum.TryParse<FilmSortOption>(TryGetQueryParamValue(queryString, "sort"), true, out var value)
+            ? value
+            : FilmSortOption.TitleAsc;
+    }
+
+    private static string? TryGetQueryParamValue(string queryString, string key)
+    {
+        if (string.IsNullOrWhiteSpace(queryString))
+        {
+            return null;
+        }
+
+        var query = queryString.TrimStart('?');
+        var pairs = query.Split('&', StringSplitOptions.RemoveEmptyEntries);
+
+        foreach (var pair in pairs)
+        {
+            var parts = pair.Split('=', 2);
+            var currentKey = Uri.UnescapeDataString(parts[0]);
+
+            if (!string.Equals(currentKey, key, StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            if (parts.Length == 1)
+            {
+                return string.Empty;
+            }
+
+            return Uri.UnescapeDataString(parts[1]);
+        }
+
+        return null;
+    }
 }

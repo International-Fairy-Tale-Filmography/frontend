@@ -1,0 +1,193 @@
+@page "/Search/ByDirector/{id}"
+@page "/Search/ByCountry/{id}"
+@page "/Search/ByCompany/{id}"
+@page "/Search/ByPerson/{id}"
+@page "/Search/ByOrigin/{id}"
+@page "/Search/ByLanguage/{id}"
+@page "/Search/ByYear/{year:int}"
+
+@using Data.Core.Configuration
+@using Data.Core.Models
+@using FrontEnd.Core.Data
+@using FrontEnd.Core.Services
+@inject NavigationManager Navigation
+@inject FrontEndDataInitializerService fedis
+@inject FrontEndDataContext context
+@inject SearchService SearchService
+
+@if (isLoading)
+{
+    <span>Please Wait.. 🎥</span>
+}
+else
+{
+    <h3>@heading</h3>
+
+    <ul class="unstyled list-manager">
+        @foreach (var film in results)
+        {
+            var directors = GetDirectors(film);
+            var countries = film.Countries.Where(i => i.Country != null).Select(i => i.Country).ToList();
+            var companies = film.Companies.Where(i => i.Company != null).Select(i => i.Company).ToList();
+
+            <li>
+                <a class="nopad" href="@BuildFilmUrl(film)"><i class="bi bi-film"></i></a>
+                <em>
+                    <a class="italics" href="@BuildFilmUrl(film)">@GetTitleWithOther(film)</a>
+                </em>@(film.ReleaseYear).
+
+                @if (directors.Count > 0)
+                {
+                    <text> Directed by </text>
+                    @for (var index = 0; index < directors.Count; index++)
+                    {
+                        var director = directors[index];
+                        <a class="nopad" href="/Search/ByDirector/@director.Guid">@GetPersonDisplayName(director)</a>
+                        if (index < directors.Count - 1)
+                        {
+                            <text>, </text>
+                        }
+                    }
+                    <text>. </text>
+                }
+
+                @if (countries.Count > 0)
+                {
+                    @for (var index = 0; index < countries.Count; index++)
+                    {
+                        var country = countries[index];
+                        <a class="nopad" href="/Search/ByCountry/@country.Guid">@country.Name</a>
+                        if (index < countries.Count - 1)
+                        {
+                            <text>/</text>
+                        }
+                    }
+                    <text>: </text>
+                }
+
+                @if (companies.Count > 0)
+                {
+                    @for (var index = 0; index < companies.Count; index++)
+                    {
+                        var company = companies[index];
+                        <a class="nopad" href="/Search/ByCompany/@company.Guid">@company.Name</a>
+                        if (index < companies.Count - 1)
+                        {
+                            <text>/</text>
+                        }
+                    }
+                    <text>. </text>
+                }
+            </li>
+        }
+    </ul>
+}
+
+@code {
+    [Parameter]
+    public string? id { get; set; }
+
+    [Parameter]
+    public int? year { get; set; }
+
+    private bool isLoading = true;
+    private string heading = "Search Results";
+    private List<Film> results = new();
+
+    protected override async Task OnParametersSetAsync()
+    {
+        isLoading = true;
+
+        await fedis.FetchData();
+
+        var query = new FilmSearchQuery
+        {
+            Sort = FilmSortOption.TitleAsc,
+            Page = 1,
+            PageSize = 100
+        };
+
+        var relativePath = Navigation.ToBaseRelativePath(Navigation.Uri);
+        var parts = relativePath.Split('/', StringSplitOptions.RemoveEmptyEntries);
+
+        if (parts.Length >= 3)
+        {
+            var searchType = parts[1];
+
+            if (string.Equals(searchType, "ByYear", StringComparison.OrdinalIgnoreCase) && year.HasValue)
+            {
+                query.Year = year.Value;
+                heading = $"Year: {year.Value}";
+            }
+            else if (Guid.TryParse(id, out var guid))
+            {
+                ApplyGuidFilter(searchType, guid, query);
+            }
+        }
+
+        var searchResult = SearchService.Search(query);
+        results = searchResult.Items.ToList();
+        isLoading = false;
+    }
+
+    private void ApplyGuidFilter(string searchType, Guid guid, FilmSearchQuery query)
+    {
+        switch (searchType.ToLowerInvariant())
+        {
+            case "bydirector":
+                query.DirectorGuid = guid;
+                heading = $"Director: {context.People.FirstOrDefault(i => i.Guid == guid)?.FirstName} {context.People.FirstOrDefault(i => i.Guid == guid)?.LastName}".Trim();
+                break;
+            case "bycountry":
+                query.CountryGuid = guid;
+                heading = $"Country: {context.Countries.FirstOrDefault(i => i.Guid == guid)?.Name}";
+                break;
+            case "bycompany":
+                query.CompanyGuid = guid;
+                heading = $"Company: {context.Companies.FirstOrDefault(i => i.Guid == guid)?.Name}";
+                break;
+            case "byperson":
+                query.PersonGuid = guid;
+                heading = $"Person: {context.People.FirstOrDefault(i => i.Guid == guid)?.FirstName} {context.People.FirstOrDefault(i => i.Guid == guid)?.LastName}".Trim();
+                break;
+            case "byorigin":
+                query.OriginGuid = guid;
+                heading = $"Origin: {context.Origins.FirstOrDefault(i => i.Guid == guid)?.Title}";
+                break;
+            case "bylanguage":
+                query.LanguageGuid = guid;
+                heading = $"Language: {context.Languages.FirstOrDefault(i => i.Guid == guid)?.Name}";
+                break;
+        }
+    }
+
+    private static List<Person> GetDirectors(Film film)
+    {
+        return film.PeopleRoles
+            .Where(i => i.RoleGuid == CoreSettings.DirectorRoleId && i.Person != null)
+            .Select(i => i.Person)
+            .GroupBy(i => i.Guid)
+            .Select(i => i.First())
+            .ToList();
+    }
+
+    private static string BuildFilmUrl(Film film)
+    {
+        return $"/Film/{Uri.EscapeDataString(film.Title ?? string.Empty)}/{film.Guid}";
+    }
+
+    private static string GetTitleWithOther(Film film)
+    {
+        if (string.IsNullOrWhiteSpace(film.OtherTitle))
+        {
+            return film.Title;
+        }
+
+        return $"{film.Title}. {film.OtherTitle}";
+    }
+
+    private static string GetPersonDisplayName(Person person)
+    {
+        return $"{person.FirstName} {person.LastName}".Trim();
+    }
+}
