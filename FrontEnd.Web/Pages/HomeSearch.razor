@@ -1,134 +1,119 @@
-﻿@using FrontEnd.Core.Data
+﻿@using Data.Core.Models
 @using FrontEnd.Core.Services
-@using Microsoft.EntityFrameworkCore
-@using Data.Core.Models
-@using System.Text.Encodings.Web
-@using System.Web
-@inject HttpClient Http
-@inject FrontEndDataContext context
+@using Microsoft.AspNetCore.Components.Routing
+@implements IDisposable
+@inject NavigationManager Navigation
 @inject FrontEndDataInitializerService fedis
-@* @if (ds != null)
-{
-    <p>
-        @ds.Companies.Count Companies -
-        @ds.Countries.Count Countries -
-        @ds.Languages.Count Languages -
-        @ds.Origins.Count Origins -
-        @ds.People.Count People -
-        @ds.Films.Count Films
-    </p>
-}
- *@
-<div class="alert alert-secondary" style="margin-top:12px">
-    
-    
-    <div class="input-group">
-        <button class="btn btn-secondary" type="button" @onclick="Search"><i class="bi bi-search"></i></button>
-        <input type="text" @bind-value="searchTitle" @onkeyup="Enter" class="form-control form-control-lg" placeholder="Enter film title" aria-label="Enter film title">
+@inject SearchService SearchService
 
-        <button class="btn btn-secondary"  type="button">Advanced</button>
-    </div>
-    
-
-
+<div class="d-flex justify-content-end mb-2" style="margin-top:12px">
+    <a class="btn btn-primary fw-bold" href="@BuildAppUrl("Export")">
+        Export <i class="bi bi-download" aria-hidden="true"></i>
+    </a>
 </div>
 
+<div class="alert alert-secondary">
+    <div class="input-group">
+        <button class="btn btn-secondary" type="button" @onclick="SearchFromInput" aria-label="Search"><i class="bi bi-search" aria-hidden="true"></i></button>
+        <input type="text" @bind-value="searchTitle" @onkeyup="Enter" class="form-control form-control-lg" placeholder="Search all films by title" aria-label="Search all films by title" />
+        <a class="btn btn-secondary d-flex align-items-center" href="@BuildAppUrl("AdvancedSearch")">Advanced</a>
+    </div>
+</div>
 
 @if (isLoading)
 {
-    <span>Please Wait.. 🎥</span>
+    <div class="d-flex align-items-center gap-2" role="status">
+        <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+        <span>Loading films…</span>
+    </div>
 }
 else
 {
-
-
-
-    <ul class="unstyled list-manager">
-
-
-        @foreach (var i in results)
-        {
-            <li>
-
-                <a class="nopad" href="Film/@HttpUtility.UrlEncode(i.Title)/@i.Guid"><i class="bi bi-film"></i></a>
-                <em>
-                    <a class="italics" href="Film/@HttpUtility.UrlEncode(i.Title)/@i.Guid">@i.Title (@i.ReleaseYear)</a>
-                </em>
-
-                @*   1979.
-
-            Directed by <a class="nopad" href="/Search/ByDirector/7783">Ina Rarisch</a>.
-
-            <a class="nopad" href="/Search/ByCountry/996">East Germany</a>:
-        *@
-
-               @*  @foreach (var j in i.Countries)
-                {
-
-                    <span> - </span>
-                    <a class="nopad" href="/Search/ByCountry/@j.CountryId">
-                        @j.Name
-                    </a>
-                }
-
-                @foreach (var j in i.Companies)
-                {
-
-                    <span> - </span>
-                    <a class="nopad" href="/Search/ByCompany/@j.CompanyId">
-                        @j.Name
-                    </a>
-                } *@
-
-                .
-
-
-
-            </li>
-        }
-
-    </ul>
+    <FilmResultsList Films="results" />
 }
 
-@code
-{
-
+@code {
     private bool isLoading = true;
-    private string searchTitle = "";
-
-    private List<Film> results = new List<Film>();
-
+    private string searchTitle = string.Empty;
+    private List<Film> results = new();
 
     protected override async Task OnInitializedAsync()
     {
-        await Task.Delay(1);
+        Navigation.LocationChanged += HandleLocationChanged;
         await fedis.FetchData();
-        await Search();
+        await ApplySearchFromUriAsync(Navigation.Uri);
     }
 
-    private async Task Search()
+    public void Dispose()
+    {
+        Navigation.LocationChanged -= HandleLocationChanged;
+    }
+
+    private void HandleLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        _ = InvokeAsync(() => ApplySearchFromUriAsync(e.Location));
+    }
+
+    private async Task SearchFromInput()
+    {
+        var destination = string.IsNullOrWhiteSpace(searchTitle)
+            ? BuildAppUrl(string.Empty)
+            : BuildAppUrl($"?title={Uri.EscapeDataString(searchTitle.Trim())}");
+
+        if (string.Equals(Navigation.Uri, destination, StringComparison.OrdinalIgnoreCase))
+        {
+            await ApplySearchFromUriAsync(destination);
+            return;
+        }
+
+        Navigation.NavigateTo(destination);
+    }
+
+    private async Task ApplySearchFromUriAsync(string uriString)
     {
         isLoading = true;
-        await Task.Delay(5);
-        if (!string.IsNullOrEmpty(searchTitle))
-        {
-            results = context.Films.Where(i => i.Title.ToLowerInvariant().Contains(searchTitle)).ToList();
-        }
-        else
-        {
-            results = context.Films.OrderBy(i => i.Title).Take(30).ToList();
-        }
+        StateHasChanged();
 
+        var uri = Navigation.ToAbsoluteUri(uriString);
+        searchTitle = TryGetQueryParamValue(uri.Query, "title") ?? string.Empty;
+        results = SearchService.Search(new FilmSearchQuery
+        {
+            Title = searchTitle,
+            Sort = FilmSortOption.TitleAsc,
+            Page = 1,
+            PageSize = 30
+        }).Items.ToList();
 
         isLoading = false;
+        await Task.CompletedTask;
     }
 
-    public async Task Enter(KeyboardEventArgs e)
+    private async Task Enter(KeyboardEventArgs e)
     {
-        if (e.Code == "Enter" || e.Code == "NumpadEnter")
+        if (e.Code is "Enter" or "NumpadEnter")
         {
-            await Search();
+            await SearchFromInput();
         }
     }
 
+    private string BuildAppUrl(string relativePath)
+    {
+        return new Uri(new Uri(Navigation.BaseUri), relativePath).AbsoluteUri;
+    }
+
+    private static string? TryGetQueryParamValue(string queryString, string key)
+    {
+        foreach (var pair in queryString.TrimStart('?').Split('&', StringSplitOptions.RemoveEmptyEntries))
+        {
+            var parts = pair.Split('=', 2);
+            if (!string.Equals(Uri.UnescapeDataString(parts[0]), key, StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            return parts.Length == 1 ? string.Empty : Uri.UnescapeDataString(parts[1]);
+        }
+
+        return null;
+    }
 }

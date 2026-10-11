@@ -1,0 +1,280 @@
+@page "/AdvancedSearch"
+
+@using Data.Core.Configuration
+@using Data.Core.Models
+@using FrontEnd.Core.Data
+@using FrontEnd.Core.Services
+@inject NavigationManager Navigation
+@inject FrontEndDataInitializerService fedis
+@inject FrontEndDataContext context
+@inject SearchService SearchService
+
+<PageTitle>Advanced Search</PageTitle>
+
+<h2>Advanced Search</h2>
+
+@if (isInitializing)
+{
+    <div class="d-flex align-items-center gap-2" role="status">
+        <span class="spinner-border" aria-hidden="true"></span>
+        <span>Loading search options…</span>
+    </div>
+}
+else
+{
+    <div class="card mb-3">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-12">
+                    <label class="form-label" for="advanced-title">Film title</label>
+                    <input id="advanced-title" class="form-control" @bind="title" placeholder="Search titles and alternate titles" />
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="advanced-director">Director</label>
+                    <select id="advanced-director" class="form-select" @bind="directorGuid">
+                        <option value="">All directors</option>
+                        @foreach (var person in GetDirectors())
+                        {
+                            <option value="@person.Guid">@GetPersonDisplayName(person)</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="advanced-person">Person</label>
+                    <select id="advanced-person" class="form-select" @bind="personGuid">
+                        <option value="">All people</option>
+                        @foreach (var person in context.People.OrderBy(i => i.LastName).ThenBy(i => i.FirstName))
+                        {
+                            <option value="@person.Guid">@GetPersonDisplayName(person)</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="advanced-country">Country</label>
+                    <select id="advanced-country" class="form-select" @bind="countryGuid">
+                        <option value="">All countries</option>
+                        @foreach (var country in context.Countries.OrderBy(i => i.Name))
+                        {
+                            <option value="@country.Guid">@country.Name</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="advanced-company">Company</label>
+                    <select id="advanced-company" class="form-select" @bind="companyGuid">
+                        <option value="">All companies</option>
+                        @foreach (var company in context.Companies.OrderBy(i => i.Name))
+                        {
+                            <option value="@company.Guid">@company.Name</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="advanced-origin">Origin</label>
+                    <select id="advanced-origin" class="form-select" @bind="originGuid">
+                        <option value="">All origins</option>
+                        @foreach (var origin in context.Origins.OrderBy(i => i.Title))
+                        {
+                            <option value="@origin.Guid">@origin.Title</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="advanced-language">Language</label>
+                    <select id="advanced-language" class="form-select" @bind="languageGuid">
+                        <option value="">All languages</option>
+                        @foreach (var language in context.Languages.OrderBy(i => i.Name))
+                        {
+                            <option value="@language.Guid">@language.Name</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="advanced-year">Release year</label>
+                    <input id="advanced-year" class="form-control" type="number" @bind="year" />
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="advanced-mode">Mode</label>
+                    <select id="advanced-mode" class="form-select" @bind="mode">
+                        <option value="">All modes</option>
+                        @foreach (var filmMode in context.Films.Select(i => i.Mode).Where(i => !string.IsNullOrWhiteSpace(i)).Distinct().OrderBy(i => i))
+                        {
+                            <option value="@filmMode">@filmMode</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="advanced-sort">Sort</label>
+                    <select id="advanced-sort" class="form-select" @bind="sort">
+                        <option value="@FilmSortOption.TitleAsc">Title (A–Z)</option>
+                        <option value="@FilmSortOption.YearAsc">Year (oldest first)</option>
+                        <option value="@FilmSortOption.YearDesc">Year (newest first)</option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="advanced-duration-min">Minimum duration: @durationMin minutes</label>
+                    <input id="advanced-duration-min" class="form-range" type="range" min="0" max="@durationCeiling" step="1" @bind="durationMin" />
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="advanced-duration-max">Maximum duration: @durationMax minutes</label>
+                    <input id="advanced-duration-max" class="form-range" type="range" min="0" max="@durationCeiling" step="1" @bind="durationMax" />
+                </div>
+            </div>
+            <div class="d-flex flex-wrap gap-2 mt-3">
+                <button class="btn btn-primary" type="button" @onclick="ApplySearch">Search</button>
+                <button class="btn btn-outline-secondary" type="button" @onclick="ClearSearch">Clear all</button>
+            </div>
+        </div>
+    </div>
+
+    @if (isSearching)
+    {
+        <div class="d-flex align-items-center gap-2" role="status">
+            <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+            <span>Searching films…</span>
+        </div>
+    }
+    else
+    {
+        <p class="text-muted">@results.Count of @totalCount matching films shown.</p>
+        <FilmResultsList Films="results" />
+    }
+}
+
+@code {
+    private bool isInitializing = true;
+    private bool isSearching;
+    private string title = string.Empty;
+    private Guid? directorGuid;
+    private Guid? countryGuid;
+    private Guid? companyGuid;
+    private Guid? personGuid;
+    private Guid? originGuid;
+    private Guid? languageGuid;
+    private int? year;
+    private int durationMin;
+    private int durationMax;
+    private int durationCeiling;
+    private string mode = string.Empty;
+    private FilmSortOption sort = FilmSortOption.TitleAsc;
+    private List<Film> results = new();
+    private int totalCount;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await fedis.FetchData();
+        durationCeiling = Math.Max(1, context.Films.Where(i => i.Duration.HasValue).Select(i => i.Duration!.Value).DefaultIfEmpty(1).Max());
+        durationMax = durationCeiling;
+        ApplyQueryFromUri(Navigation.Uri);
+        await RunSearchAsync();
+        isInitializing = false;
+    }
+
+    private async Task ApplySearch()
+    {
+        if (durationMin > durationMax)
+        {
+            durationMax = durationMin;
+        }
+
+        Navigation.NavigateTo(BuildSearchUrl());
+        await RunSearchAsync();
+    }
+
+    private async Task ClearSearch()
+    {
+        title = string.Empty;
+        directorGuid = null;
+        countryGuid = null;
+        companyGuid = null;
+        personGuid = null;
+        originGuid = null;
+        languageGuid = null;
+        year = null;
+        durationMin = 0;
+        durationMax = durationCeiling;
+        mode = string.Empty;
+        sort = FilmSortOption.TitleAsc;
+        Navigation.NavigateTo(BuildSearchUrl());
+        await RunSearchAsync();
+    }
+
+    private async Task RunSearchAsync()
+    {
+        isSearching = true;
+        await Task.Yield();
+        var searchResult = SearchService.Search(new FilmSearchQuery
+        {
+            Title = title,
+            DirectorGuid = directorGuid,
+            CountryGuid = countryGuid,
+            CompanyGuid = companyGuid,
+            PersonGuid = personGuid,
+            OriginGuid = originGuid,
+            LanguageGuid = languageGuid,
+            Year = year,
+            DurationMin = durationMin == 0 ? null : durationMin,
+            DurationMax = durationMax == durationCeiling ? null : durationMax,
+            Mode = mode,
+            Sort = sort,
+            Page = 1,
+            PageSize = 100
+        });
+        results = searchResult.Items.ToList();
+        totalCount = searchResult.TotalCount;
+        isSearching = false;
+    }
+
+    private void ApplyQueryFromUri(string uriString)
+    {
+        var query = ParseQuery(Navigation.ToAbsoluteUri(uriString).Query);
+        title = GetString(query, "title") ?? string.Empty;
+        directorGuid = GetGuid(query, "director");
+        countryGuid = GetGuid(query, "country");
+        companyGuid = GetGuid(query, "company");
+        personGuid = GetGuid(query, "person");
+        originGuid = GetGuid(query, "origin");
+        languageGuid = GetGuid(query, "language");
+        year = GetInt(query, "year");
+        durationMin = GetInt(query, "durationMin") ?? 0;
+        durationMax = GetInt(query, "durationMax") ?? durationCeiling;
+        mode = GetString(query, "mode") ?? string.Empty;
+        sort = Enum.TryParse<FilmSortOption>(GetString(query, "sort"), true, out var selectedSort) ? selectedSort : FilmSortOption.TitleAsc;
+    }
+
+    private string BuildSearchUrl()
+    {
+        var values = new List<string>();
+        AddQueryValue(values, "title", title);
+        AddQueryValue(values, "director", directorGuid);
+        AddQueryValue(values, "country", countryGuid);
+        AddQueryValue(values, "company", companyGuid);
+        AddQueryValue(values, "person", personGuid);
+        AddQueryValue(values, "origin", originGuid);
+        AddQueryValue(values, "language", languageGuid);
+        AddQueryValue(values, "year", year);
+        if (durationMin > 0) AddQueryValue(values, "durationMin", durationMin);
+        if (durationMax < durationCeiling) AddQueryValue(values, "durationMax", durationMax);
+        AddQueryValue(values, "mode", mode);
+        if (sort != FilmSortOption.TitleAsc) AddQueryValue(values, "sort", sort);
+
+        return BuildAppUrl($"AdvancedSearch{(values.Count == 0 ? string.Empty : $"?{string.Join("&", values)}")}");
+    }
+
+    private string BuildAppUrl(string relativePath) => new Uri(new Uri(Navigation.BaseUri), relativePath).AbsoluteUri;
+
+    private IEnumerable<Person> GetDirectors() => context.Films.SelectMany(i => i.PeopleRoles).Where(i => i.RoleGuid == CoreSettings.DirectorRoleId && i.Person != null).Select(i => i.Person).GroupBy(i => i.Guid).Select(i => i.First()).OrderBy(i => i.LastName).ThenBy(i => i.FirstName);
+
+    private static string GetPersonDisplayName(Person person) => $"{person.FirstName} {person.LastName}".Trim();
+
+    private static Dictionary<string, string> ParseQuery(string queryString) => queryString.TrimStart('?').Split('&', StringSplitOptions.RemoveEmptyEntries).Select(i => i.Split('=', 2)).Where(i => i.Length > 0).ToDictionary(i => Uri.UnescapeDataString(i[0]), i => i.Length > 1 ? Uri.UnescapeDataString(i[1]) : string.Empty, StringComparer.OrdinalIgnoreCase);
+
+    private static string? GetString(IReadOnlyDictionary<string, string> values, string key) => values.TryGetValue(key, out var value) ? value : null;
+    private static Guid? GetGuid(IReadOnlyDictionary<string, string> values, string key) => Guid.TryParse(GetString(values, key), out var value) ? value : null;
+    private static int? GetInt(IReadOnlyDictionary<string, string> values, string key) => int.TryParse(GetString(values, key), out var value) ? value : null;
+
+    private static void AddQueryValue<T>(List<string> values, string key, T? value)
+    {
+        if (value is not null && !string.IsNullOrWhiteSpace(value.ToString())) values.Add($"{Uri.EscapeDataString(key)}={Uri.EscapeDataString(value.ToString()!)}");
+    }
+}

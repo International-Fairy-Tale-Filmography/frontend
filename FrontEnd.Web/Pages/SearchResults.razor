@@ -1,0 +1,99 @@
+@page "/Search/ByDirector/{id}"
+@page "/Search/ByCountry/{id}"
+@page "/Search/ByCompany/{id}"
+@page "/Search/ByPerson/{id}"
+@page "/Search/ByOrigin/{id}"
+@page "/Search/ByLanguage/{id}"
+@page "/Search/ByYear/{year:int}"
+
+@using FrontEnd.Core.Data
+@using FrontEnd.Core.Services
+@inject NavigationManager Navigation
+@inject FrontEndDataInitializerService fedis
+@inject FrontEndDataContext context
+@inject SearchService SearchService
+
+@if (isLoading)
+{
+    <div class="d-flex align-items-center gap-2" role="status">
+        <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+        <span>Loading search results…</span>
+    </div>
+}
+else
+{
+    <h2>@heading</h2>
+    <FilmResultsList Films="results" />
+}
+
+@code {
+    [Parameter]
+    public string? id { get; set; }
+
+    [Parameter]
+    public int? year { get; set; }
+
+    private bool isLoading = true;
+    private string heading = "Search Results";
+    private List<Data.Core.Models.Film> results = new();
+
+    protected override async Task OnParametersSetAsync()
+    {
+        isLoading = true;
+        await fedis.FetchData();
+
+        var query = new FilmSearchQuery { Sort = FilmSortOption.TitleAsc, Page = 1, PageSize = 100 };
+        var parts = Navigation.ToBaseRelativePath(Navigation.Uri).Split('/', StringSplitOptions.RemoveEmptyEntries);
+        var searchType = parts.Length >= 2 ? parts[^2] : string.Empty;
+
+        if (string.Equals(searchType, "ByYear", StringComparison.OrdinalIgnoreCase) && year.HasValue)
+        {
+            query.Year = year.Value;
+            heading = $"Year: {year.Value}";
+        }
+        else if (Guid.TryParse(id, out var guid))
+        {
+            ApplyGuidFilter(searchType, guid, query);
+        }
+
+        results = SearchService.Search(query).Items.ToList();
+        isLoading = false;
+    }
+
+    private void ApplyGuidFilter(string searchType, Guid guid, FilmSearchQuery query)
+    {
+        switch (searchType.ToLowerInvariant())
+        {
+            case "bydirector":
+                query.DirectorGuid = guid;
+                heading = $"Director: {GetPersonName(guid)}";
+                break;
+            case "bycountry":
+                query.CountryGuid = guid;
+                heading = $"Country: {context.Countries.FirstOrDefault(i => i.Guid == guid)?.Name ?? "Unknown"}";
+                break;
+            case "bycompany":
+                query.CompanyGuid = guid;
+                heading = $"Company: {context.Companies.FirstOrDefault(i => i.Guid == guid)?.Name ?? "Unknown"}";
+                break;
+            case "byperson":
+                query.PersonGuid = guid;
+                heading = $"Person: {GetPersonName(guid)}";
+                break;
+            case "byorigin":
+                query.OriginGuid = guid;
+                heading = $"Origin: {context.Origins.FirstOrDefault(i => i.Guid == guid)?.Title ?? "Unknown"}";
+                break;
+            case "bylanguage":
+                query.LanguageGuid = guid;
+                heading = $"Language: {context.Languages.FirstOrDefault(i => i.Guid == guid)?.Name ?? "Unknown"}";
+                break;
+        }
+    }
+
+    private string GetPersonName(Guid guid)
+    {
+        var person = context.People.FirstOrDefault(i => i.Guid == guid);
+        return person is null ? "Unknown" : $"{person.FirstName} {person.LastName}".Trim();
+    }
+}

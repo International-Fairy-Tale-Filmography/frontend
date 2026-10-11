@@ -1,218 +1,262 @@
 ﻿@page "/Film/{slugparam}/{idparam}"
 
 @using Data.Core.Configuration
-@using FrontEnd.Core.Services
-@using FrontEnd.Core.Data
 @using Data.Core.Models
+@using FrontEnd.Core.Data
+@using FrontEnd.Core.Services
 @inject FrontEndDataInitializerService fedis
 @inject FrontEndDataContext context
-<h3>Film</h3>
-
+@inject NavigationManager Navigation
 
 @if (!isLoading)
 {
     @if (SelectedFilm != null)
     {
-        <div class="container" id="body">
+        var directors = GetDirectors(SelectedFilm);
+        var countries = SelectedFilm.Countries.Where(i => i.Country != null).Select(i => i.Country).ToList();
+        var companies = SelectedFilm.Companies.Where(i => i.Company != null).Select(i => i.Company).ToList();
+        var origins = SelectedFilm.Origins.Where(i => i.Origin != null).Select(i => i.Origin).ToList();
+        var languages = SelectedFilm.Languages.Where(i => i.Language != null).Select(i => i.Language).ToList();
+        var castGroups = GetCastRoleGroups(SelectedFilm);
 
-            
-
+        <div class="film-detail" id="body">
             <div class="row">
-                <div class="span12">
+                <div class="col-12">
                     <h2>@SelectedFilm.Title</h2>
                 </div>
             </div>
 
-            <div class="row">
-
-                <div class="span8">
-
-                    <div class="row film-data">
-                        <div class="span1">
+            <div class="row g-4">
+                <div class="col-lg-8">
+                    <div class="row film-data mb-2">
+                        <div class="col-sm-3 col-lg-2">
                             Director(s):
                         </div>
-                        <div class="span7 ">
+                        <div class="col-sm-9 col-lg-10 film-info">
                             <span class="film-info">
-                                @foreach (var i in SelectedFilm.PeopleRoles.Where(j => j.RoleGuid == CoreSettings.DirectorRoleId))
+                                @for (var index = 0; index < directors.Count; index++)
                                 {
-                                    <a href="/Search/ByDirector/7783">@i.Person.FirstName @i.Person.LastName</a>
+                                    var director = directors[index];
+                                    <a href="@BuildSearchUrl("ByDirector", director.Guid)">@GetPersonDisplayName(director)</a>
+                                    if (index < directors.Count - 1)
+                                    {
+                                        <text> / </text>
+                                    }
                                 }
-                                
                             </span>
                         </div>
-
                     </div>
 
-
-                    <div class="row film-data">
-                        <div class="span1">
+                    <div class="row film-data mb-2">
+                        <div class="col-sm-3 col-lg-2">
                             Country(s):
                         </div>
-                        <div class="span7 film-info">
+                        <div class="col-sm-9 col-lg-10 film-info">
                             <span class="film-info">
-                                @foreach (var i in SelectedFilm.Countries)
+                                @for (var index = 0; index < countries.Count; index++)
                                 {
-                                    <a href="/Search/ByCountry/996">@i.Country.Name</a>
+                                    var country = countries[index];
+                                    <a href="@BuildSearchUrl("ByCountry", country.Guid)">@country.Name</a>
+                                    if (index < countries.Count - 1)
+                                    {
+                                        <text> / </text>
+                                    }
                                 }
-                                
                             </span>
                         </div>
                     </div>
 
-                    <div class="row film-data">
-                        <div class="span1">
+                    <div class="row film-data mb-2">
+                        <div class="col-sm-3 col-lg-2">
                             Company(s):
                         </div>
-                        <div class="span7 film-info">
+                        <div class="col-sm-9 col-lg-10 film-info">
                             <span class="film-info">
-                                @foreach (var i in SelectedFilm.Companies)
+                                @for (var index = 0; index < companies.Count; index++)
                                 {
-                                    <a href="/Search/ByCompany/@i.Company.Guid">@i.Company.Name</a>
+                                    var company = companies[index];
+                                    <a href="@BuildSearchUrl("ByCompany", company.Guid)">@company.Name</a>
+                                    if (index < companies.Count - 1)
+                                    {
+                                        <text> / </text>
+                                    }
                                 }
-                               
                             </span>
                         </div>
                     </div>
 
-
-
-                    <div class="row film-data">
-                        <div class="span1">
+                    <div class="row film-data mb-2">
+                        <div class="col-sm-3 col-lg-2">
                             Colour:
                         </div>
-                        <div class="span7 film-info">
+                        <div class="col-sm-9 col-lg-10 film-info">
                             <span class="film-info">
                                 @SelectedFilm.Color
                             </span>
                         </div>
                     </div>
 
-
-                    <div class="row film-data">
-                        <div class="span1">
+                    <div class="row film-data mb-2">
+                        <div class="col-sm-3 col-lg-2">
                             Mode:
                         </div>
-                        <div class="span7 film-info">
+                        <div class="col-sm-9 col-lg-10 film-info">
                             <span class="film-info">
                                 @SelectedFilm.Mode
                             </span>
                         </div>
                     </div>
 
-                    <div class="row film-data">
-                        <div class="span1">
+                    <div class="row film-data mb-2">
+                        <div class="col-sm-3 col-lg-2">
                             Duration:
                         </div>
-                        <div class="span7 film-info">
+                        <div class="col-sm-9 col-lg-10 film-info">
                             <span class="film-info">
-                                @SelectedFilm.Duration
+                                @SelectedFilm.Duration MIN
                             </span>
                         </div>
                     </div>
 
-                    <div class="row film-data">
-                        <div class="span1">
+                    <div class="row film-data mb-2">
+                        <div class="col-sm-3 col-lg-2">
                             Origin(s):
                         </div>
-                        <div class="span7">
+                        <div class="col-sm-9 col-lg-10">
                             <span class="film-info">
-                                @foreach (var i in SelectedFilm.Origins)
+                                @for (var index = 0; index < origins.Count; index++)
                                 {
-                                    <a href="/">@i.Origin.Title</a>
+                                    var origin = origins[index];
+                                    <a href="@BuildSearchUrl("ByOrigin", origin.Guid)">@origin.Title</a>
+                                    if (index < origins.Count - 1)
+                                    {
+                                        <text> / </text>
+                                    }
                                 }
                             </span>
                         </div>
                     </div>
 
-
-                    <div class="row film-data">
-                        <div class="span1">
+                    <div class="row film-data mb-2">
+                        <div class="col-sm-3 col-lg-2">
                             Language(s):
                         </div>
-                        <div class="span7">
+                        <div class="col-sm-9 col-lg-10">
                             <span class="film-info">
-                                @foreach (var i in SelectedFilm.Languages)
+                                @for (var index = 0; index < languages.Count; index++)
                                 {
-                                    <a href="/">@i.Language.Name</a>
+                                    var language = languages[index];
+                                    <a href="@BuildSearchUrl("ByLanguage", language.Guid)">@language.Name</a>
+                                    if (index < languages.Count - 1)
+                                    {
+                                        <text> / </text>
+                                    }
                                 }
                             </span>
                         </div>
                     </div>
 
-
-                    <div class="row film-data">
-                        <div class="span1">
+                    <div class="row film-data mb-2">
+                        <div class="col-sm-3 col-lg-2">
                             Link(s):
                         </div>
-                        <div class="span7 film-info">
-
+                        <div class="col-sm-9 col-lg-10 film-info">
                             <ul class="link-list unstyled">
-                                @foreach (var i in SelectedFilm.Links)
+                                @foreach (var link in SelectedFilm.Links)
                                 {
-                                    <a href="@i.Url">@i.Url</a>
+                                    <li>
+                                        <a href="@link.Url" target="_blank" rel="noopener noreferrer">@link.Url</a>
+                                    </li>
                                 }
                             </ul>
-
-
-
                         </div>
                     </div>
-
-
-
                 </div>
 
-                
-                <div class="span4">
-
-                    <div class="cast-container">
-                        @foreach (var i in SelectedFilm.PeopleRoles.Where(i => i.RoleGuid != CoreSettings.DirectorRoleId).OrderBy(i => i.Role.Order))
-                        {
-                            <h5>@i.Role.Name</h5>
-                            <ul>
-                                <li>
-                                    <a href="/Search/ByPerson/7783">@i.Person.FirstName @i.Person.LastName</a>
-                                </li>
-                            </ul>
-                        }
-
-                    </div>
-
+                <div class="col-lg-4">
+                    @if (castGroups.Any())
+                    {
+                        <div class="cast-container">
+                            @foreach (var castGroup in castGroups)
+                            {
+                                <h5>@castGroup.RoleName</h5>
+                                <ul>
+                                    @foreach (var person in castGroup.People)
+                                    {
+                                        <li>
+                                            <a href="@BuildSearchUrl("ByPerson", person.Guid)">@GetPersonDisplayName(person)</a>
+                                        </li>
+                                    }
+                                </ul>
+                            }
+                        </div>
+                    }
                 </div>
-
             </div>
 
             <div id="scrollToTop"></div>
         </div>
-
     }
     else
     {
         <p>Film Not Found</p>
     }
-
-
 }
 
 @code {
+    [Parameter]
+    public string? slugparam { get; set; }
 
     [Parameter]
-    public string slugParam { get; set; }
-
-    [Parameter]
-    public string idParam { get; set; }
+    public string? idparam { get; set; }
 
     private bool isLoading = true;
-    public Film SelectedFilm { get; set; }
+    public Film? SelectedFilm { get; set; }
+
     protected override async Task OnInitializedAsync()
     {
-        
-        await Task.Delay(1);
         await fedis.FetchData();
-        var guid = new Guid(idParam);
-        SelectedFilm = context.Films.First(i => i.Guid == guid);
+
+        if (Guid.TryParse(idparam, out var guid))
+        {
+            SelectedFilm = context.Films.FirstOrDefault(i => i.Guid == guid);
+        }
 
         isLoading = false;
+    }
 
+    private static List<Person> GetDirectors(Film film)
+    {
+        return film.PeopleRoles
+            .Where(i => i.RoleGuid == CoreSettings.DirectorRoleId && i.Person != null)
+            .Select(i => i.Person)
+            .GroupBy(i => i.Guid)
+            .Select(i => i.First())
+            .ToList();
+    }
+
+    private static List<(string RoleName, List<Person> People)> GetCastRoleGroups(Film film)
+    {
+        return film.PeopleRoles
+            .Where(i => i.RoleGuid != CoreSettings.DirectorRoleId && i.Role != null && i.Person != null)
+            .GroupBy(i => i.Role.Guid)
+            .OrderBy(i => i.First().Role.Order)
+            .Select(i => (
+                RoleName: i.First().Role.Name,
+                People: i.Select(x => x.Person)
+                    .GroupBy(p => p.Guid)
+                    .Select(p => p.First())
+                    .ToList()))
+            .ToList();
+    }
+
+    private static string GetPersonDisplayName(Person person)
+    {
+        return $"{person.FirstName} {person.LastName}".Trim();
+    }
+
+    private string BuildSearchUrl(string searchType, Guid id)
+    {
+        return new Uri(new Uri(Navigation.BaseUri), $"Search/{searchType}/{id}").AbsoluteUri;
     }
 }

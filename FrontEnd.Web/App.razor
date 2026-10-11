@@ -1,12 +1,16 @@
 ﻿<Router AppAssembly="@typeof(App).Assembly">
     <Found Context="routeData">
         <RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)" />
-        <FocusOnNavigate RouteData="@routeData" Selector="h1" />
+        <FocusOnNavigate RouteData="@routeData" Selector="h1, h2" />
     </Found>
     <NotFound>
-        <PageTitle>Not found</PageTitle>
+        <PageTitle>Page Not Found</PageTitle>
         <LayoutView Layout="@typeof(MainLayout)">
-            <p role="alert">Sorry, there's nothing at this address.</p>
+            <section aria-labelledby="not-found-heading">
+                <h1 id="not-found-heading">Page Not Found</h1>
+                <p role="alert">Sorry, there is nothing at this address.</p>
+                <NavLink class="btn btn-primary" href="" Match="NavLinkMatch.All">Return to the filmography home page</NavLink>
+            </section>
         </LayoutView>
     </NotFound>
 </Router>

@@ -19,7 +19,7 @@ builder.Services.AddScoped<CoreSettingsModel>(i => new CoreSettingsModel()
     CsvBaseUrl = "https://international-fairy-tale-filmography.github.io/data/csv/"
 });
 builder.Services.AddScoped<FrontEndDataInitializerService>();
-
+builder.Services.AddScoped<SearchService>();
 
 
 await builder.Build().RunAsync();

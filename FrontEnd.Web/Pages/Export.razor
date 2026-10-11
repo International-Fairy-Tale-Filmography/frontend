@@ -1,0 +1,118 @@
+@page "/Export"
+
+@using Data.Core.Configuration
+@using Data.Core.Models
+@using FrontEnd.Core.Data
+@using FrontEnd.Core.Services
+@using System.Text
+@inject IJSRuntime JS
+@inject NavigationManager Navigation
+@inject FrontEndDataInitializerService fedis
+@inject FrontEndDataContext context
+
+<PageTitle>Export Filmography</PageTitle>
+
+<h2>Export the Complete Filmography</h2>
+
+@if (isLoading)
+{
+    <div class="d-flex align-items-center gap-2" role="status">
+        <span class="spinner-border" aria-hidden="true"></span>
+        <span>Loading the filmography for export…</span>
+    </div>
+}
+else
+{
+    <p>
+        Download all <strong>@context.Films.Count</strong> films in the International Fairy-Tale Filmography as a CSV file.
+        This export always contains the complete filmography and is not affected by any search or filter.
+    </p>
+
+    <button class="btn btn-primary" type="button" @onclick="ExportFilmography" disabled="@isExporting">
+        @if (isExporting)
+        {
+            <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+            <span class="ms-1">Preparing download…</span>
+        }
+        else
+        {
+            <i class="bi bi-download" aria-hidden="true"></i><span class="ms-1">Download complete filmography CSV</span>
+        }
+    </button>
+}
+
+@code {
+    private bool isLoading = true;
+    private bool isExporting;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await fedis.FetchData();
+        isLoading = false;
+    }
+
+    private async Task ExportFilmography()
+    {
+        isExporting = true;
+
+        try
+        {
+            var csv = BuildExportCsv(context.Films.OrderBy(i => i.Title));
+            await JS.InvokeVoidAsync("filmography.downloadCsv", "fairy-tale-filmography-export.csv", csv);
+        }
+        finally
+        {
+            isExporting = false;
+        }
+    }
+
+    private string BuildExportCsv(IEnumerable<Film> films)
+    {
+        var csv = new StringBuilder();
+        csv.AppendLine($"The Fairy-Tale Filmography,\u0040COPYRIGHT {DateTime.Now.Year} - Pauline Greenhill, Kendra Magnus-Johnston, Jack Zipes");
+        csv.AppendLine("Film Title,Release Year,Director,Country,Company,Link");
+
+        foreach (var film in films)
+        {
+            var directors = string.Join(" / ", GetDirectors(film).Select(GetPersonDisplayName));
+            var countries = string.Join(" / ", film.Countries.Where(i => i.Country != null).Select(i => i.Country.Name));
+            var companies = string.Join(" / ", film.Companies.Where(i => i.Company != null).Select(i => i.Company.Name));
+            var link = new Uri(new Uri(Navigation.BaseUri), $"Film/{Uri.EscapeDataString(film.Title ?? string.Empty)}/{film.Guid}").AbsoluteUri;
+
+            csv.AppendLine(string.Join(",",
+                EscapeCsvValue(GetTitleWithOther(film)),
+                EscapeCsvValue(film.ReleaseYear?.ToString()),
+                EscapeCsvValue(directors),
+                EscapeCsvValue(countries),
+                EscapeCsvValue(companies),
+                EscapeCsvValue(link)));
+        }
+
+        return csv.ToString();
+    }
+
+    private static List<Person> GetDirectors(Film film)
+    {
+        return film.PeopleRoles
+            .Where(i => i.RoleGuid == CoreSettings.DirectorRoleId && i.Person != null)
+            .Select(i => i.Person)
+            .GroupBy(i => i.Guid)
+            .Select(i => i.First())
+            .ToList();
+    }
+
+    private static string GetTitleWithOther(Film film)
+    {
+        return string.IsNullOrWhiteSpace(film.OtherTitle) ? film.Title : $"{film.Title}. {film.OtherTitle}";
+    }
+
+    private static string GetPersonDisplayName(Person person)
+    {
+        return $"{person.FirstName} {person.LastName}".Trim();
+    }
+
+    private static string EscapeCsvValue(string? value)
+    {
+        return "\"" + (value ?? string.Empty).Replace("\"", "\"\"") + "\"";
+    }
+}
