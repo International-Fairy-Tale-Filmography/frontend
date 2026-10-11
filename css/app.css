@@ -121,3 +121,29 @@ code {
     padding: 12px;
     border: 1px solid #999
 }
+
+
+/*welcome*/
+
+.welcomemessage {
+    background-color: #fff;
+    height: 20px;
+    padding: 9px;
+    margin: 12px;
+    list-style: none;
+    color: gray !important
+}
+
+.welcome-container {
+    -webkit-border-radius: 6px;
+    -moz-border-radius: 6px;
+    border-radius: 6px;
+    background-color: #fff;
+    border: 1px solid #999;
+    margin-top: 12px;
+    margin-bottom: 12px;
+    padding: 9px;
+    padding-top: 10px;
+    padding-bottom: 35px;
+    width: 920px
+}
