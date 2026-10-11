@@ -33,7 +33,7 @@
       "url": "_framework\/icudt_no_CJK.dat"
     },
     {
-      "hash": "sha256-ZCmCM4mzwSDzHqaVWNrbwE3geh\/cqqBRwJvRm4BO5YY=",
+      "hash": "sha256-CEueUYKjHthGmvyuKpMdq4KtUJ3k6uZ7UYhZgucuvKY=",
       "url": "_framework\/blazor.boot.json"
     },
     {
@@ -41,19 +41,19 @@
       "url": "_framework\/CsvHelper.wasm"
     },
     {
-      "hash": "sha256-ADPNQ3PXgd9wUiPx5apK3sFi1jOJZgEoVMTw+yHq\/hI=",
+      "hash": "sha256-QYh4NYyROxM3teWSUvlqdNPTTJTLbu3QJZW9CNLeY8E=",
       "url": "_framework\/Data.Core.wasm"
     },
     {
-      "hash": "sha256-dlh\/IJHnXs6RuBCWYKsycD7GGueHSGSB2Xp5Rz3NzjQ=",
+      "hash": "sha256-B\/6Hrn9++ayg0f425Ida28oKfs9MCyjRd4Zn1octBnE=",
       "url": "_framework\/FrontEnd.Core.wasm"
     },
     {
-      "hash": "sha256-UC8s69cKfrQ4SDPEfl1sBWSp2pw\/msT3ZnUC3snOyeQ=",
+      "hash": "sha256-WyOhEwfZKM4bQGEi6HR6e+vtVa\/G9b9Yi15RJwTRz94=",
       "url": "_framework\/FrontEnd.Web.wasm"
     },
     {
-      "hash": "sha256-AP26bajLXH6AFBYjcI0tB1VT07MMs87YFbBM\/Kx4\/0o=",
+      "hash": "sha256-NR4wYMuiWPeGwFNRS+B02anDGprB+Bo\/S6bPn2bbNOM=",
       "url": "_framework\/Microsoft.AspNetCore.Components.wasm"
     },
     {
@@ -161,7 +161,7 @@
       "url": "_framework\/System.ComponentModel.Primitives.wasm"
     },
     {
-      "hash": "sha256-iAN0mANmKJuC55ZXF2aje3uH6jvRx8PpxgeJlJM6XOY=",
+      "hash": "sha256-V8dXEOJNkM0gKyKz+u6GRN+fwTa7ukC\/sPiNBVpskWQ=",
       "url": "_framework\/System.ComponentModel.TypeConverter.wasm"
     },
     {
@@ -229,11 +229,11 @@
       "url": "_framework\/System.ObjectModel.wasm"
     },
     {
-      "hash": "sha256-4CzLa2ACV8y59lS60KEmGE50+mlyJFxcH9YJalDQcwQ=",
+      "hash": "sha256-9cmj5+vubMsUe\/CfTh9cniZeKH62\/xElJ4vbnq8Y5To=",
       "url": "_framework\/System.Private.CoreLib.wasm"
     },
     {
-      "hash": "sha256-KoZ2b2NnWrDQjvjMwXiaLHIacya8WHG8XF4PX0wrQSI=",
+      "hash": "sha256-wR8AqZFRYTaASCco9\/QUwAdChtQZ12vDnwzxSrBFMQg=",
       "url": "_framework\/System.Private.Uri.wasm"
     },
     {
@@ -253,7 +253,7 @@
       "url": "_framework\/System.Runtime.Serialization.Formatters.wasm"
     },
     {
-      "hash": "sha256-yPSuAVpEM0vEAFcWJZPDwgJtaPHYR\/jr35tAwMv7sSY=",
+      "hash": "sha256-kTncUZKn2QXOlAS4MtCPD7j1QMv5rcG6H4\/+kbkip6w=",
       "url": "_framework\/System.Runtime.wasm"
     },
     {
@@ -285,11 +285,7 @@
       "url": "_framework\/System.wasm"
     },
     {
-      "hash": "sha256-T5\/vzBkQmTaYC2vMfjYK5d5J5PUEjiOFtH4zRkkO8js=",
-      "url": "_framework\/System.Web.HttpUtility.wasm"
-    },
-    {
-      "hash": "sha256-GN+HczP2Dec1YsfAglejPgLvXM+hL4bCwvyOLLKBBMU=",
+      "hash": "sha256-ZFKw8+u9ACTlKpjZtVHYtcLVcz4Wwth7gAg5p62p6Es=",
       "url": "FrontEnd.Web.styles.css"
     },
     {
@@ -329,8 +325,12 @@
       "url": "img\/JackZipes.jpg"
     },
     {
-      "hash": "sha256-I9o2cv0YUjeGn9YWw69HMm8E9g3G\/vPkXKEf6Fn\/pJQ=",
+      "hash": "sha256-TnpwfYx0JdmevDKBbDVcaAY3LJSnymkFWJrMsC0MZIg=",
       "url": "index.html"
+    },
+    {
+      "hash": "sha256-akCZNX74bbwvcJx7CBF2Q2YNXHI0bf8qW\/VMIh\/fyzY=",
+      "url": "js\/download.js"
     },
     {
       "hash": "sha256-Y\/vHgeT1L6l3c1opnVdbr0Up+init\/fgOMgPXg5bWVY=",
@@ -345,5 +345,5 @@
       "url": "sample-data\/weather.json"
     }
   ],
-  "version": "YgFGGVr+"
+  "version": "lFJHNoAg"
 };
