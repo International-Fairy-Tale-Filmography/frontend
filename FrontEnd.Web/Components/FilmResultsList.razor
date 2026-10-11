@@ -1,0 +1,102 @@
+@using Data.Core.Configuration
+@using Data.Core.Models
+@inject NavigationManager Navigation
+
+@if (Films.Count == 0)
+{
+    <p>No films match this search.</p>
+}
+else
+{
+    <ul class="unstyled list-manager">
+        @foreach (var film in Films)
+        {
+            var directors = GetDirectors(film);
+            var countries = film.Countries.Where(i => i.Country != null).Select(i => i.Country).ToList();
+            var companies = film.Companies.Where(i => i.Company != null).Select(i => i.Company).ToList();
+
+            <li>
+                <a class="nopad" href="@BuildFilmUrl(film)"><i class="bi bi-film" aria-hidden="true"></i></a>
+                <em><a class="italics" href="@BuildFilmUrl(film)">@GetTitleWithOther(film)</a></em>@(film.ReleaseYear).
+
+                @if (directors.Count > 0)
+                {
+                    <text> Directed by </text>
+                    @for (var index = 0; index < directors.Count; index++)
+                    {
+                        var director = directors[index];
+                        <a class="nopad" href="@BuildSearchUrl("ByDirector", director.Guid)">@GetPersonDisplayName(director)</a>
+                        if (index < directors.Count - 1)
+                        {
+                            <text>, </text>
+                        }
+                    }
+                    <text>. </text>
+                }
+
+                @if (countries.Count > 0)
+                {
+                    @for (var index = 0; index < countries.Count; index++)
+                    {
+                        var country = countries[index];
+                        <a class="nopad" href="@BuildSearchUrl("ByCountry", country.Guid)">@country.Name</a>
+                        if (index < countries.Count - 1)
+                        {
+                            <text>/</text>
+                        }
+                    }
+                    <text>: </text>
+                }
+
+                @if (companies.Count > 0)
+                {
+                    @for (var index = 0; index < companies.Count; index++)
+                    {
+                        var company = companies[index];
+                        <a class="nopad" href="@BuildSearchUrl("ByCompany", company.Guid)">@company.Name</a>
+                        if (index < companies.Count - 1)
+                        {
+                            <text>/</text>
+                        }
+                    }
+                    <text>. </text>
+                }
+            </li>
+        }
+    </ul>
+}
+
+@code {
+    [Parameter, EditorRequired]
+    public IReadOnlyList<Film> Films { get; set; } = Array.Empty<Film>();
+
+    private static List<Person> GetDirectors(Film film)
+    {
+        return film.PeopleRoles
+            .Where(i => i.RoleGuid == CoreSettings.DirectorRoleId && i.Person != null)
+            .Select(i => i.Person)
+            .GroupBy(i => i.Guid)
+            .Select(i => i.First())
+            .ToList();
+    }
+
+    private string BuildFilmUrl(Film film)
+    {
+        return new Uri(new Uri(Navigation.BaseUri), $"Film/{Uri.EscapeDataString(film.Title ?? string.Empty)}/{film.Guid}").AbsoluteUri;
+    }
+
+    private string BuildSearchUrl(string searchType, Guid id)
+    {
+        return new Uri(new Uri(Navigation.BaseUri), $"Search/{searchType}/{id}").AbsoluteUri;
+    }
+
+    private static string GetTitleWithOther(Film film)
+    {
+        return string.IsNullOrWhiteSpace(film.OtherTitle) ? film.Title : $"{film.Title}. {film.OtherTitle}";
+    }
+
+    private static string GetPersonDisplayName(Person person)
+    {
+        return $"{person.FirstName} {person.LastName}".Trim();
+    }
+}

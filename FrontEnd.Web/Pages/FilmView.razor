@@ -6,6 +6,7 @@
 @using FrontEnd.Core.Services
 @inject FrontEndDataInitializerService fedis
 @inject FrontEndDataContext context
+@inject NavigationManager Navigation
 
 @if (!isLoading)
 {
@@ -36,7 +37,7 @@
                                 @for (var index = 0; index < directors.Count; index++)
                                 {
                                     var director = directors[index];
-                                    <a href="/Search/ByDirector/@director.Guid">@GetPersonDisplayName(director)</a>
+                                    <a href="@BuildSearchUrl("ByDirector", director.Guid)">@GetPersonDisplayName(director)</a>
                                     if (index < directors.Count - 1)
                                     {
                                         <text> / </text>
@@ -55,7 +56,7 @@
                                 @for (var index = 0; index < countries.Count; index++)
                                 {
                                     var country = countries[index];
-                                    <a href="/Search/ByCountry/@country.Guid">@country.Name</a>
+                                    <a href="@BuildSearchUrl("ByCountry", country.Guid)">@country.Name</a>
                                     if (index < countries.Count - 1)
                                     {
                                         <text> / </text>
@@ -74,7 +75,7 @@
                                 @for (var index = 0; index < companies.Count; index++)
                                 {
                                     var company = companies[index];
-                                    <a href="/Search/ByCompany/@company.Guid">@company.Name</a>
+                                    <a href="@BuildSearchUrl("ByCompany", company.Guid)">@company.Name</a>
                                     if (index < companies.Count - 1)
                                     {
                                         <text> / </text>
@@ -126,7 +127,7 @@
                                 @for (var index = 0; index < origins.Count; index++)
                                 {
                                     var origin = origins[index];
-                                    <a href="/Search/ByOrigin/@origin.Guid">@origin.Title</a>
+                                    <a href="@BuildSearchUrl("ByOrigin", origin.Guid)">@origin.Title</a>
                                     if (index < origins.Count - 1)
                                     {
                                         <text> / </text>
@@ -145,7 +146,7 @@
                                 @for (var index = 0; index < languages.Count; index++)
                                 {
                                     var language = languages[index];
-                                    <a href="/Search/ByLanguage/@language.Guid">@language.Name</a>
+                                    <a href="@BuildSearchUrl("ByLanguage", language.Guid)">@language.Name</a>
                                     if (index < languages.Count - 1)
                                     {
                                         <text> / </text>
@@ -183,7 +184,7 @@
                                     @foreach (var person in castGroup.People)
                                     {
                                         <li>
-                                            <a href="/Search/ByPerson/@person.Guid">@GetPersonDisplayName(person)</a>
+                                            <a href="@BuildSearchUrl("ByPerson", person.Guid)">@GetPersonDisplayName(person)</a>
                                         </li>
                                     }
                                 </ul>
@@ -252,5 +253,10 @@
     private static string GetPersonDisplayName(Person person)
     {
         return $"{person.FirstName} {person.LastName}".Trim();
+    }
+
+    private string BuildSearchUrl(string searchType, Guid id)
+    {
+        return new Uri(new Uri(Navigation.BaseUri), $"Search/{searchType}/{id}").AbsoluteUri;
     }
 }
