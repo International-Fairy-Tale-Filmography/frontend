@@ -1,6 +1,7 @@
 ﻿@using DataEditor.Core.Services
 @using Data.Core.Models
 @inherits LayoutComponentBase
+@implements IDisposable
 @inject GitEntityService ges
 @inject GitService GitService
 @inject CoreSettingsModel Settings
@@ -33,12 +34,23 @@
         <NavMenu/>
     </MudDrawer>
     <MudMainContent>
+        @if (_isStale)
+        {
+            <MudAlert Severity="Severity.Error" Variant="Variant.Filled" Class="ma-4">
+                <MudText Typo="Typo.h6">This data set is out of date</MudText>
+                <MudText>Someone published newer data while this editing session was open. Your saved changes are still here, but do not publish them until you have reviewed the newer data.</MudText>
+                <MudButton Color="Color.Inherit" OnClick="ViewChanges" Class="mt-2">Review my changes</MudButton>
+            </MudAlert>
+        }
         @Body
     </MudMainContent>
 </MudLayout>
 @code {
     private bool _drawerOpen = true;
     private bool _switchingBranch;
+    private bool _isStale;
+    private bool _freshnessCheckFailed;
+    private readonly CancellationTokenSource _monitorCancellation = new();
     private List<string> _branches = new();
     private string _selectedBranch;
 
@@ -47,6 +59,65 @@
         await GitService.GetConfiguration();
         _branches = await GitService.GetBranches();
         _selectedBranch = Settings.Branch;
+        _ = MonitorFreshnessAsync(_monitorCancellation.Token);
+    }
+
+    private async Task MonitorFreshnessAsync(CancellationToken cancellationToken)
+    {
+        using var timer = new PeriodicTimer(TimeSpan.FromSeconds(30));
+        try
+        {
+            while (await timer.WaitForNextTickAsync(cancellationToken))
+            {
+                await InvokeAsync(CheckFreshnessAsync);
+            }
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+        }
+    }
+
+    private async Task CheckFreshnessAsync()
+    {
+        var baselineSha = ges.DataVersionSha;
+        if (_switchingBranch || _isStale || string.IsNullOrEmpty(baselineSha))
+        {
+            return;
+        }
+
+        var checkedBranch = Settings.Branch;
+        string latestSha;
+        try
+        {
+            latestSha = await ges.GetLatestBranchHeadSha();
+            _freshnessCheckFailed = false;
+        }
+        catch (Octokit.ApiException ex)
+        {
+            if (!_freshnessCheckFailed)
+            {
+                Snackbar.Add($"Could not check for newer data: {ex.Message}", Severity.Warning);
+            }
+
+            _freshnessCheckFailed = true;
+            return;
+        }
+        catch (HttpRequestException ex)
+        {
+            if (!_freshnessCheckFailed)
+            {
+                Snackbar.Add($"Could not check for newer data: {ex.Message}", Severity.Warning);
+            }
+
+            _freshnessCheckFailed = true;
+            return;
+        }
+
+        if (checkedBranch == Settings.Branch && baselineSha == ges.DataVersionSha && latestSha != baselineSha)
+        {
+            _isStale = true;
+            StateHasChanged();
+        }
     }
 
     private void DrawerToggle()
@@ -87,6 +158,7 @@
             Settings.Branch = branch;
             await GitService.SaveConfiguration(Settings);
             await ges.ResetCaches();
+            _isStale = false;
             _selectedBranch = branch;
             Snackbar.Add($"Now viewing {branch}. Load a data table to begin editing.", Severity.Success);
             NavigationManager.NavigateTo("/home");
@@ -95,5 +167,11 @@
         {
             _switchingBranch = false;
         }
+    }
+
+    public void Dispose()
+    {
+        _monitorCancellation.Cancel();
+        _monitorCancellation.Dispose();
     }
 }
