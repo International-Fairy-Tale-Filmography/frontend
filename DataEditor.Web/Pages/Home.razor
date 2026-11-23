@@ -55,22 +55,24 @@
 </MudGrid>
 
 @code {
-    string name;
+    private string name;
 
     protected override async Task OnInitializedAsync()
     {
-        // Retrieve the configuration to access the AccessToken
-        await service.GetConfiguration();
-
-        // Check if the AccessToken is null or empty
-        if (string.IsNullOrWhiteSpace(service._coreSettings.AccessToken))
+        var settings = await service.GetConfiguration();
+        if (string.IsNullOrWhiteSpace(settings.AccessToken))
         {
-            // Redirect to the Settings page if AccessToken is missing
             Navigation.NavigateTo("settings");
             return;
         }
 
-        // Proceed to get the user's name if AccessToken is valid
-        name = await service.GetUser();
+        var validation = await service.ValidateToken(settings.AccessToken);
+        if (!validation.IsValid)
+        {
+            Navigation.NavigateTo("settings");
+            return;
+        }
+
+        name = validation.Login;
     }
 }

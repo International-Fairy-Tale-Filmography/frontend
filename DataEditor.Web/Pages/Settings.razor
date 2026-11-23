@@ -1,66 +1,135 @@
 ﻿@page "/settings"
-@inject GitService _service
+@inject GitService Service
 @inject ISnackbar Snackbar
 
-<PageTitle>Connection setup</PageTitle>
+<PageTitle>Connect to the editor</PageTitle>
 
 <MudContainer MaxWidth="MaxWidth.Medium" Class="mt-4">
     <MudPaper Elevation="2" Class="pa-6">
-        <MudText Typo="Typo.h4">Connect to the data service</MudText>
-        <MudText Typo="Typo.body1" Class="mt-3">
-            This setup is normally completed by the person who manages the data editor. If you were not given a connection token, ask that person to set up access for you.
+        <MudText Typo="Typo.h4">Connect to the data editor</MudText>
+        <MudText Typo="Typo.body1" Class="mt-2">
+            Connect your GitHub account once in this tab. After that, browse and edit the filmography like a normal data table.
         </MudText>
-        <MudAlert Severity="Severity.Info" Class="mt-4">
-            Day-to-day editing does not require you to know about branches or commits. Your connection token is stored in this browser and is used only to access the configured data.
-        </MudAlert>
 
-        <MudExpansionPanels Class="mt-4">
-            <MudExpansionPanel Text="Advanced setup (administrator only)">
-                <MudText Typo="Typo.body2" Class="mb-3">
-                    The current app connects directly to GitHub. An administrator can create a token with access to the data repository and enter it here. Do not share the token with other people.
-                </MudText>
-                <MudTextField T="string" Label="Connection token" InputType="InputType.Password" @bind-Value="_editSettings.AccessToken" />
-                <MudList T="string">
-                    <MudListItem>
-                        <MudText>Open <MudLink Href="https://github.com/settings/tokens" Target="_blank">GitHub token settings</MudLink> and create a token with access to the data repository.</MudText>
-                    </MudListItem>
-                    <MudListItem>
-                        <MudText>Paste the token above and select Connect. The app checks that it can access the data.</MudText>
-                    </MudListItem>
-                </MudList>
-                <MudButton OnClick="Save" Variant="Variant.Filled" Color="Color.Primary" Class="mt-2">Connect</MudButton>
-            </MudExpansionPanel>
-        </MudExpansionPanels>
+        @if (IsConnected)
+        {
+            <MudAlert Severity="Severity.Success" Class="mt-4">
+                Connected as <strong>@ConnectedUser</strong>. Your connection is only kept in this browser tab.
+            </MudAlert>
+            <MudButton OnClick="Disconnect" Variant="Variant.Outlined" Color="Color.Error" Class="mt-3">Disconnect this tab</MudButton>
+        }
+        else if (!string.IsNullOrWhiteSpace(StatusMessage))
+        {
+            <MudAlert Severity="Severity.Error" Class="mt-4">@StatusMessage</MudAlert>
+        }
+
+        @if (!IsConnected)
+        {
+            <MudDivider Class="my-4" />
+            <MudText Typo="Typo.h6">One-time connection setup</MudText>
+            <MudText Typo="Typo.body2" Class="mt-2">
+                You need a GitHub account that already has permission to edit the filmography data. Create a fine-grained personal access token for your own account; never use or share another person's token.
+            </MudText>
+
+            <MudList T="string" Class="mt-2">
+                <MudListItem>
+                    <MudText>1. <MudLink Href="https://github.com/settings/personal-access-tokens/new" Target="_blank">Create a fine-grained token</MudLink> on GitHub.</MudText>
+                </MudListItem>
+                <MudListItem>
+                    <MudText>2. Set the resource owner to <strong>International-Fairy-Tale-Filmography</strong> and select only the <strong>data</strong> repository.</MudText>
+                </MudListItem>
+                <MudListItem>
+                    <MudText>3. Under Repository permissions, set <strong>Contents</strong> to <strong>Read and write</strong>. Leave all other permissions unchanged. GitHub includes the required read-only repository metadata access.</MudText>
+                </MudListItem>
+                <MudListItem>
+                    <MudText>4. Choose an expiration date, create the token, and copy it. If GitHub says organization approval is required, ask the repository administrator to approve it.</MudText>
+                </MudListItem>
+                <MudListItem>
+                    <MudText>5. Paste the token below and select Connect. The editor will check access before saving it.</MudText>
+                </MudListItem>
+            </MudList>
+
+            <MudTextField T="string" Label="Your GitHub token" InputType="InputType.Password" Autocomplete="off" @bind-Value="Token" Disabled="IsConnecting" FullWidth="true" />
+            <MudText Typo="Typo.caption" Class="mt-1">The token is stored in this tab's session and removed when you disconnect or close the tab. Do not paste it into a shared computer.</MudText>
+            <MudButton OnClick="Connect" Variant="Variant.Filled" Color="Color.Primary" Class="mt-3" Disabled="IsConnecting || string.IsNullOrWhiteSpace(Token)">
+                @(IsConnecting ? "Checking access..." : "Connect")
+            </MudButton>
+        }
     </MudPaper>
 </MudContainer>
 
 @code {
-
-    CoreSettingsModel _settings;
-    CoreSettingsModel _editSettings = new();
+    private string Token { get; set; } = string.Empty;
+    private string ConnectedUser { get; set; } = string.Empty;
+    private string StatusMessage { get; set; } = string.Empty;
+    private bool IsConnected { get; set; }
+    private bool IsConnecting { get; set; }
+    private CoreSettingsModel Configuration { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
-        _settings = await _service.GetConfiguration();
-        _editSettings.AccessToken = _settings.AccessToken;
-        _editSettings.Owner = _settings.Owner;
-        _editSettings.RepoName = _settings.RepoName;
-        _editSettings.Branch = _settings.Branch;
-        _editSettings.Folder = _settings.Folder;
-
-    }
-
-    public async Task Save()
-    {
-        var validationResult = await _service.ValidateToken(_editSettings.AccessToken);
-        if (!validationResult.IsValid)
+        Configuration = await Service.GetConfiguration();
+        if (string.IsNullOrWhiteSpace(Configuration.AccessToken))
         {
-            Snackbar.Add(validationResult.ErrorMessage, Severity.Error);
             return;
         }
 
-        await _service.SaveConfiguration(_editSettings);
-        Snackbar.Add("Connection is ready.", Severity.Success);
+        try
+        {
+            var validation = await Service.ValidateToken(Configuration.AccessToken);
+            if (!validation.IsValid)
+            {
+                StatusMessage = validation.ErrorMessage;
+                return;
+            }
+
+            ConnectedUser = validation.Login;
+            IsConnected = true;
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"We could not check the saved connection. Please check your internet connection and try again. Details: {ex.Message}";
+        }
     }
-    
+
+    private async Task Connect()
+    {
+        IsConnecting = true;
+        StatusMessage = string.Empty;
+        try
+        {
+            var validation = await Service.ValidateToken(Token);
+            if (!validation.IsValid)
+            {
+                StatusMessage = validation.ErrorMessage;
+                return;
+            }
+
+            Configuration.AccessToken = Token;
+            await Service.SaveConfiguration(Configuration);
+            ConnectedUser = validation.Login;
+            IsConnected = true;
+            Token = string.Empty;
+            Snackbar.Add("You are connected. Your token is saved in this tab only.", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"We could not verify the connection. Please try again. Details: {ex.Message}";
+        }
+        finally
+        {
+            IsConnecting = false;
+        }
+    }
+
+    private async Task Disconnect()
+    {
+        await Service.ClearAccessToken();
+        Configuration.AccessToken = null;
+        IsConnected = false;
+        ConnectedUser = string.Empty;
+        Token = string.Empty;
+        StatusMessage = string.Empty;
+        Snackbar.Add("This tab has been disconnected.", Severity.Info);
+    }
 }

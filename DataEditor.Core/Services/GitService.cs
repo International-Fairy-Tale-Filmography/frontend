@@ -7,6 +7,7 @@ public class ValidationResult
 {
     public bool IsValid { get; set; }
     public string ErrorMessage { get; set; }
+    public string Login { get; set; }
 }
 
 //https://www.daveabrock.com/2021/03/14/upload-files-to-github-repository/
@@ -26,7 +27,17 @@ public class GitService
 
     public async Task<CoreSettingsModel> GetConfiguration()
     {
-        var githubAccessToken = await _jsRuntime.InvokeAsync<string>("localStorage.getItem", "github_accesstoken");
+        var githubAccessToken = await _jsRuntime.InvokeAsync<string>("sessionStorage.getItem", "github_accesstoken");
+        if (string.IsNullOrWhiteSpace(githubAccessToken))
+        {
+            githubAccessToken = await _jsRuntime.InvokeAsync<string>("localStorage.getItem", "github_accesstoken");
+            if (!string.IsNullOrWhiteSpace(githubAccessToken))
+            {
+                await _jsRuntime.InvokeVoidAsync("sessionStorage.setItem", "github_accesstoken", githubAccessToken);
+                await _jsRuntime.InvokeVoidAsync("localStorage.removeItem", "github_accesstoken");
+            }
+        }
+
         var selectedBranch = await _jsRuntime.InvokeAsync<string>("sessionStorage.getItem", "data_editor_branch");
         if (string.IsNullOrWhiteSpace(selectedBranch))
         {
@@ -44,10 +55,9 @@ public class GitService
             _coreSettings.Branch = selectedBranch;
         }
 
-        if (!string.IsNullOrEmpty(_coreSettings.AccessToken))
-        {
-            _gitHubClient.Credentials = new Credentials(_coreSettings.AccessToken);
-        }
+        _gitHubClient.Credentials = string.IsNullOrWhiteSpace(_coreSettings.AccessToken)
+            ? Credentials.Anonymous
+            : new Credentials(_coreSettings.AccessToken);
 
         return _coreSettings;
     }
@@ -62,19 +72,25 @@ public class GitService
         _coreSettings.Branch = settings.Branch;
         _coreSettings.Folder = settings.Folder;
 
-        await _jsRuntime.InvokeVoidAsync("localStorage.setItem", "github_accesstoken", _coreSettings.AccessToken);
+        await _jsRuntime.InvokeVoidAsync("sessionStorage.setItem", "github_accesstoken", _coreSettings.AccessToken);
+        await _jsRuntime.InvokeVoidAsync("localStorage.removeItem", "github_accesstoken");
         await _jsRuntime.InvokeVoidAsync("sessionStorage.setItem", "data_editor_branch", _coreSettings.Branch);
 
         _gitHubClient.Credentials = new Credentials(_coreSettings.AccessToken);
     }
 
+    public async Task ClearAccessToken()
+    {
+        await _jsRuntime.InvokeVoidAsync("sessionStorage.removeItem", "github_accesstoken");
+        await _jsRuntime.InvokeVoidAsync("localStorage.removeItem", "github_accesstoken");
+        _coreSettings.AccessToken = null;
+        _gitHubClient.Credentials = Credentials.Anonymous;
+    }
+
     public async Task<string> GetUser()
     {
-        
         await GetConfiguration();
-
         var user = await _gitHubClient.User.Current();
-
         return user.Login;
     }
 
@@ -204,14 +220,12 @@ public class GitService
             .ToList();
     }
 
-    /// <summary>
-    /// Validates the provided GitHub access token by attempting to retrieve the authenticated user.
-    /// Ensures the token has the necessary permissions.
-    /// </summary>
-    /// <param name="token">GitHub access token to validate.</param>
-    /// <returns>A ValidationResult indicating success or failure with an error message.</returns>
     public async Task<ValidationResult> ValidateToken(string token)
     {
+        if (string.IsNullOrWhiteSpace(token))
+        {
+            return new ValidationResult { IsValid = false, ErrorMessage = "Enter a personal access token to connect." };
+        }
 
         try
         {
@@ -220,25 +234,51 @@ public class GitService
                 Credentials = new Credentials(token)
             };
 
-            // Attempt to get the current user
             var user = await testClient.User.Current();
+            await testClient.Repository.Branch.Get(
+                _coreSettings.Owner,
+                _coreSettings.RepoName,
+                _coreSettings.Branch);
 
-            // Check if the token has 'repo' scope by attempting to list repositories
-            var userRepos = await testClient.Repository.GetAllForCurrent();
+            await testClient.Repository.Content.GetAllContentsByRef(
+                _coreSettings.Owner,
+                _coreSettings.RepoName,
+                Path.Combine(_coreSettings.Folder, "Films.csv").Replace('\\', '/'),
+                _coreSettings.Branch);
 
-            // Additional permission checks can be added here if necessary
-
-            return new ValidationResult { IsValid = true };
+            return new ValidationResult { IsValid = true, Login = user.Login };
         }
         catch (AuthorizationException)
         {
-            // Token is invalid or lacks necessary permissions
-            return new ValidationResult { IsValid = false, ErrorMessage = "Invalid token or insufficient permissions. Please ensure the token has 'public_repo' access." };
+            return new ValidationResult
+            {
+                IsValid = false,
+                ErrorMessage = "GitHub rejected this token. Check that it is active and has access to the data repository."
+            };
         }
-        catch (Exception ex)
+        catch (NotFoundException)
         {
-            // Handle other exceptions if necessary
-            return new ValidationResult { IsValid = false, ErrorMessage = $"An error occurred while validating the token: {ex.Message}" };
+            return new ValidationResult
+            {
+                IsValid = false,
+                ErrorMessage = "The token cannot access the configured data repository or selected data set. Check the repository selection and permissions."
+            };
+        }
+        catch (ApiException ex)
+        {
+            return new ValidationResult
+            {
+                IsValid = false,
+                ErrorMessage = $"GitHub could not verify access to the data repository: {ex.Message}"
+            };
+        }
+        catch (HttpRequestException ex)
+        {
+            return new ValidationResult
+            {
+                IsValid = false,
+                ErrorMessage = $"Could not reach GitHub to verify the token: {ex.Message}"
+            };
         }
     }
 }
