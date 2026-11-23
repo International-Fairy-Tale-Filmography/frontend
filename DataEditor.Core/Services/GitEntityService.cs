@@ -7,7 +7,6 @@ using System.Net.Http;
 using System.Net.Http.Json;
 using System.Reflection.PortableExecutable;
 using System.Text;
-using System.Text.Json;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using CsvHelper;
@@ -27,15 +26,11 @@ namespace DataEditor.Core.Services
         private readonly CoreSettingsModel _settings;
         private readonly GitService _gitService;
         private readonly SemaphoreSlim _dataVersionLock = new(1, 1);
-        private readonly Dictionary<string, string> _draftContents = new(StringComparer.OrdinalIgnoreCase);
-        private readonly Dictionary<string, string> _baselineContents = new(StringComparer.OrdinalIgnoreCase);
         private string _dataVersionSha;
-        private bool _draftLoaded;
 
         public string DataVersionSha => _dataVersionSha;
-        public bool HasRecoverableDraft { get; private set; }
-        public int UnsavedRecordCount { get; private set; }
-        public event Action DraftStateChanged;
+        public int SaveClickCount { get; private set; }
+        public event Action SaveClickCountChanged;
 
         public GitEntityService(DataEditorDataContext context, CoreSettingsModel settings, GitService gitService)
         {
@@ -58,43 +53,26 @@ namespace DataEditor.Core.Services
         }
 
         private sealed record FileChange(string FileName, string Content);
-        private sealed class DraftSnapshot
-        {
-            public string Branch { get; set; }
-            public string BaseSha { get; set; }
-            public Dictionary<string, string> Files { get; set; } = new(StringComparer.OrdinalIgnoreCase);
-        }
 
         public async Task<string> CommitAllChangesToGit(Action<string> progressCallback = null)
         {
-            await EnsureBranchIsCurrentAsync();
-            var fileChanges = new List<FileChange?>
-            {
-                await GetFileChange(_context.Countries.OrderBy(i => i.Guid).ToList()),
-                await GetFileChange(_context.Films.OrderBy(i => i.Guid).ToList()),
-                await GetFileChange(_context.Origins.OrderBy(i => i.Guid).ToList()),
-                await GetFileChange(_context.People.OrderBy(i => i.Guid).ToList()),
-                await GetFileChange(_context.Roles.OrderBy(i => i.Guid).ToList()),
-                await GetFileChange(_context.Languages.OrderBy(i => i.Guid).ToList()),
-                await GetFileChange(_context.Companies.OrderBy(i => i.Guid).ToList()),
-                await GetFileChange(_context.FilmLinks.OrderBy(i => i.Guid).ThenBy(i => i.FilmGuid).ToList()),
-                await GetFileChange(_context.FilmCompanies.OrderBy(i => i.FilmGuid).ThenBy(i => i.CompanyGuid).ToList()),
-                await GetFileChange(_context.FilmCountries.OrderBy(i => i.FilmGuid).ThenBy(i => i.CountryGuid).ToList()),
-                await GetFileChange(_context.FilmLanguages.OrderBy(i => i.FilmGuid).ThenBy(i => i.LanguageGuid).ToList()),
-                await GetFileChange(_context.FilmOrigins.OrderBy(i => i.FilmGuid).ThenBy(i => i.OriginGuid).ToList()),
-                await GetFileChange(_context.FilmPersonRoles.OrderBy(i => i.Film).ThenBy(i => i.Person).ThenBy(i => i.RoleGuid).ToList())
-            };
+            var differences = await GetAllDifferences();
+            return await CommitReviewedChanges(differences, progressCallback);
+        }
 
-            var changedFiles = fileChanges
-                .OfType<FileChange>()
-                .ToDictionary(change => change.FileName, change => change.Content);
+        public async Task<string> CommitReviewedChanges(IReadOnlyCollection<FileDifference> differences, Action<string> progressCallback = null)
+        {
+            await EnsureBranchIsCurrentAsync();
+            var changedFiles = differences
+                .Where(difference => difference.ChangedLinesCount > 0)
+                .ToDictionary(difference => difference.FileName, difference => difference.NewContent);
 
             if (changedFiles.Count == 0)
             {
                 return "There are no saved changes to publish.";
             }
 
-            progressCallback?.Invoke($"Preparing {changedFiles.Count} changed data file(s)...");
+            progressCallback?.Invoke($"Publishing {changedFiles.Count} changed data file(s)...");
             await PublishChangesAtomically(changedFiles);
             progressCallback?.Invoke("All changed data files were published together.");
             await ResetCaches();
@@ -504,35 +482,6 @@ namespace DataEditor.Core.Services
             await _dataVersionLock.WaitAsync();
             try
             {
-                if (!_draftLoaded)
-                {
-                    var savedDraft = await _gitService.GetEditorDraft(_settings.Branch);
-                    if (!string.IsNullOrWhiteSpace(savedDraft))
-                    {
-                        var snapshot = JsonSerializer.Deserialize<DraftSnapshot>(savedDraft)
-                            ?? throw new InvalidDataException("The saved editing-session draft could not be read.");
-                        if (!string.Equals(snapshot.Branch, _settings.Branch, StringComparison.Ordinal))
-                        {
-                            throw new InvalidDataException("The saved editing-session draft belongs to a different data set.");
-                        }
-
-                        if (string.IsNullOrWhiteSpace(snapshot.BaseSha) || snapshot.Files == null)
-                        {
-                            throw new InvalidDataException("The saved editing-session draft is incomplete.");
-                        }
-
-                        _dataVersionSha = snapshot.BaseSha;
-                        foreach (var file in snapshot.Files)
-                        {
-                            _draftContents[file.Key] = file.Value;
-                        }
-
-                        HasRecoverableDraft = _draftContents.Count > 0;
-                    }
-
-                    _draftLoaded = true;
-                }
-
                 if (string.IsNullOrEmpty(_dataVersionSha))
                 {
                     _dataVersionSha = await _gitService.GetBranchHeadSha();
@@ -747,10 +696,7 @@ namespace DataEditor.Core.Services
         {
             await EnsureDataVersionCaptured();
             var repositoryFile = await GetFileByName(name);
-            var baselineContent = await GetFileContentFromDownloadUrl(repositoryFile);
-            _baselineContents[name] = baselineContent;
-            var content = _draftContents.TryGetValue(name, out var draftContent) ? draftContent : baselineContent;
-            UpdateDraftState();
+            var content = await GetFileContentFromDownloadUrl(repositoryFile);
 
             using var reader = new StringReader(content);
 
@@ -907,111 +853,21 @@ namespace DataEditor.Core.Services
             public string NewValue { get; set; }
         }
 
-        public async Task SaveDraftAsync(params Type[] changedEntityTypes)
+        public void RecordSaveClick()
         {
-            await EnsureDataVersionCaptured();
-            foreach (var entityType in changedEntityTypes.Distinct())
-            {
-                var fileName = $"{CoreSettings.dbSetNames[entityType]}.csv";
-                var content = await SerializeCurrentTable(entityType);
-                if (content != null)
-                {
-                    if (!_baselineContents.TryGetValue(fileName, out var baselineContent))
-                    {
-                        throw new InvalidOperationException($"The baseline for {fileName} has not been loaded; the draft was not saved.");
-                    }
-
-                    if (BuildRecordDifferences(fileName, baselineContent, content).Count == 0)
-                    {
-                        _draftContents.Remove(fileName);
-                    }
-                    else
-                    {
-                        _draftContents[fileName] = content;
-                    }
-                }
-            }
-
-            HasRecoverableDraft = _draftContents.Count > 0;
-            if (HasRecoverableDraft)
-            {
-                var snapshot = new DraftSnapshot
-                {
-                    Branch = _settings.Branch,
-                    BaseSha = _dataVersionSha,
-                    Files = new Dictionary<string, string>(_draftContents, StringComparer.OrdinalIgnoreCase)
-                };
-                await _gitService.SaveEditorDraft(_settings.Branch, JsonSerializer.Serialize(snapshot));
-            }
-            else
-            {
-                await _gitService.ClearEditorDraft(_settings.Branch);
-            }
-
-            UpdateDraftState();
+            SaveClickCount++;
+            SaveClickCountChanged?.Invoke();
         }
 
-        private Task<string> SerializeCurrentTable(Type entityType)
+        public Task ResetCaches()
         {
-            return entityType == typeof(Company) ? SerializeCsv(_context.Companies.OrderBy(item => item.Guid).ToList())
-                : entityType == typeof(Country) ? SerializeCsv(_context.Countries.OrderBy(item => item.Guid).ToList())
-                : entityType == typeof(Film) ? SerializeCsv(_context.Films.OrderBy(item => item.Guid).ToList())
-                : entityType == typeof(Language) ? SerializeCsv(_context.Languages.OrderBy(item => item.Guid).ToList())
-                : entityType == typeof(Origin) ? SerializeCsv(_context.Origins.OrderBy(item => item.Guid).ToList())
-                : entityType == typeof(Person) ? SerializeCsv(_context.People.OrderBy(item => item.Guid).ToList())
-                : entityType == typeof(Role) ? SerializeCsv(_context.Roles.OrderBy(item => item.Guid).ToList())
-                : entityType == typeof(FilmLink) ? SerializeCsv(_context.FilmLinks.OrderBy(item => item.Guid).ThenBy(item => item.FilmGuid).ToList())
-                : entityType == typeof(FilmCompany) ? SerializeCsv(_context.FilmCompanies.OrderBy(item => item.FilmGuid).ThenBy(item => item.CompanyGuid).ToList())
-                : entityType == typeof(FilmCountry) ? SerializeCsv(_context.FilmCountries.OrderBy(item => item.FilmGuid).ThenBy(item => item.CountryGuid).ToList())
-                : entityType == typeof(FilmLanguage) ? SerializeCsv(_context.FilmLanguages.OrderBy(item => item.FilmGuid).ThenBy(item => item.LanguageGuid).ToList())
-                : entityType == typeof(FilmOrigin) ? SerializeCsv(_context.FilmOrigins.OrderBy(item => item.FilmGuid).ThenBy(item => item.OriginGuid).ToList())
-                : entityType == typeof(FilmPersonRole) ? SerializeCsv(_context.FilmPersonRoles.OrderBy(item => item.FilmGuid).ThenBy(item => item.PersonGuid).ThenBy(item => item.RoleGuid).ToList())
-                : throw new ArgumentOutOfRangeException(nameof(entityType), entityType, "Unsupported draft table.");
-        }
-
-        private static async Task<string> SerializeCsv<T>(List<T> records)
-        {
-            await using var writer = new StringWriter();
-            await using var csv = new CsvWriter(writer, new CsvConfiguration(CultureInfo.InvariantCulture));
-            csv.WriteHeader<T>();
-            await csv.NextRecordAsync();
-            await csv.WriteRecordsAsync(records);
-            return writer.ToString();
-        }
-
-        private void UpdateDraftState()
-        {
-            UnsavedRecordCount = _draftContents.Sum(draft =>
-                _baselineContents.TryGetValue(draft.Key, out var baseline)
-                    ? BuildRecordDifferences(draft.Key, baseline, draft.Value).Count
-                    : 0);
-            HasRecoverableDraft = _draftContents.Count > 0;
-            DraftStateChanged?.Invoke();
-        }
-
-        public async Task ClearDraftAsync()
-        {
-            await _gitService.ClearEditorDraft(_settings.Branch);
-            _draftContents.Clear();
-            HasRecoverableDraft = false;
-            UpdateDraftState();
-        }
-
-        public async Task ResetCaches()
-        {
-            await ClearDraftAsync();
-            // Clear all DbSets by removing all entities and resetting their state
             _context.ClearAllDbSets();
-
-            // Detach all tracked entities to avoid tracking conflicts
             _context.DetachAllEntities();
-
-            // Clear the LoadedFiles collection to force reloading all data from Git
             LoadedFiles.Clear();
-            _draftContents.Clear();
-            _baselineContents.Clear();
-            _draftLoaded = false;
             _dataVersionSha = null;
+            SaveClickCount = 0;
+            SaveClickCountChanged?.Invoke();
+            return Task.CompletedTask;
         }
     }
 }

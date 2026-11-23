@@ -16,6 +16,9 @@
         <MudDatePicker @bind-Date="item.CreatedOn" Label="Created On" Clearable="true" ShowToolbar="false" />
         <MudTextField @bind-Value="item.UpdatedBy" Label="Updated By"></MudTextField>
         <MudDatePicker @bind-Date="item.UpdatedOn" Label="Updated On" Clearable="true" ShowToolbar="false" />
+        <MudDivider Class="my-3" />
+        <MudText Typo="Typo.h6">Contribution history</MudText>
+        <ContributionListField @bind-Value="item.ContributionHistory" />
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="Cancel">Cancel</MudButton>
@@ -59,15 +62,7 @@
         }
 
         await ctx.SaveChangesAsync();
-        try
-        {
-            await ges.SaveDraftAsync(typeof(Origin));
-        }
-        catch (Exception ex)
-        {
-            Snackbar.Add($"Changes are saved in this tab, but the recovery copy could not be updated: {ex.Message}", Severity.Error);
-            return;
-        }
+        ges.RecordSaveClick();
 
         Snackbar.Add($"{item.Code} saved in this editing session. Publish your changes when ready.", Severity.Success);
         MudDialog.Close();

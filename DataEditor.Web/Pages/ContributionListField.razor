@@ -1,0 +1,66 @@
+@using Data.Core.Models
+@inject IDialogService DialogService
+
+<MudStack Spacing="1">
+    <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.EditNote" OnClick="EditContributions" Disabled="@(!string.IsNullOrEmpty(_error))">
+        Edit contribution list
+    </MudButton>
+    @if (!string.IsNullOrEmpty(_error))
+    {
+        <MudText Color="Color.Error" Typo="Typo.caption">@_error</MudText>
+    }
+    else
+    {
+        <MudText Typo="Typo.caption" Color="Color.Secondary">@_entryCount contribution rows</MudText>
+    }
+</MudStack>
+
+@code {
+    [Parameter]
+    public string? Value { get; set; }
+
+    [Parameter]
+    public EventCallback<string?> ValueChanged { get; set; }
+
+    private int _entryCount;
+    private string? _error;
+
+    protected override void OnParametersSet()
+    {
+        try
+        {
+            _entryCount = ContributionHistoryJson.Deserialize(Value).Count;
+            _error = null;
+        }
+        catch (Exception ex)
+        {
+            _error = $"The contribution list could not be read: {ex.Message}";
+        }
+    }
+
+    private async Task EditContributions()
+    {
+        List<ContributionEntry> entries;
+        try
+        {
+            entries = ContributionHistoryJson.Deserialize(Value);
+        }
+        catch (Exception ex)
+        {
+            _error = $"The contribution list could not be opened: {ex.Message}";
+            return;
+        }
+
+        var parameters = new DialogParameters<ContributionListEditor> { { editor => editor.Entries, entries } };
+        var options = new DialogOptions { MaxWidth = MaxWidth.ExtraLarge, FullWidth = true };
+        var dialog = await DialogService.ShowAsync<ContributionListEditor>("Contribution history", parameters, options);
+        var result = await dialog.Result;
+        if (result is { Canceled: false, Data: List<ContributionEntry> updatedEntries })
+        {
+            Value = ContributionHistoryJson.Serialize(updatedEntries);
+            _entryCount = updatedEntries.Count;
+            _error = null;
+            await ValueChanged.InvokeAsync(Value);
+        }
+    }
+}

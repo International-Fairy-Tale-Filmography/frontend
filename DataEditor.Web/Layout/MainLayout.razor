@@ -19,13 +19,9 @@
         <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
         <MudText Typo="Typo.h5" Class="ml-3">IFTF Data Editor</MudText>
         <MudSpacer />
-        @if (ges.UnsavedRecordCount > 0)
+        @if (ges.SaveClickCount > 0)
         {
-            <MudChip T="string" Color="Color.Warning" Size="Size.Small" Class="mr-2">@ges.UnsavedRecordCount saved changes · not published</MudChip>
-        }
-        else if (ges.HasRecoverableDraft)
-        {
-            <MudChip T="string" Color="Color.Info" Size="Size.Small" Class="mr-2">Recovery copy saved</MudChip>
+            <MudChip T="string" Color="Color.Warning" Size="Size.Small" Class="mr-2">@ges.SaveClickCount saves in this tab · not published</MudChip>
         }
         @if (_branches.Count > 0)
         {
@@ -68,7 +64,7 @@
         await GitService.GetConfiguration();
         _branches = await GitService.GetBranches();
         _selectedBranch = Settings.Branch;
-        ges.DraftStateChanged += OnDraftStateChanged;
+        ges.SaveClickCountChanged += OnSaveClickCountChanged;
         _ = MonitorFreshnessAsync(_monitorCancellation.Token);
     }
 
@@ -170,12 +166,11 @@
         _switchingBranch = true;
         try
         {
-            var differences = await ges.GetAllDifferences();
-            if (differences.Any(difference => difference.ChangedLinesCount > 0))
+            if (ges.SaveClickCount > 0)
             {
                 var shouldSwitch = await DialogService.ShowMessageBox(
                     "Switch data set?",
-                    "Your saved changes in this editing session will be discarded when you switch. Continue only if you are ready to lose those changes.",
+                    "Your saved changes in this tab will be discarded when you switch. Continue only if you are ready to lose those changes.",
                     yesText: "Switch data set",
                     cancelText: "Keep current data");
 
@@ -185,7 +180,6 @@
                 }
             }
 
-            await ges.ClearDraftAsync();
             Settings.Branch = branch;
             await GitService.SaveConfiguration(Settings);
             await ges.ResetCaches();
@@ -207,14 +201,14 @@
         _ => branch
     };
 
-    private void OnDraftStateChanged()
+    private void OnSaveClickCountChanged()
     {
         _ = InvokeAsync(StateHasChanged);
     }
 
     public void Dispose()
     {
-        ges.DraftStateChanged -= OnDraftStateChanged;
+        ges.SaveClickCountChanged -= OnSaveClickCountChanged;
         _monitorCancellation.Cancel();
         _monitorCancellation.Dispose();
     }

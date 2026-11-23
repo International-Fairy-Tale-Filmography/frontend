@@ -153,7 +153,9 @@ else if (_backgroundLoading)
     async Task EditItem(Guid? id)
     {
         var parameters = new DialogParameters<FilmEdit> { { x => x.Id, id } };
-        var dialog = await DialogService.ShowAsync<FilmEdit>("Edit", parameters);
+        var title = id is null ? "Add film" : "Edit film";
+        var options = new DialogOptions { MaxWidth = MaxWidth.ExtraLarge, FullWidth = true };
+        var dialog = await DialogService.ShowAsync<FilmEdit>(title, parameters, options);
         var result = await dialog.Result;
         if (!result.Canceled)
         {

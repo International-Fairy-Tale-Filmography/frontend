@@ -5,332 +5,675 @@
 @inject DataEditorDataContext ctx
 @inject GitEntityService ges
 @inject ISnackbar Snackbar
+@inject IDialogService DialogService
 
 <MudDialog>
     <DialogContent>
-        <MudCheckBox @bind-Value="item.Published"> Published</MudCheckBox>
-        <MudGrid xs="12" md="6">
-            <MudItem>
-                <MudTextField @bind-Value="item.Title" Label="Title"></MudTextField>
-                <MudTextField @bind-Value="item.OtherTitle" Label="Other Title"></MudTextField>
-                <MudTextField @bind-Value="item.Color" Label="Color"></MudTextField>
-                <MudTextField @bind-Value="item.ReleaseYear" Label="Release Year"></MudTextField>
-                <MudTextField @bind-Value="item.Duration" Label="Duration"></MudTextField>
-                <MudTextField @bind-Value="item.Mode" Label="Mode"></MudTextField>
-                <MudTextField @bind-Value="item.Comment" Label="Comment"></MudTextField>
-                
-                <MudTextField @bind-Value="item.CreatedBy" Label="Created By"></MudTextField>
-                <MudDatePicker @bind-Date="item.CreatedOn" Label="Created On" Clearable="true" ShowToolbar="false" />
-                <MudTextField @bind-Value="item.UpdatedBy" Label="Updated By"></MudTextField>
-                <MudDatePicker @bind-Date="item.UpdatedOn" Label="Updated On" Clearable="true" ShowToolbar="false" />
-            </MudItem>
-            <MudItem xs="12" md="6">
-                <MudAutocomplete ToStringFunc="@(e => e == null ? null : $"{e.Name}")" T="Company" Label="Search Company" @bind-Value="selectedCompany" SearchFunc="@SearchCompanies" Variant="Variant.Text" ShowProgressIndicator="true" ResetValueOnEmptyText="true" Clearable="true" Dense="true"/>
-                <MudButton StartIcon="@Icons.Material.Filled.Add" OnClick="AddCompany">Add Company</MudButton>
+        @if (!string.IsNullOrWhiteSpace(_loadError))
+        {
+            <MudAlert Severity="Severity.Error">@_loadError</MudAlert>
+        }
+        else if (item is not null)
+        {
+            <MudAlert Severity="Severity.Info" Dense="true" Class="mb-4">
+                Save keeps this film in the current browser tab. Review and publish your changes when you are ready.
+            </MudAlert>
 
-                <MudChipSet T="Guid" AllClosable OnClose="RemoveCompany">
-                    @foreach (var value in item.Companies)
-                    {
-                        <MudChip Text="@value.Company.Name" Value="value.CompanyGuid.ToString()"></MudChip>
-                    }
-                </MudChipSet>
-                
-                <MudAutocomplete ToStringFunc="@(e => e == null ? null : $"{e.Name}")" T="Country" Label="Search Country" @bind-Value="selectedCountry" SearchFunc="@SearchCountries" Variant="Variant.Text" ShowProgressIndicator="true" ResetValueOnEmptyText="true" Clearable="true" Dense="true"/>
-                <MudButton StartIcon="@Icons.Material.Filled.Add" OnClick="AddCountry">Add Country</MudButton>
+            @if (!string.IsNullOrWhiteSpace(_saveError))
+            {
+                <MudAlert Severity="Severity.Error" Class="mb-4">@_saveError</MudAlert>
+            }
 
+            <MudForm @ref="_form">
+                <MudTabs @bind-ActivePanelIndex="_activeTabIndex" Rounded="true" Border="true" KeepPanelsAlive="true">
+                    <MudTabPanel Text="Film details" Icon="@Icons.Material.Filled.Movie">
+                        <MudGrid Spacing="3" Class="pa-2">
+                            <MudItem xs="12" md="8">
+                                <MudTextField @bind-Value="item.Title" @bind-Value:after="MarkChanged" Label="Film title" Required="true" RequiredError="Enter a film title." MaxLength="500" Immediate="true" />
+                            </MudItem>
+                            <MudItem xs="12" md="4">
+                                <MudCheckBox T="bool?" @bind-Value="item.Published" @bind-Value:after="MarkChanged" Label="Published" />
+                            </MudItem>
+                            <MudItem xs="12" md="6">
+                                <MudTextField @bind-Value="item.OtherTitle" @bind-Value:after="MarkChanged" Label="Other title" MaxLength="500" />
+                            </MudItem>
+                            <MudItem xs="12" md="3">
+                                <MudNumericField T="int?" @bind-Value="item.ReleaseYear" @bind-Value:after="MarkChanged" Label="Release year" Min="1" />
+                            </MudItem>
+                            <MudItem xs="12" md="3">
+                                <MudNumericField T="int?" @bind-Value="item.Duration" @bind-Value:after="MarkChanged" Label="Duration (minutes)" Min="1" />
+                            </MudItem>
+                            <MudItem xs="12" md="6">
+                                <MudTextField @bind-Value="item.Color" @bind-Value:after="MarkChanged" Label="Color" MaxLength="200" />
+                            </MudItem>
+                            <MudItem xs="12" md="6">
+                                <MudTextField @bind-Value="item.Mode" @bind-Value:after="MarkChanged" Label="Format or mode" MaxLength="200" />
+                            </MudItem>
+                            <MudItem xs="12" md="6">
+                                <MudText Typo="Typo.h6">Origins</MudText>
+                                <MudAutocomplete T="Origin" Label="Find an origin" @bind-Value="selectedOrigin" SearchFunc="SearchOrigins" ToStringFunc="@(origin => origin?.Title ?? string.Empty)" ShowProgressIndicator="true" ResetValueOnEmptyText="true" Clearable="true" Dense="true" />
+                                <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Add" OnClick="AddOrigin" Disabled="@(!CanAddOrigin)" Class="mt-2">Add origin</MudButton>
+                                @if (selectedOrigin is not null && !CanAddOrigin) { <MudText Typo="Typo.caption" Color="Color.Warning">This origin is already added.</MudText> }
+                                @foreach (var origin in item.Origins.OrderBy(entry => entry.Origin?.Title))
+                                {
+                                    <div class="d-flex align-center justify-space-between">
+                                        <MudText>@origin.Origin?.Title</MudText>
+                                        <MudIconButton Icon="@Icons.Material.Filled.Close" Size="Size.Small" AriaLabel="Remove origin" OnClick="@(() => RemoveOrigin(origin.OriginGuid))" />
+                                    </div>
+                                }
+                            </MudItem>
+                        </MudGrid>
+                    </MudTabPanel>
 
-                <MudChipSet T="Guid" AllClosable OnClose="RemoveCountry">
-                    @foreach (var value in item.Countries)
-                    {
-                        <MudChip Text="@value.Country.Name" Value="value.CountryGuid.ToString()"></MudChip>
-                    }
-                </MudChipSet>
-               
-                <MudAutocomplete ToStringFunc="@(e => e == null ? null : $"{e.Name}")" T="Language" Label="Search Language" @bind-Value="selectedLanguage" SearchFunc="@SearchLanguages" Variant="Variant.Text" ShowProgressIndicator="true" ResetValueOnEmptyText="true" Clearable="true" Dense="true"/>
-                <MudButton StartIcon="@Icons.Material.Filled.Add" OnClick="AddLanguage">Add Language</MudButton>
+                    <MudTabPanel Text="People & companies" Icon="@Icons.Material.Filled.Groups">
+                        <MudGrid Spacing="3" Class="pa-2">
+                            <MudItem xs="12" md="6">
+                                <MudText Typo="Typo.h6">People and roles</MudText>
+                                <MudText Typo="Typo.body2" Class="mb-2">Find a person in the searchable people list, then choose their role.</MudText>
+                                <MudStack Spacing="2">
+                                    <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Search" OnClick="PickPerson">@(selectedPerson is null ? "Find a person" : PersonName(selectedPerson))</MudButton>
+                                    <MudAutocomplete T="Role" Label="Choose a role" @bind-Value="selectedRole" @bind-Value:after="MarkChanged" SearchFunc="SearchRoles" ToStringFunc="@(role => role?.Name ?? string.Empty)" ShowProgressIndicator="true" ResetValueOnEmptyText="true" Clearable="true" Dense="true" />
+                                    <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.PersonAdd" OnClick="AddPersonRole" Disabled="@(!CanAddPersonRole)">Add credit</MudButton>
+                                </MudStack>
+                                @if (selectedPerson is not null && selectedRole is not null && !CanAddPersonRole)
+                                {
+                                    <MudText Typo="Typo.caption" Color="Color.Warning">This person already has this role on the film.</MudText>
+                                }
+                                @if (item.PeopleRoles.Count == 0)
+                                {
+                                    <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mt-3">No people or roles added.</MudText>
+                                }
+                                else
+                                {
+                                    <MudList T="string" Dense="true" Class="mt-2">
+                                        @foreach (var credit in OrderedPeopleRoles)
+                                        {
+                                            <MudListItem T="string">
+                                                <MudText>@PersonName(credit.Person) — @credit.Role?.Name</MudText>
+                                                <MudIconButton Icon="@Icons.Material.Filled.Close" Color="Color.Default" Size="Size.Small" AriaLabel="Remove credit" OnClick="@(() => RemovePersonRole(credit))" />
+                                            </MudListItem>
+                                        }
+                                    </MudList>
+                                }
+                            </MudItem>
+                            <MudItem xs="12" md="6">
+                                <MudText Typo="Typo.h6">Companies</MudText>
+                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                    <MudAutocomplete T="Company" Label="Find a company" @bind-Value="selectedCompany" SearchFunc="SearchCompanies" ToStringFunc="@(company => company?.Name ?? string.Empty)" ShowProgressIndicator="true" ResetValueOnEmptyText="true" Clearable="true" Dense="true" />
+                                    <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Add" OnClick="AddCompany" Disabled="@(!CanAddCompany)">Add company</MudButton>
+                                </MudStack>
+                                @if (selectedCompany is not null && !CanAddCompany)
+                                {
+                                    <MudText Typo="Typo.caption" Color="Color.Warning">This company is already added.</MudText>
+                                }
+                                @if (item.Companies.Count == 0)
+                                {
+                                    <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mt-3">No companies added.</MudText>
+                                }
+                                else
+                                {
+                                    <MudList T="string" Dense="true" Class="mt-2">
+                                        @foreach (var company in item.Companies.OrderBy(entry => entry.Company?.Name))
+                                        {
+                                            <MudListItem T="string">
+                                                <MudText>@company.Company?.Name</MudText>
+                                                <MudIconButton Icon="@Icons.Material.Filled.Close" Size="Size.Small" AriaLabel="Remove company" OnClick="@(() => RemoveCompany(company.CompanyGuid))" />
+                                            </MudListItem>
+                                        }
+                                    </MudList>
+                                }
+                            </MudItem>
+                        </MudGrid>
+                    </MudTabPanel>
 
-                <MudChipSet T="Guid" AllClosable OnClose="RemoveLanguage">
-                    @foreach (var value in item.Languages)
-                    {
-                        <MudChip Text="@value.Language.Name" Value="value.LanguageGuid.ToString()"></MudChip>
-                    }
-                </MudChipSet>
-               
+                    <MudTabPanel Text="Places & languages" Icon="@Icons.Material.Filled.Public">
+                        <MudGrid Spacing="3" Class="pa-2">
+                            <MudItem xs="12" md="6">
+                                <MudText Typo="Typo.h6">Countries</MudText>
+                                <MudAutocomplete T="Country" Label="Find a country" @bind-Value="selectedCountry" SearchFunc="SearchCountries" ToStringFunc="@(country => country?.Name ?? string.Empty)" ShowProgressIndicator="true" ResetValueOnEmptyText="true" Clearable="true" Dense="true" />
+                                <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Add" OnClick="AddCountry" Disabled="@(!CanAddCountry)" Class="mt-2">Add country</MudButton>
+                                @if (selectedCountry is not null && !CanAddCountry) { <MudText Typo="Typo.caption" Color="Color.Warning">This country is already added.</MudText> }
+                                @foreach (var country in item.Countries.OrderBy(entry => entry.Country?.Name))
+                                {
+                                    <div class="d-flex align-center justify-space-between">
+                                        <MudText>@country.Country?.Name</MudText>
+                                        <MudIconButton Icon="@Icons.Material.Filled.Close" Size="Size.Small" AriaLabel="Remove country" OnClick="@(() => RemoveCountry(country.CountryGuid))" />
+                                    </div>
+                                }
+                            </MudItem>
+                            <MudItem xs="12" md="6">
+                                <MudText Typo="Typo.h6">Languages</MudText>
+                                <MudAutocomplete T="Language" Label="Find a language" @bind-Value="selectedLanguage" SearchFunc="SearchLanguages" ToStringFunc="@(language => language?.Name ?? string.Empty)" ShowProgressIndicator="true" ResetValueOnEmptyText="true" Clearable="true" Dense="true" />
+                                <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Add" OnClick="AddLanguage" Disabled="@(!CanAddLanguage)" Class="mt-2">Add language</MudButton>
+                                @if (selectedLanguage is not null && !CanAddLanguage) { <MudText Typo="Typo.caption" Color="Color.Warning">This language is already added.</MudText> }
+                                @foreach (var language in item.Languages.OrderBy(entry => entry.Language?.Name))
+                                {
+                                    <div class="d-flex align-center justify-space-between">
+                                        <MudText>@language.Language?.Name</MudText>
+                                        <MudIconButton Icon="@Icons.Material.Filled.Close" Size="Size.Small" AriaLabel="Remove language" OnClick="@(() => RemoveLanguage(language.LanguageGuid))" />
+                                    </div>
+                                }
+                            </MudItem>
+                        </MudGrid>
+                    </MudTabPanel>
 
-                <MudAutocomplete ToStringFunc="@(e => e == null ? null : $"{e.Title}")" T="Origin" Label="Search Origin" @bind-Value="selectedOrigin" SearchFunc="@SearchOrigins" Variant="Variant.Text" ShowProgressIndicator="true" ResetValueOnEmptyText="true" Clearable="true" Dense="true"/>
-                <MudButton StartIcon="@Icons.Material.Filled.Add" OnClick="AddOrigin">Add Origin</MudButton>
-
-                <MudChipSet T="Guid" AllClosable OnClose="RemoveOrigin">
-                    @foreach (var value in item.Origins)
-                    {
-                        <MudChip Text="@value.Origin.Title" Value="value.OriginGuid.ToString()"></MudChip>
-                    }
-                </MudChipSet>
-               
-                
-                <MudAutocomplete ToStringFunc="@(e => e == null ? null : $"{e.FirstName} {e.LastName}")" T="Person" Label="Search People" @bind-Value="selectedPerson" SearchFunc="@SearchPeople" Variant="Variant.Text" ShowProgressIndicator="true" ResetValueOnEmptyText="true" Clearable="true" Dense="true"/>
-                <MudAutocomplete ToStringFunc="@(e => e == null ? null : $"{e.Name}")" T="Role" Label="Search Roles" @bind-Value="selectedRole" SearchFunc="@SearchRoles" Variant="Variant.Text" ShowProgressIndicator="true" ResetValueOnEmptyText="true" Clearable="true" Dense="true"/>
-                <MudButton StartIcon="@Icons.Material.Filled.Add" OnClick="AddPersonRole">Add Person</MudButton>
-
-                <MudChipSet T="FilmPersonRole" AllClosable OnClose="RemovePersonRole">
-                    @foreach (var value in item.PeopleRoles.OrderBy(i => i.Role.Guid))
-                    {
-                        <MudChip Text="@( $"{value.Role.Name} {value.Person.FirstName} {value.Person.LastName}")" Value="value"></MudChip>
-                    }
-                </MudChipSet>
-
-
-            </MudItem>
-
-        </MudGrid>
-
-
-
-
-        
+                    <MudTabPanel Text="Links & notes" Icon="@Icons.Material.Filled.Link">
+                        <MudGrid Spacing="3" Class="pa-2">
+                            <MudItem xs="12">
+                                <MudText Typo="Typo.h6">Web links</MudText>
+                                <MudText Typo="Typo.body2" Class="mb-2">Add a full web address beginning with https:// or http://.</MudText>
+                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                    <MudTextField @bind-Value="_newLinkUrl" @bind-Value:after="MarkChanged" Label="Web address" Placeholder="https://example.org/film" HelperText="Include http:// or https://" Error="@(!string.IsNullOrEmpty(NewLinkInputError))" ErrorText="@NewLinkInputError" Immediate="true" OnKeyDown="HandleLinkKeyDown" />
+                                    <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.AddLink" OnClick="AddLink" Disabled="@(!CanAddLink)">Add link</MudButton>
+                                </MudStack>
+                                @if (!string.IsNullOrWhiteSpace(_linkError))
+                                {
+                                    <MudText Color="Color.Error" Typo="Typo.caption">@_linkError</MudText>
+                                }
+                                @if (item.Links.Count == 0)
+                                {
+                                    <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mt-3">No links added.</MudText>
+                                }
+                                else
+                                {
+                                    <MudList T="string" Dense="true" Class="mt-2">
+                                        @foreach (var link in item.Links)
+                                        {
+                                            <MudListItem T="string">
+                                                <MudTextField @bind-Value="link.Url" @bind-Value:after="MarkChanged" Label="Web address" Immediate="true" />
+                                                <MudIconButton Icon="@Icons.Material.Filled.Close" Size="Size.Small" AriaLabel="Remove link" OnClick="@(() => RemoveLink(link.Guid))" />
+                                            </MudListItem>
+                                        }
+                                    </MudList>
+                                }
+                            </MudItem>
+                            <MudItem xs="12">
+                                <MudText Typo="Typo.h6">Contribution history</MudText>
+                                <MudText Typo="Typo.body2" Class="mb-2">Record who contributed, what they did, and when.</MudText>
+                                <ContributionListField @bind-Value="item.ContributionHistory" @bind-Value:after="MarkChanged" />
+                            </MudItem>
+                            <MudItem xs="12">
+                                <MudTextField @bind-Value="item.Comment" @bind-Value:after="MarkChanged" Label="Notes" Lines="4" MaxLength="4000" />
+                            </MudItem>
+                            <MudItem xs="12">
+                                <MudExpansionPanels>
+                                    <MudExpansionPanel Text="Record details">
+                                        <MudText Typo="Typo.body2" Class="mb-2">Optional record tracking information.</MudText>
+                                        <MudGrid Spacing="2">
+                                            <MudItem xs="12" sm="6"><MudTextField @bind-Value="item.CreatedBy" @bind-Value:after="MarkChanged" Label="Added by" MaxLength="200" /></MudItem>
+                                            <MudItem xs="12" sm="6"><MudDatePicker @bind-Date="item.CreatedOn" @bind-Date:after="MarkChanged" Label="Added on" Clearable="true" ShowToolbar="false" /></MudItem>
+                                            <MudItem xs="12" sm="6"><MudTextField @bind-Value="item.UpdatedBy" @bind-Value:after="MarkChanged" Label="Updated by" MaxLength="200" /></MudItem>
+                                            <MudItem xs="12" sm="6"><MudDatePicker @bind-Date="item.UpdatedOn" @bind-Date:after="MarkChanged" Label="Updated on" Clearable="true" ShowToolbar="false" /></MudItem>
+                                        </MudGrid>
+                                    </MudExpansionPanel>
+                                </MudExpansionPanels>
+                            </MudItem>
+                        </MudGrid>
+                    </MudTabPanel>
+                </MudTabs>
+            </MudForm>
+        }
     </DialogContent>
     <DialogActions>
-        <MudButton OnClick="Cancel">Cancel</MudButton>
-        <MudButton Color="Color.Error" OnClick="Save">Save changes</MudButton>
+        <MudButton OnClick="Cancel" Disabled="_saving">Cancel</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Save" Disabled="@(_saving || item is null || !string.IsNullOrWhiteSpace(_loadError))" StartIcon="@Icons.Material.Filled.Save">
+            @(_saving ? "Saving..." : "Save film")
+        </MudButton>
     </DialogActions>
 </MudDialog>
 
 @code {
-
     [CascadingParameter]
-    private MudDialogInstance MudDialog { get; set; }
+    private MudDialogInstance MudDialog { get; set; } = default!;
 
     [Parameter]
-    public Guid? Id { get; set; } = null;
+    public Guid? Id { get; set; }
 
-    public Film item { get; set; }
+    private MudForm? _form;
+    private Film? item;
+    private Film? _originalFilm;
+    private bool _saving;
+    private bool _isDirty;
+    private int _activeTabIndex;
+    private string? _loadError;
+    private string? _saveError;
+    private string? _linkError;
+    private string _newLinkUrl = string.Empty;
+
+    private Company? selectedCompany;
+    private Country? selectedCountry;
+    private Language? selectedLanguage;
+    private Origin? selectedOrigin;
+    private Person? selectedPerson;
+    private Role? selectedRole;
+
+    private IEnumerable<FilmPersonRole> OrderedPeopleRoles => item?.PeopleRoles
+        .OrderBy(credit => credit.Role?.Order ?? int.MaxValue)
+        .ThenBy(credit => PersonName(credit.Person), StringComparer.OrdinalIgnoreCase)
+        ?? Enumerable.Empty<FilmPersonRole>();
+
+    private bool CanAddCompany => selectedCompany is not null && item?.Companies.All(entry => entry.CompanyGuid != selectedCompany.Guid) == true;
+    private bool CanAddCountry => selectedCountry is not null && item?.Countries.All(entry => entry.CountryGuid != selectedCountry.Guid) == true;
+    private bool CanAddLanguage => selectedLanguage is not null && item?.Languages.All(entry => entry.LanguageGuid != selectedLanguage.Guid) == true;
+    private bool CanAddOrigin => selectedOrigin is not null && item?.Origins.All(entry => entry.OriginGuid != selectedOrigin.Guid) == true;
+    private bool CanAddPersonRole => selectedPerson is not null && selectedRole is not null && item?.PeopleRoles.All(entry => entry.PersonGuid != selectedPerson.Guid || entry.RoleGuid != selectedRole.Guid) == true;
+    private bool CanAddLink => IsValidWebAddress(_newLinkUrl) && item?.Links.All(link => !string.Equals(link.Url, _newLinkUrl.Trim(), StringComparison.OrdinalIgnoreCase)) == true;
+    private string? NewLinkInputError => string.IsNullOrWhiteSpace(_newLinkUrl)
+        ? null
+        : !IsValidWebAddress(_newLinkUrl)
+            ? "Enter a valid address beginning with http:// or https://."
+            : item?.Links.Any(link => string.Equals(link.Url, _newLinkUrl.Trim(), StringComparison.OrdinalIgnoreCase)) == true
+                ? "This web address is already added."
+                : null;
 
     protected override async Task OnInitializedAsync()
     {
-        if (Id != null)
+        try
         {
-            item = await ctx.Films
-                .Include(i => i.Companies).ThenInclude(fc => fc.Company)
-                .Include(i => i.Countries).ThenInclude(fc => fc.Country)
-                .Include(i => i.Languages).ThenInclude(fl => fl.Language)
-                .Include(i => i.Origins).ThenInclude(fo => fo.Origin)
-                .Include(i => i.PeopleRoles).ThenInclude(fpr => fpr.Role)
-                .Include(i => i.PeopleRoles).ThenInclude(fpr => fpr.Person)
-                .FirstAsync(i => i.Guid == Id);
+            if (Id is Guid filmId)
+            {
+                _originalFilm = await ctx.Films
+                    .Include(film => film.Links)
+                    .Include(film => film.Companies).ThenInclude(entry => entry.Company)
+                    .Include(film => film.Countries).ThenInclude(entry => entry.Country)
+                    .Include(film => film.Languages).ThenInclude(entry => entry.Language)
+                    .Include(film => film.Origins).ThenInclude(entry => entry.Origin)
+                    .Include(film => film.PeopleRoles).ThenInclude(entry => entry.Role)
+                    .Include(film => film.PeopleRoles).ThenInclude(entry => entry.Person)
+                    .FirstAsync(film => film.Guid == filmId);
+                item = CreateEditingCopy(_originalFilm);
+            }
+            else
+            {
+                item = new Film
+                {
+                    Guid = Guid.NewGuid(),
+                    Companies = new(),
+                    Countries = new(),
+                    Languages = new(),
+                    Origins = new(),
+                    PeopleRoles = new(),
+                    Links = new()
+                };
+            }
         }
-        else
+        catch (Exception ex)
         {
-            item = new Film();
+            _loadError = $"We could not load this film for editing. No changes were made. Details: {ex.Message}";
         }
-
     }
 
     private async Task Save()
     {
-        if (Id == null)
+        if (_saving || item is null || _form is null)
         {
-            
-            await ctx.Films.AddAsync(item);
-        }
-        else
-        {
-            ctx.Films.Update(item);
-        }
-
-        await ctx.SaveChangesAsync();
-        try
-        {
-            await ges.SaveDraftAsync(typeof(Film), typeof(FilmLink), typeof(FilmCompany), typeof(FilmCountry), typeof(FilmLanguage), typeof(FilmOrigin), typeof(FilmPersonRole));
-        }
-        catch (Exception ex)
-        {
-            Snackbar.Add($"Changes are saved in this tab, but the recovery copy could not be updated: {ex.Message}", Severity.Error);
             return;
         }
 
-        Snackbar.Add($"{item.Title} saved in this editing session. Publish your changes when ready.", Severity.Success);
-        MudDialog.Close();
-
-    }
-    private void Cancel() => MudDialog.Cancel();
-
-
-    //company
-    private Company selectedCompany = null;
-    public void AddCompany()
-    {
-        item.Companies.Add(new FilmCompany()
+        _saveError = null;
+        await _form.Validate();
+        if (!_form.IsValid)
         {
-            Film = item,
-            Company = selectedCompany
-        });
+            _activeTabIndex = 0;
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(item.Title))
+        {
+            _activeTabIndex = 0;
+            _saveError = "Enter a film title before saving.";
+            return;
+        }
+
+        if (!ValidateLinks())
+        {
+            return;
+        }
+
+        item.Title = item.Title.Trim();
+        _saving = true;
+        try
+        {
+            if (_originalFilm is null)
+            {
+                await ctx.Films.AddAsync(item);
+            }
+            else
+            {
+                ApplyChangesToExistingFilm(_originalFilm, item);
+            }
+
+            await ctx.SaveChangesAsync();
+            ges.RecordSaveClick();
+            Snackbar.Add($"{item.Title} saved in this editing session. Review and publish your changes when ready.", Severity.Success);
+            MudDialog.Close(DialogResult.Ok(true));
+        }
+        catch (Exception ex)
+        {
+            _saveError = $"We could not save this film in the current tab. Your edits are still open. Details: {ex.Message}";
+            Snackbar.Add("We could not save this film. Your edits are still open.", Severity.Error);
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+
+    private static Film CreateEditingCopy(Film source)
+    {
+        var copy = new Film
+        {
+            Guid = source.Guid,
+            Title = source.Title,
+            OtherTitle = source.OtherTitle,
+            Color = source.Color,
+            ReleaseYear = source.ReleaseYear,
+            Duration = source.Duration,
+            Mode = source.Mode,
+            Comment = source.Comment,
+            Published = source.Published,
+            ContributionHistory = source.ContributionHistory,
+            CreatedOn = source.CreatedOn,
+            CreatedBy = source.CreatedBy,
+            UpdatedOn = source.UpdatedOn,
+            UpdatedBy = source.UpdatedBy
+        };
+
+        copy.Links = source.Links.Select(link => new FilmLink
+        {
+            Guid = link.Guid,
+            FilmGuid = source.Guid,
+            Url = link.Url,
+            Film = copy
+        }).ToList();
+        copy.Companies = source.Companies.Select(entry => new FilmCompany
+        {
+            FilmGuid = source.Guid,
+            CompanyGuid = entry.CompanyGuid,
+            Company = entry.Company,
+            Film = copy
+        }).ToList();
+        copy.Countries = source.Countries.Select(entry => new FilmCountry
+        {
+            FilmGuid = source.Guid,
+            CountryGuid = entry.CountryGuid,
+            Country = entry.Country,
+            Film = copy
+        }).ToList();
+        copy.Languages = source.Languages.Select(entry => new FilmLanguage
+        {
+            FilmGuid = source.Guid,
+            LanguageGuid = entry.LanguageGuid,
+            Language = entry.Language,
+            Film = copy
+        }).ToList();
+        copy.Origins = source.Origins.Select(entry => new FilmOrigin
+        {
+            FilmGuid = source.Guid,
+            OriginGuid = entry.OriginGuid,
+            Origin = entry.Origin,
+            Film = copy
+        }).ToList();
+        copy.PeopleRoles = source.PeopleRoles.Select(entry => new FilmPersonRole
+        {
+            FilmGuid = source.Guid,
+            PersonGuid = entry.PersonGuid,
+            RoleGuid = entry.RoleGuid,
+            Person = entry.Person,
+            Role = entry.Role,
+            Film = copy
+        }).ToList();
+
+        return copy;
+    }
+
+    private void ApplyChangesToExistingFilm(Film target, Film edited)
+    {
+        target.Title = edited.Title;
+        target.OtherTitle = edited.OtherTitle;
+        target.Color = edited.Color;
+        target.ReleaseYear = edited.ReleaseYear;
+        target.Duration = edited.Duration;
+        target.Mode = edited.Mode;
+        target.Comment = edited.Comment;
+        target.Published = edited.Published;
+        target.ContributionHistory = edited.ContributionHistory;
+        target.CreatedOn = edited.CreatedOn;
+        target.CreatedBy = edited.CreatedBy;
+        target.UpdatedOn = edited.UpdatedOn;
+        target.UpdatedBy = edited.UpdatedBy;
+
+        SyncRelationships(target.Companies, edited.Companies, entry => entry.CompanyGuid,
+            entries =>
+            {
+                var removed = entries.ToList();
+                ctx.FilmCompanies.RemoveRange(removed);
+                foreach (var entry in removed) target.Companies.Remove(entry);
+            },
+            entries => ctx.FilmCompanies.AddRange(entries),
+            companyGuid => new FilmCompany { Film = target, FilmGuid = target.Guid, CompanyGuid = companyGuid });
+        SyncRelationships(target.Countries, edited.Countries, entry => entry.CountryGuid,
+            entries =>
+            {
+                var removed = entries.ToList();
+                ctx.FilmCountries.RemoveRange(removed);
+                foreach (var entry in removed) target.Countries.Remove(entry);
+            },
+            entries => ctx.FilmCountries.AddRange(entries),
+            countryGuid => new FilmCountry { Film = target, FilmGuid = target.Guid, CountryGuid = countryGuid });
+        SyncRelationships(target.Languages, edited.Languages, entry => entry.LanguageGuid,
+            entries =>
+            {
+                var removed = entries.ToList();
+                ctx.FilmLanguages.RemoveRange(removed);
+                foreach (var entry in removed) target.Languages.Remove(entry);
+            },
+            entries => ctx.FilmLanguages.AddRange(entries),
+            languageGuid => new FilmLanguage { Film = target, FilmGuid = target.Guid, LanguageGuid = languageGuid });
+        SyncRelationships(target.Origins, edited.Origins, entry => entry.OriginGuid,
+            entries =>
+            {
+                var removed = entries.ToList();
+                ctx.FilmOrigins.RemoveRange(removed);
+                foreach (var entry in removed) target.Origins.Remove(entry);
+            },
+            entries => ctx.FilmOrigins.AddRange(entries),
+            originGuid => new FilmOrigin { Film = target, FilmGuid = target.Guid, OriginGuid = originGuid });
+        SyncRelationships(target.PeopleRoles, edited.PeopleRoles, entry => (entry.PersonGuid, entry.RoleGuid),
+            entries =>
+            {
+                var removed = entries.ToList();
+                ctx.FilmPersonRoles.RemoveRange(removed);
+                foreach (var entry in removed) target.PeopleRoles.Remove(entry);
+            },
+            entries => ctx.FilmPersonRoles.AddRange(entries),
+            keys => new FilmPersonRole { Film = target, FilmGuid = target.Guid, PersonGuid = keys.PersonGuid, RoleGuid = keys.RoleGuid });
+
+        var editedLinks = edited.Links.ToDictionary(link => link.Guid);
+        var removedLinks = target.Links.Where(link => !editedLinks.ContainsKey(link.Guid)).ToList();
+        ctx.FilmLinks.RemoveRange(removedLinks);
+        foreach (var removedLink in removedLinks) target.Links.Remove(removedLink);
+        foreach (var link in edited.Links)
+        {
+            var existingLink = target.Links.FirstOrDefault(candidate => candidate.Guid == link.Guid);
+            if (existingLink is null)
+            {
+                ctx.FilmLinks.Add(new FilmLink { Guid = link.Guid, FilmGuid = target.Guid, Url = link.Url, Film = target });
+            }
+            else
+            {
+                existingLink.Url = link.Url;
+            }
+        }
+    }
+
+    private static void SyncRelationships<TLink, TKey>(
+        List<TLink> existing,
+        List<TLink> edited,
+        Func<TLink, TKey> getKey,
+        Action<IEnumerable<TLink>> remove,
+        Action<IEnumerable<TLink>> add,
+        Func<TKey, TLink> create)
+        where TKey : notnull
+    {
+        var existingByKey = existing.ToDictionary(getKey);
+        var editedByKey = edited.ToDictionary(getKey);
+        remove(existing.Where(entry => !editedByKey.ContainsKey(getKey(entry))).ToList());
+        add(editedByKey.Keys.Where(key => !existingByKey.ContainsKey(key)).Select(create).ToList());
+    }
+
+    private void AddCompany()
+    {
+        if (item is null || !CanAddCompany || selectedCompany is null) return;
+        item.Companies.Add(new FilmCompany { FilmGuid = item.Guid, CompanyGuid = selectedCompany.Guid, Film = item, Company = selectedCompany });
+        MarkChanged();
         selectedCompany = null;
     }
 
-    private async Task<IEnumerable<Company>> SearchCompanies(string value, CancellationToken token)
+    private void AddCountry()
     {
-
-        var query = ctx.Companies.AsQueryable();
-
-        if (!string.IsNullOrEmpty(value))
-        {
-            query = query.Where(i => i.Name.Contains(value, StringComparison.InvariantCultureIgnoreCase));
-        }
-
-        return await query.OrderBy( i=> i.Name).Take(10).ToListAsync(cancellationToken: token);
-    }
-
-    public void RemoveCompany(MudChip<Guid> chip)
-    {
-        var selected = item.Companies.First(i => i.CompanyGuid == chip.Value);
-        item.Companies.Remove(selected);
-    }
-
-    //Country
-    private Country selectedCountry = null;
-    public void AddCountry()
-    {
-        item.Countries.Add(new FilmCountry()
-        {
-            Film = item,
-            Country = selectedCountry
-        });
+        if (item is null || !CanAddCountry || selectedCountry is null) return;
+        item.Countries.Add(new FilmCountry { FilmGuid = item.Guid, CountryGuid = selectedCountry.Guid, Film = item, Country = selectedCountry });
+        MarkChanged();
         selectedCountry = null;
     }
 
-    private async Task<IEnumerable<Country>> SearchCountries(string value, CancellationToken token)
+    private void AddLanguage()
     {
-
-        var query = ctx.Countries.AsQueryable();
-
-        if (!string.IsNullOrEmpty(value))
-        {
-            query = query.Where(i => i.Name.Contains(value, StringComparison.InvariantCultureIgnoreCase));
-        }
-
-        return await query.OrderBy(i => i.Name).Take(10).ToListAsync(cancellationToken: token);
-    }
-
-    public void RemoveCountry(MudChip<Guid> chip)
-    {
-        var selected = item.Countries.First(i => i.CountryGuid == chip.Value!);
-        item.Countries.Remove(selected);
-    }
-
-
-    //Language
-    private Language selectedLanguage = null;
-    public void AddLanguage()
-    {
-        item.Languages.Add(new FilmLanguage()
-        {
-            Film = item,
-            Language = selectedLanguage
-        });
+        if (item is null || !CanAddLanguage || selectedLanguage is null) return;
+        item.Languages.Add(new FilmLanguage { FilmGuid = item.Guid, LanguageGuid = selectedLanguage.Guid, Film = item, Language = selectedLanguage });
+        MarkChanged();
         selectedLanguage = null;
     }
 
-    private async Task<IEnumerable<Language>> SearchLanguages(string value, CancellationToken token)
+    private void AddOrigin()
     {
-
-        var query = ctx.Languages.AsQueryable();
-
-        if (!string.IsNullOrEmpty(value))
-        {
-            query = query.Where(i => i.Name.Contains(value, StringComparison.InvariantCultureIgnoreCase));
-        }
-
-        return await query.OrderBy(i => i.Name).Take(10).ToListAsync(cancellationToken: token);
-    }
-
-    public void RemoveLanguage(MudChip<Guid> chip)
-    {
-        var selected = item.Languages.First(i => i.LanguageGuid == chip.Value!);
-        item.Languages.Remove(selected);
-    }
-
-    //Origin
-    private Origin selectedOrigin = null;
-    public void AddOrigin()
-    {
-        item.Origins.Add(new FilmOrigin()
-        {
-            Film = item,
-            Origin = selectedOrigin
-        });
+        if (item is null || !CanAddOrigin || selectedOrigin is null) return;
+        item.Origins.Add(new FilmOrigin { FilmGuid = item.Guid, OriginGuid = selectedOrigin.Guid, Film = item, Origin = selectedOrigin });
+        MarkChanged();
         selectedOrigin = null;
     }
 
-    private async Task<IEnumerable<Origin>> SearchOrigins(string value, CancellationToken token)
+    private void AddPersonRole()
     {
-
-        var query = ctx.Origins.AsQueryable();
-
-        if (!string.IsNullOrEmpty(value))
+        if (item is null || !CanAddPersonRole || selectedPerson is null || selectedRole is null) return;
+        item.PeopleRoles.Add(new FilmPersonRole
         {
-            query = query.Where(i => i.Title.Contains(value, StringComparison.InvariantCultureIgnoreCase));
-        }
-
-        return await query.OrderBy(i => i.Title).Take(10).ToListAsync(cancellationToken: token);
-    }
-
-    public void RemoveOrigin(MudChip<Guid> chip)
-    {
-        var selected = item.Origins.First(i => i.OriginGuid == chip.Value!);
-        item.Origins.Remove(selected);
-    }
-
-    //people
-    public void RemovePersonRole(MudChip<FilmPersonRole> chip)
-    {
-        item.PeopleRoles.Remove(chip.Value);
-    }
-
-    public void AddPersonRole()
-    {
-        item.PeopleRoles.Add(new FilmPersonRole()
-        {
+            FilmGuid = item.Guid,
+            PersonGuid = selectedPerson.Guid,
+            RoleGuid = selectedRole.Guid,
             Film = item,
             Person = selectedPerson,
             Role = selectedRole
         });
+        MarkChanged();
         selectedPerson = null;
         selectedRole = null;
     }
 
-    private Person selectedPerson = null;
-    private async Task<IEnumerable<Person>> SearchPeople(string value, CancellationToken token)
+    private async Task PickPerson()
     {
-        var query = ctx.People.AsQueryable();
-
-        if (!string.IsNullOrEmpty(value))
+        var dialog = await DialogService.ShowAsync<PersonPicker>("Find a person", options: new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true });
+        var result = await dialog.Result;
+        if (result is { Canceled: false, Data: Person person })
         {
-
-            query = query.Where(i => 
-                i.FirstName.Contains(value, StringComparison.InvariantCultureIgnoreCase) ||
-                i.LastName.Contains(value, StringComparison.InvariantCultureIgnoreCase)
-                );
+            selectedPerson = person;
+            MarkChanged();
         }
-
-        return await query.OrderBy(i => i.FirstName).ThenBy(i => i.LastName).Take(10).ToListAsync(cancellationToken: token);
     }
 
-    private Role selectedRole = null;
-    private async Task<IEnumerable<Role>> SearchRoles(string value, CancellationToken token)
+    private void AddLink()
     {
-
-        var query = ctx.Roles.AsQueryable();
-
-        if (!string.IsNullOrEmpty(value))
+        _linkError = null;
+        if (item is null || !CanAddLink)
         {
-            int.TryParse(value, out var valueInt);
-
-            query = query.Where(i => 
-                i.Name.Contains(value, StringComparison.InvariantCultureIgnoreCase)
-            );
+            _linkError = "Enter a valid, unique web address beginning with http:// or https://.";
+            return;
         }
 
-        return await query.OrderBy(i => i.Name).Take(10).ToListAsync(cancellationToken: token);
+        item.Links.Add(new FilmLink { Guid = Guid.NewGuid(), FilmGuid = item.Guid, Url = _newLinkUrl.Trim(), Film = item });
+        MarkChanged();
+        _newLinkUrl = string.Empty;
     }
 
+    private void HandleLinkKeyDown(KeyboardEventArgs args)
+    {
+        if (args.Key == "Enter") AddLink();
+    }
+
+    private bool ValidateLinks()
+    {
+        _linkError = null;
+        if (item is null) return false;
+        if (item.Links.Any(link => !IsValidWebAddress(link.Url)))
+        {
+            _linkError = "Every link must be a valid web address beginning with http:// or https://.";
+            return false;
+        }
+
+        if (item.Links.Select(link => link.Url.Trim()).Distinct(StringComparer.OrdinalIgnoreCase).Count() != item.Links.Count)
+        {
+            _linkError = "Remove duplicate web addresses before saving.";
+            return false;
+        }
+
+        return true;
+    }
+
+    private static bool IsValidWebAddress(string? value) =>
+        Uri.TryCreate(value?.Trim(), UriKind.Absolute, out var uri) &&
+        (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps) &&
+        !string.IsNullOrWhiteSpace(uri.Host);
+
+    private void RemoveCompany(Guid guid) => MarkDirtyIfRemoved(item?.Companies.RemoveAll(entry => entry.CompanyGuid == guid) ?? 0);
+    private void RemoveCountry(Guid guid) => MarkDirtyIfRemoved(item?.Countries.RemoveAll(entry => entry.CountryGuid == guid) ?? 0);
+    private void RemoveLanguage(Guid guid) => MarkDirtyIfRemoved(item?.Languages.RemoveAll(entry => entry.LanguageGuid == guid) ?? 0);
+    private void RemoveOrigin(Guid guid) => MarkDirtyIfRemoved(item?.Origins.RemoveAll(entry => entry.OriginGuid == guid) ?? 0);
+    private void RemovePersonRole(FilmPersonRole credit)
+    {
+        if (item?.PeopleRoles.Remove(credit) == true) MarkChanged();
+    }
+    private void RemoveLink(Guid guid) => MarkDirtyIfRemoved(item?.Links.RemoveAll(link => link.Guid == guid) ?? 0);
+
+    private void MarkChanged() => _isDirty = true;
+    private void MarkDirtyIfRemoved(int count)
+    {
+        if (count > 0) MarkChanged();
+    }
+
+    private static string PersonName(Person? person) => person is null ? "Unknown person" : $"{person.FirstName} {person.LastName}".Trim();
+
+    private Task<IEnumerable<Company>> SearchCompanies(string value, CancellationToken token) => SearchAsync(ctx.Companies, value, company => company.Name, token);
+    private Task<IEnumerable<Country>> SearchCountries(string value, CancellationToken token) => SearchAsync(ctx.Countries, value, country => country.Name, token);
+    private Task<IEnumerable<Language>> SearchLanguages(string value, CancellationToken token) => SearchAsync(ctx.Languages, value, language => language.Name, token);
+    private Task<IEnumerable<Origin>> SearchOrigins(string value, CancellationToken token) => SearchAsync(ctx.Origins, value, origin => origin.Title, token);
+    private Task<IEnumerable<Role>> SearchRoles(string value, CancellationToken token) => SearchAsync(ctx.Roles, value, role => role.Name, token);
+
+    private static async Task<IEnumerable<T>> SearchAsync<T>(IQueryable<T> source, string value, Func<T, string?> label, CancellationToken token)
+    {
+        token.ThrowIfCancellationRequested();
+        var entries = await source.ToListAsync(token);
+        return entries
+            .Where(entry => string.IsNullOrWhiteSpace(value) || (label(entry)?.Contains(value, StringComparison.OrdinalIgnoreCase) ?? false))
+            .OrderBy(label, StringComparer.OrdinalIgnoreCase)
+            .Take(20)
+            .ToList();
+    }
+
+    private async Task Cancel()
+    {
+        if (_saving) return;
+
+        if (_isDirty)
+        {
+            var discard = await DialogService.ShowMessageBox(
+                "Discard film changes?",
+                "Your changes in this form have not been saved. Discard them and close the form?",
+                yesText: "Discard changes",
+                cancelText: "Keep editing");
+            if (discard != true) return;
+        }
+
+        MudDialog.Cancel();
+    }
 }

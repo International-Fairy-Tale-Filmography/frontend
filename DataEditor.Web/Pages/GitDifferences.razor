@@ -15,15 +15,20 @@
         <MudText Typo="Typo.body1" Class="mb-4">@(ShowingLatestChanges ? "Compare the data that changed on the selected data set with the changes saved in this tab. Your edits have not been discarded." : "Check the changes you have saved in this editing session before publishing them.")</MudText>
         
         <MudDivider Class="my-4" />
-        
+
+        @if (!string.IsNullOrEmpty(ErrorMessage))
+        {
+            <MudAlert Severity="Severity.Error" Class="my-4">@ErrorMessage</MudAlert>
+        }
+
         @if (IsLoading)
         {
             <MudProgressLinear Indeterminate="true" Class="my-4" />
             <MudText>Calculating differences...</MudText>
         }
-        else if (!string.IsNullOrEmpty(ErrorMessage))
+        else if (_reviewLoadFailed)
         {
-            <MudAlert Severity="Severity.Error" Class="my-4">@ErrorMessage</MudAlert>
+            <MudText Typo="Typo.body2">Please try loading the review again.</MudText>
         }
         else if (Differences.Count == 0 && !ShowingLatestChanges)
         {
@@ -34,8 +39,8 @@
             @if (ShowingLatestChanges)
             {
                 <MudAlert Severity="Severity.Warning" Class="mb-4">Publishing is paused because this tab's data is older than the selected data set. Use these comparisons to review changes, then reload the latest data before continuing.</MudAlert>
-                <MudButton Variant="Variant.Outlined" OnClick="GoBack" Class="mb-4">Keep editing my saved changes</MudButton>
-                <MudButton Variant="Variant.Filled" Color="Color.Error" OnClick="ReloadLatestData" Disabled="IsLoading" Class="mb-4 ml-2">Discard my saved changes and load latest data</MudButton>
+                <MudButton Variant="Variant.Outlined" OnClick="GoBack" Class="mb-4">Keep editing with my saved changes</MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Error" OnClick="ReloadLatestData" Disabled="IsLoading" Class="mb-4 ml-2">Discard my edits and load latest data</MudButton>
                 @if (DraftDifferences.Count > 0)
                 {
                     <MudText Typo="Typo.h5" Class="mt-4">Changes saved in this tab</MudText>
@@ -133,6 +138,7 @@
     private bool IsLoading { get; set; } = true;
     private bool IsCommitting { get; set; } = false;
     private string ErrorMessage { get; set; }
+    private bool _reviewLoadFailed;
     private List<GitEntityService.FileDifference> Differences { get; set; } = new List<GitEntityService.FileDifference>();
     private List<GitEntityService.FileDifference> DraftDifferences { get; set; } = new();
     private string ProgressMessage = string.Empty;
@@ -146,6 +152,7 @@
     {
         IsLoading = true;
         ErrorMessage = null;
+        _reviewLoadFailed = false;
         try
         {
             if (ShowingLatestChanges)
@@ -160,6 +167,7 @@
         }
         catch (Exception ex)
         {
+            _reviewLoadFailed = true;
             ErrorMessage = $"We could not load your changes. Please try again. Details: {ex.Message}";
         }
         finally
@@ -175,7 +183,7 @@
         ProgressMessage = "Checking that this data set is up to date...";
         try
         {
-            await GitEntityService.CommitAllChangesToGit((message) =>
+            await GitEntityService.CommitReviewedChanges(Differences, (message) =>
             {
                 InvokeAsync(() =>
                 {
@@ -189,13 +197,13 @@
         }
         catch (GitEntityService.StaleDataException ex)
         {
+            ProgressMessage = string.Empty;
             ErrorMessage = ex.Message;
-            Snackbar.Add(ex.Message, Severity.Error);
         }
         catch (Exception ex)
         {
+            ProgressMessage = string.Empty;
             ErrorMessage = $"We could not publish your changes. No success was reported. Details: {ex.Message}";
-            Snackbar.Add("We could not publish your changes. Your edits are still in this session.", Severity.Error);
         }
         finally
         {
@@ -216,10 +224,10 @@
     private async Task ReloadLatestData()
     {
         var confirmed = await DialogService.ShowMessageBox(
-            "Discard this tab's saved changes?",
-            "This will permanently remove this tab's saved edits and load the latest data. Use the comparison above to note any changes you need to re-enter.",
+            "Discard this tab's edits?",
+            "This will remove the edits currently held in this tab and load the latest data. Use the comparison above to note any changes you need to re-enter.",
             yesText: "Discard edits and load latest data",
-            cancelText: "Keep my saved changes");
+            cancelText: "Keep my edits");
 
         if (confirmed != true)
         {

@@ -15,6 +15,7 @@ namespace Data.Core.Models
         public Guid Guid { get; set; }
         public string Name { get; set; }
         public int Order { get; set; }
+        public string? ContributionHistory { get; set; }
 
         public DateTime? CreatedOn { get; set; }
         public string? CreatedBy { get; set; }

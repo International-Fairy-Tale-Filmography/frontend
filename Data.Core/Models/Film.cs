@@ -16,8 +16,9 @@ public class Film
     public string Mode { get; set; }
     public string Comment { get; set; }
     public bool? Published { get; set; }
+    public string? ContributionHistory { get; set; }
 
-    public DateTime? CreatedOn { get; set; }
+    public DateTime? CreatedOn { get; set;}
     public string? CreatedBy { get; set; }
     public DateTime? UpdatedOn { get; set; }
     public string? UpdatedBy { get; set; }

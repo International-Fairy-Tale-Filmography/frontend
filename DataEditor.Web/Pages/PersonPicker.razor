@@ -1,0 +1,140 @@
+@using Microsoft.EntityFrameworkCore
+@using Data.Core.Models
+@inject DataEditorDataContext Context
+
+<MudDialog>
+    <DialogContent>
+        <MudText Typo="Typo.body2" Class="mb-3">Search the people list, then select the correct person. Advanced search lets you narrow by first and last name separately.</MudText>
+        <MudPaper Outlined="true" Class="pa-3 mb-3">
+            <MudTextField @bind-Value="_quickSearch" Label="Quick search" Placeholder="Type a name" Immediate="true" OnKeyDown="HandleQuickSearchKeyDown" />
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SearchQuick" Disabled="@_isSearching" Class="mt-2">Search all names</MudButton>
+        </MudPaper>
+
+        <MudExpansionPanels>
+            <MudExpansionPanel Text="Advanced search">
+                <MudText Typo="Typo.body2" Class="mb-2">Enter at least two characters in first name or last name.</MudText>
+                <MudGrid Spacing="2">
+                    <MudItem xs="12" sm="6"><MudTextField @bind-Value="_firstName" Label="First name contains" Immediate="true" /></MudItem>
+                    <MudItem xs="12" sm="6"><MudTextField @bind-Value="_lastName" Label="Last name contains" Immediate="true" /></MudItem>
+                    <MudItem xs="12"><MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SearchAdvanced" Disabled="@_isSearching">Search names</MudButton></MudItem>
+                </MudGrid>
+            </MudExpansionPanel>
+        </MudExpansionPanels>
+
+        @if (!string.IsNullOrWhiteSpace(_errorMessage))
+        {
+            <MudAlert Severity="Severity.Error" Class="my-3">@_errorMessage</MudAlert>
+        }
+        @if (_isSearching)
+        {
+            <MudProgressLinear Indeterminate="true" Class="my-3" />
+        }
+        else if (_hasSearched && _results.Count == 0)
+        {
+            <MudAlert Severity="Severity.Info" Class="my-3">No people matched. Try a different name.</MudAlert>
+        }
+        else if (_hasSearched)
+        {
+            <MudText Typo="Typo.subtitle2" Class="my-3">
+                @(_totalMatches > _results.Count ? $"Showing the first {_results.Count} of {_totalMatches} matches. Add more name details to narrow the results." : $"{_totalMatches} matching people")
+            </MudText>
+            <MudTable T="Person" Items="_results" Hover="true" Dense="true" Bordered="true" RowsPerPage="10">
+                <HeaderContent>
+                    <MudTh>Person</MudTh>
+                    <MudTh></MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="Person">@PersonName(context)</MudTd>
+                    <MudTd DataLabel="Select" Class="text-right">
+                        <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="@(() => SelectPerson(context))">Select</MudButton>
+                    </MudTd>
+                </RowTemplate>
+                <PagerContent>
+                    <MudTablePager PageSizeOptions="new int[] { 10, 25, 50 }" />
+                </PagerContent>
+            </MudTable>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    private MudDialogInstance MudDialog { get; set; } = default!;
+
+    private string _quickSearch = string.Empty;
+    private string _firstName = string.Empty;
+    private string _lastName = string.Empty;
+    private bool _isSearching;
+    private bool _hasSearched;
+    private string? _errorMessage;
+    private int _totalMatches;
+    private List<Person> _results = new();
+
+    private async Task SearchQuick()
+    {
+        var term = _quickSearch.Trim();
+        if (term.Length < 2)
+        {
+            _errorMessage = "Enter at least two characters to search.";
+            _hasSearched = false;
+            return;
+        }
+
+        await RunSearch(person => PersonName(person).Contains(term, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private async Task SearchAdvanced()
+    {
+        var first = _firstName.Trim();
+        var last = _lastName.Trim();
+        if (first.Length < 2 && last.Length < 2)
+        {
+            _errorMessage = "Enter at least two characters in first name or last name.";
+            _hasSearched = false;
+            return;
+        }
+
+        await RunSearch(person =>
+            (first.Length == 0 || (person.FirstName ?? string.Empty).Contains(first, StringComparison.OrdinalIgnoreCase)) &&
+            (last.Length == 0 || (person.LastName ?? string.Empty).Contains(last, StringComparison.OrdinalIgnoreCase)));
+    }
+
+    private async Task RunSearch(Func<Person, bool> matches)
+    {
+        _isSearching = true;
+        _errorMessage = null;
+        _hasSearched = false;
+        try
+        {
+            var people = await Context.People.AsNoTracking().ToListAsync();
+            var matchesQuery = people.Where(matches)
+                .OrderBy(person => person.LastName, StringComparer.OrdinalIgnoreCase)
+                .ThenBy(person => person.FirstName, StringComparer.OrdinalIgnoreCase)
+                .ToList();
+            _totalMatches = matchesQuery.Count;
+            _results = matchesQuery.Take(500).ToList();
+            _hasSearched = true;
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = $"We could not search the people list. Details: {ex.Message}";
+        }
+        finally
+        {
+            _isSearching = false;
+        }
+    }
+
+    private static string PersonName(Person person) => $"{person.FirstName} {person.LastName}".Trim();
+
+    private void HandleQuickSearchKeyDown(KeyboardEventArgs args)
+    {
+        if (args.Key == "Enter") _ = SearchQuick();
+    }
+
+    private void SelectPerson(Person person) => MudDialog.Close(DialogResult.Ok(person));
+    private void Cancel() => MudDialog.Cancel();
+}

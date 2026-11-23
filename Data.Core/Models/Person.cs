@@ -10,6 +10,7 @@ public class Person
     public Guid Guid { get; set; }
     public string FirstName { get; set; }
     public string LastName { get; set; }
+    public string? ContributionHistory { get; set; }
 
     public DateTime? CreatedOn { get; set; }
     public string? CreatedBy { get; set; }

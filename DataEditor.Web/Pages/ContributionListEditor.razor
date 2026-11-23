@@ -1,0 +1,70 @@
+@using Data.Core.Models
+
+<MudDialog>
+    <DialogContent>
+        <MudText Typo="Typo.body2" Class="mb-3">Add one row for each contribution. The person name is freeform and does not have to be in the film cast list.</MudText>
+        <MudForm @ref="_form">
+            <MudGrid Spacing="2">
+                <MudItem xs="12" md="4"><MudText Typo="Typo.subtitle2">Who</MudText></MudItem>
+                <MudItem xs="12" md="4"><MudText Typo="Typo.subtitle2">What</MudText></MudItem>
+                <MudItem xs="12" md="4"><MudText Typo="Typo.subtitle2">When</MudText></MudItem>
+                @foreach (var entry in _entries)
+                {
+                    <MudItem xs="12" md="4">
+                        <MudTextField @bind-Value="entry.Who" Label="Person" Required="true" RequiredError="Enter who contributed." MaxLength="300" />
+                    </MudItem>
+                    <MudItem xs="12" md="4">
+                        <MudTextField @bind-Value="entry.What" Label="Contribution" Required="true" RequiredError="Describe the contribution." MaxLength="1000" />
+                    </MudItem>
+                    <MudItem xs="12" md="4">
+                        <div class="d-flex align-center">
+                            <MudDatePicker @bind-Date="entry.When" Label="Date" Clearable="true" ShowToolbar="false" Class="flex-grow-1" />
+                            <MudIconButton Icon="@Icons.Material.Filled.DeleteOutline" Color="Color.Error" AriaLabel="Remove contribution" OnClick="@(() => RemoveEntry(entry))" />
+                        </div>
+                    </MudItem>
+                }
+            </MudGrid>
+        </MudForm>
+        <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Add" OnClick="AddEntry" Class="mt-3">Add row</MudButton>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Save">Save contribution list</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    private MudDialogInstance MudDialog { get; set; } = default!;
+
+    [Parameter]
+    public List<ContributionEntry> Entries { get; set; } = new();
+
+    private MudForm? _form;
+    private List<ContributionEntry> _entries = new();
+
+    protected override void OnInitialized()
+    {
+        _entries = Entries.Select(entry => new ContributionEntry
+        {
+            Who = entry.Who,
+            What = entry.What,
+            When = entry.When
+        }).ToList();
+    }
+
+    private void AddEntry() => _entries.Add(new ContributionEntry());
+    private void RemoveEntry(ContributionEntry entry) => _entries.Remove(entry);
+
+    private async Task Save()
+    {
+        if (_form is null) return;
+        await _form.Validate();
+        if (_form.IsValid)
+        {
+            MudDialog.Close(DialogResult.Ok(_entries));
+        }
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+}

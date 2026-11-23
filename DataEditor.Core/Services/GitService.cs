@@ -188,27 +188,6 @@ public class GitService
         return commit.Sha;
     }
 
-    public async Task<string> GetEditorDraft(string branch)
-    {
-        await GetConfiguration();
-        var key = await _jsRuntime.InvokeAsync<string>("dataEditorDrafts.key", _coreSettings.Owner, _coreSettings.RepoName, branch);
-        return await _jsRuntime.InvokeAsync<string>("dataEditorDrafts.get", key);
-    }
-
-    public async Task SaveEditorDraft(string branch, string draft)
-    {
-        await GetConfiguration();
-        var key = await _jsRuntime.InvokeAsync<string>("dataEditorDrafts.key", _coreSettings.Owner, _coreSettings.RepoName, branch);
-        await _jsRuntime.InvokeVoidAsync("dataEditorDrafts.set", key, draft);
-    }
-
-    public async Task ClearEditorDraft(string branch)
-    {
-        await GetConfiguration();
-        var key = await _jsRuntime.InvokeAsync<string>("dataEditorDrafts.key", _coreSettings.Owner, _coreSettings.RepoName, branch);
-        await _jsRuntime.InvokeVoidAsync("dataEditorDrafts.remove", key);
-    }
-
     public async Task<List<string>> GetBranches()
     {
         await GetConfiguration();

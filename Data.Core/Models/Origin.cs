@@ -11,6 +11,7 @@ public class Origin
     public string Title { get; set; }
     public string Code { get; set; }
     public string Author { get; set; }
+    public string? ContributionHistory { get; set; }
 
     public DateTime? CreatedOn { get; set; }
     public string? CreatedBy { get; set; }
