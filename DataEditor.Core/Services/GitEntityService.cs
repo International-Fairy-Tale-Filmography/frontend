@@ -37,8 +37,22 @@ namespace DataEditor.Core.Services
             _gitService = gitService;
         }
 
+        public sealed class StaleDataException : Exception
+        {
+            public StaleDataException(string baselineSha, string latestSha)
+                : base("This editing session is based on an older version of the selected data set. Reload or review the newer data before publishing.")
+            {
+                BaselineSha = baselineSha;
+                LatestSha = latestSha;
+            }
+
+            public string BaselineSha { get; }
+            public string LatestSha { get; }
+        }
+
         public async Task<string> CommitAllChangesToGit(Action<string> progressCallback = null)
         {
+            await EnsureBranchIsCurrentAsync();
             var sb = new StringBuilder();
 
             var entitiesToCommit = new List<Func<Task<string>>>
@@ -152,48 +166,35 @@ namespace DataEditor.Core.Services
                 return fileDiff;
             }
 
-            try
+            var file = await GetFileByName(filename);
+
+            await using var writer = new StringWriter();
+            await using var csv = new CsvWriter(writer, new CsvConfiguration(CultureInfo.InvariantCulture));
+            csv.WriteHeader<T>();
+            await csv.NextRecordAsync();
+            await csv.WriteRecordsAsync(objects);
+
+            var oldContent = await GetFileContentFromDownloadUrl(file);
+            var newContent = writer.ToString();
+
+            fileDiff.OldContent = oldContent;
+            fileDiff.NewContent = newContent;
+
+            var oldLines = oldContent.Split('\n');
+            var newLines = newContent.Split('\n');
+            int changedLines = 0;
+            for (int i = 0; i < Math.Max(oldLines.Length, newLines.Length); i++)
             {
-                var file = await GetFileByName(filename);
+                var oldLine = i < oldLines.Length ? oldLines[i] : null;
+                var newLine = i < newLines.Length ? newLines[i] : null;
 
-                await using var writer = new StringWriter();
-                await using var csv = new CsvWriter(writer, new CsvConfiguration(CultureInfo.InvariantCulture));
-                csv.WriteHeader<T>();
-                await csv.NextRecordAsync();
-                await csv.WriteRecordsAsync(objects);
-
-                // Get the content on the server
-                var oldContent = await GetFileContentFromDownloadUrl(file);
-                var newContent = writer.ToString();
-
-                fileDiff.OldContent = oldContent;
-                fileDiff.NewContent = newContent;
-
-                // Simple way to calculate differences (line by line)
-                var oldLines = oldContent.Split('\n');
-                var newLines = newContent.Split('\n');
-
-                // Count changed lines
-                int changedLines = 0;
-                for (int i = 0; i < Math.Max(oldLines.Length, newLines.Length); i++)
+                if (oldLine != newLine)
                 {
-                    var oldLine = i < oldLines.Length ? oldLines[i] : null;
-                    var newLine = i < newLines.Length ? newLines[i] : null;
-
-                    if (oldLine != newLine)
-                    {
-                        changedLines++;
-                    }
+                    changedLines++;
                 }
-
-                fileDiff.ChangedLinesCount = changedLines;
-            }
-            catch (Exception ex)
-            {
-                // Handle exceptions - log, return empty differences, etc.
-                System.Diagnostics.Debug.WriteLine($"Error getting differences for {filename}: {ex.Message}");
             }
 
+            fileDiff.ChangedLinesCount = changedLines;
             return fileDiff;
         }
 
@@ -276,6 +277,16 @@ namespace DataEditor.Core.Services
         public Task<string> GetLatestBranchHeadSha()
         {
             return _gitService.GetBranchHeadSha();
+        }
+
+        public async Task EnsureBranchIsCurrentAsync()
+        {
+            await EnsureDataVersionCaptured();
+            var latestSha = await _gitService.GetBranchHeadSha();
+            if (!string.Equals(_dataVersionSha, latestSha, StringComparison.Ordinal))
+            {
+                throw new StaleDataException(_dataVersionSha, latestSha);
+            }
         }
 
         private async Task EnsureDataVersionCaptured()

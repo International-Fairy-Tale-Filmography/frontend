@@ -20,6 +20,10 @@
             <MudProgressLinear Indeterminate="true" Class="my-4" />
             <MudText>Calculating differences...</MudText>
         }
+        else if (!string.IsNullOrEmpty(ErrorMessage))
+        {
+            <MudAlert Severity="Severity.Error" Class="my-4">@ErrorMessage</MudAlert>
+        }
         else if (Differences.Count == 0)
         {
             <MudAlert Severity="Severity.Info" Class="my-4">There are no saved changes to publish. Your data is up to date.</MudAlert>
@@ -95,6 +99,7 @@
 @code {
     private bool IsLoading { get; set; } = true;
     private bool IsCommitting { get; set; } = false;
+    private string ErrorMessage { get; set; }
     private List<GitEntityService.FileDifference> Differences { get; set; } = new List<GitEntityService.FileDifference>();
     private string ProgressMessage = string.Empty;
 
@@ -106,28 +111,54 @@
     private async Task LoadDifferences()
     {
         IsLoading = true;
-        Differences = await GitEntityService.GetAllDifferences();
-        IsLoading = false;
+        ErrorMessage = null;
+        try
+        {
+            Differences = await GitEntityService.GetAllDifferences();
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"We could not load your changes. Please try again. Details: {ex.Message}";
+        }
+        finally
+        {
+            IsLoading = false;
+        }
     }
 
     private async Task CommitChanges()
     {
         IsCommitting = true;
-        ProgressMessage = "Starting commit process...";
-        await GitEntityService.CommitAllChangesToGit((message) =>
+        ErrorMessage = null;
+        ProgressMessage = "Checking that this data set is up to date...";
+        try
         {
-            InvokeAsync(() =>
+            await GitEntityService.CommitAllChangesToGit((message) =>
             {
-                ProgressMessage = message;
-                StateHasChanged();
+                InvokeAsync(() =>
+                {
+                    ProgressMessage = message;
+                    StateHasChanged();
+                });
             });
-        });
-        ProgressMessage = "All changes committed successfully. Caches have been reset.";
-        Snackbar.Add("All changes committed successfully. Caches have been reset.", Severity.Success);
-        IsCommitting = false;
-
-        // Navigate to a different page after committing changes
-        NavigationManager.NavigateTo("/");
+            ProgressMessage = "Your changes have been published.";
+            Snackbar.Add("Your changes have been published.", Severity.Success);
+            NavigationManager.NavigateTo("/");
+        }
+        catch (GitEntityService.StaleDataException ex)
+        {
+            ErrorMessage = ex.Message;
+            Snackbar.Add(ex.Message, Severity.Error);
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"We could not publish your changes. No success was reported. Details: {ex.Message}";
+            Snackbar.Add("We could not publish your changes. Your edits are still in this session.", Severity.Error);
+        }
+        finally
+        {
+            IsCommitting = false;
+        }
     }
 
     // Optional: Add a separate method for manually resetting caches if needed
