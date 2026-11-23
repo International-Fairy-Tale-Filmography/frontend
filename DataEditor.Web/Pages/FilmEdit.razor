@@ -216,7 +216,7 @@
 
 @code {
     [CascadingParameter]
-    private MudDialogInstance MudDialog { get; set; } = default!;
+    private IMudDialogInstance MudDialog { get; set; } = default!;
 
     [Parameter]
     public Guid? Id { get; set; }
@@ -688,7 +688,7 @@
 
         if (_isDirty)
         {
-            var discard = await DialogService.ShowMessageBox(
+            var discard = await DialogService.ShowMessageBoxAsync(
                 "Discard film changes?",
                 "Your changes in this form have not been saved. Discard them and close the form?",
                 yesText: "Discard changes",

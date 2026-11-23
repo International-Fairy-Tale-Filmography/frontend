@@ -223,7 +223,7 @@
 
     private async Task ReloadLatestData()
     {
-        var confirmed = await DialogService.ShowMessageBox(
+        var confirmed = await DialogService.ShowMessageBoxAsync(
             "Discard this tab's edits?",
             "This will remove the edits currently held in this tab and load the latest data. Use the comparison above to note any changes you need to re-enter.",
             yesText: "Discard edits and load latest data",

@@ -127,7 +127,7 @@
         {
             _isStale = true;
             StateHasChanged();
-            var compareNow = await DialogService.ShowMessageBox(
+            var compareNow = await DialogService.ShowMessageBoxAsync(
                 "Newer data is available",
                 "This data set changed while you were editing. Your saved changes in this tab are preserved, and publishing is paused. Compare the changes before deciding what to re-enter.",
                 yesText: "Compare data",
@@ -168,7 +168,7 @@
         {
             if (ges.SaveClickCount > 0)
             {
-                var shouldSwitch = await DialogService.ShowMessageBox(
+                var shouldSwitch = await DialogService.ShowMessageBoxAsync(
                     "Switch data set?",
                     "Your saved changes in this tab will be discarded when you switch. Continue only if you are ready to lose those changes.",
                     yesText: "Switch data set",
