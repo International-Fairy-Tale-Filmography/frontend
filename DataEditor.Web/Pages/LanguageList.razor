@@ -60,7 +60,8 @@
     async Task EditItem(Guid? id)
     {
         var parameters = new DialogParameters<LanguageEdit> { { x => x.Id, id } };
-        var dialog = await DialogService.ShowAsync<LanguageEdit>("Edit", parameters);
+        var title = id is null ? "Add language" : "Edit language";
+        var dialog = await DialogService.ShowAsync<LanguageEdit>(title, parameters, new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true });
         var result = await dialog.Result;
         if (!result.Canceled)
         {

@@ -59,7 +59,8 @@
     async Task EditItem(Guid? id)
     {
         var parameters = new DialogParameters<RoleEdit> { { x => x.Id, id } };
-        var dialog = await DialogService.ShowAsync<RoleEdit>("Edit", parameters);
+        var title = id is null ? "Add role" : "Edit role";
+        var dialog = await DialogService.ShowAsync<RoleEdit>(title, parameters, new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true });
         var result = await dialog.Result;
         if (!result.Canceled)
         {

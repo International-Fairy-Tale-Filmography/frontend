@@ -61,7 +61,8 @@
     async Task EditItem(Guid? id)
     {
         var parameters = new DialogParameters<OriginEdit> { { x => x.Id, id } };
-        var dialog = await DialogService.ShowAsync<OriginEdit>("Edit", parameters);
+        var title = id is null ? "Add origin" : "Edit origin";
+        var dialog = await DialogService.ShowAsync<OriginEdit>(title, parameters, new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true });
         var result = await dialog.Result;
         if (!result.Canceled)
         {

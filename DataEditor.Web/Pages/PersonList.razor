@@ -59,7 +59,8 @@
     async Task EditItem(Guid? id)
     {
         var parameters = new DialogParameters<PersonEdit> { { x => x.Id, id } };
-        var dialog = await DialogService.ShowAsync<PersonEdit>("Edit", parameters);
+        var title = id is null ? "Add person" : "Edit person";
+        var dialog = await DialogService.ShowAsync<PersonEdit>(title, parameters, new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true });
         var result = await dialog.Result;
         if (!result.Canceled)
         {

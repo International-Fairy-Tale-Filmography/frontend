@@ -8,17 +8,25 @@
 
 <MudDialog>
     <DialogContent>
-        <MudTextField @bind-Value="item.Name" Label="Name"></MudTextField>
-        <MudTextField @bind-Value="item.Description" Label="Description"></MudTextField>
-        
-        
-        <MudDivider Class="my-3" />
-        <MudText Typo="Typo.h6">Contribution history</MudText>
-        <ContributionListField @bind-Value="item.ContributionHistory" />
+        <MudAlert Severity="Severity.Info" Dense="true">Save keeps this company in the current browser tab. It is not published until you publish your changes. Cancel discards your edits.</MudAlert>
+        <MudStack Spacing="3" Class="mt-4">
+            <MudPaper Outlined="true" Class="pa-4">
+                <MudText Typo="Typo.h6" Class="mb-3">Company details</MudText>
+                <MudStack Spacing="2">
+                    <MudTextField @bind-Value="item.Name" Label="Name" />
+                    <MudTextField @bind-Value="item.Description" Label="Description" Lines="3" />
+                </MudStack>
+            </MudPaper>
+            <MudPaper Outlined="true" Class="pa-4">
+                <MudText Typo="Typo.h6">Contribution history</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-2">Keep a record of who contributed, what they did, and when.</MudText>
+                <ContributionListField @bind-Value="item.ContributionHistory" />
+            </MudPaper>
+        </MudStack>
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="Cancel">Cancel</MudButton>
-        <MudButton Color="Color.Error" OnClick="Save">Save changes</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Save" StartIcon="@Icons.Material.Filled.Save">@(DeferSave ? "Use this company" : "Save company")</MudButton>
     </DialogActions>
 </MudDialog>
 

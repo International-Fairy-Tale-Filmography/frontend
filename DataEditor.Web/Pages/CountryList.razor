@@ -61,7 +61,8 @@
     async Task EditItem(Guid? id)
     {
         var parameters = new DialogParameters<CountryEdit> { { x => x.Id, id } };
-        var dialog = await DialogService.ShowAsync<CountryEdit>("Edit", parameters);
+        var title = id is null ? "Add country" : "Edit country";
+        var dialog = await DialogService.ShowAsync<CountryEdit>(title, parameters, new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true });
         var result = await dialog.Result;
         if (!result.Canceled)
         {
