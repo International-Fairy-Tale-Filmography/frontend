@@ -116,6 +116,66 @@ namespace DataEditor.Core.Services
             return differences;
         }
 
+        public async Task<List<FileDifference>> GetLatestVersionDifferences()
+        {
+            await EnsureDataVersionCaptured();
+            var latestSha = await _gitService.GetBranchHeadSha();
+            if (string.Equals(_dataVersionSha, latestSha, StringComparison.Ordinal))
+            {
+                return new List<FileDifference>();
+            }
+
+            var differences = new List<FileDifference>();
+            differences.Add(await GetLatestVersionDifference<Country>(latestSha));
+            differences.Add(await GetLatestVersionDifference<Film>(latestSha));
+            differences.Add(await GetLatestVersionDifference<Origin>(latestSha));
+            differences.Add(await GetLatestVersionDifference<Person>(latestSha));
+            differences.Add(await GetLatestVersionDifference<Role>(latestSha));
+            differences.Add(await GetLatestVersionDifference<Language>(latestSha));
+            differences.Add(await GetLatestVersionDifference<Company>(latestSha));
+            differences.Add(await GetLatestVersionDifference<FilmLink>(latestSha));
+            differences.Add(await GetLatestVersionDifference<FilmCompany>(latestSha));
+            differences.Add(await GetLatestVersionDifference<FilmCountry>(latestSha));
+            differences.Add(await GetLatestVersionDifference<FilmLanguage>(latestSha));
+            differences.Add(await GetLatestVersionDifference<FilmOrigin>(latestSha));
+            differences.Add(await GetLatestVersionDifference<FilmPersonRole>(latestSha));
+            return differences;
+        }
+
+        private async Task<FileDifference> GetLatestVersionDifference<T>(string latestSha)
+        {
+            var filename = $"{CoreSettings.dbSetNames[typeof(T)]}.csv";
+            var difference = new FileDifference { FileName = filename, OldContent = string.Empty, NewContent = string.Empty };
+            if (!LoadedFiles.Contains(typeof(T)))
+            {
+                return difference;
+            }
+
+            var path = Path.Combine(_settings.Folder, filename);
+            var originalFile = await _gitService.GetFile(path, _dataVersionSha);
+            var latestFile = await _gitService.GetFile(path, latestSha);
+            difference.OldContent = await GetFileContentFromDownloadUrl(originalFile);
+            difference.NewContent = await GetFileContentFromDownloadUrl(latestFile);
+            difference.ChangedLinesCount = CountChangedLines(difference.OldContent, difference.NewContent);
+            return difference;
+        }
+
+        private static int CountChangedLines(string oldContent, string newContent)
+        {
+            var oldLines = oldContent.Split('\n');
+            var newLines = newContent.Split('\n');
+            var changedLines = 0;
+            for (var i = 0; i < Math.Max(oldLines.Length, newLines.Length); i++)
+            {
+                if ((i < oldLines.Length ? oldLines[i] : null) != (i < newLines.Length ? newLines[i] : null))
+                {
+                    changedLines++;
+                }
+            }
+
+            return changedLines;
+        }
+
         public async Task<FileDifference> GetDifferences<T>()
         {
             Dictionary<Type, Func<Task<FileDifference>>> handlers = new Dictionary<Type, Func<Task<FileDifference>>>

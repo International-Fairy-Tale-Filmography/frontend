@@ -1,5 +1,6 @@
 @page "/git-differences"
 @using DataEditor.Core.Services
+@using Microsoft.AspNetCore.Components
 @using Data.Core.Models
 @using System.Text
 @inject GitEntityService GitEntityService
@@ -10,8 +11,8 @@
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4">
     <MudPaper Elevation="3" Class="pa-4">
-        <MudText Typo="Typo.h4">Review your changes</MudText>
-        <MudText Typo="Typo.body1" Class="mb-4">Check the changes you have saved in this editing session before publishing them.</MudText>
+        <MudText Typo="Typo.h4">@(ShowingLatestChanges ? "Compare data versions" : "Review your changes")</MudText>
+        <MudText Typo="Typo.body1" Class="mb-4">@(ShowingLatestChanges ? "Compare the data that changed on the selected data set with the changes saved in this tab. Your edits have not been discarded." : "Check the changes you have saved in this editing session before publishing them.")</MudText>
         
         <MudDivider Class="my-4" />
         
@@ -30,14 +31,35 @@
         }
         else
         {
-            <MudButton Variant="Variant.Filled" 
-                       Color="Color.Success" 
-                       OnClick="CommitChanges"
-                       Disabled="IsCommitting"
-                       StartIcon="@Icons.Material.Filled.Save"
-                       Class="mb-4">
-               @(IsCommitting ? "Publishing..." : "Publish changes")
-            </MudButton>
+            @if (ShowingLatestChanges)
+            {
+                <MudAlert Severity="Severity.Warning" Class="mb-4">Publishing is paused because this tab's data is older than the selected data set. Use these comparisons to review changes, then reload the latest data before continuing.</MudAlert>
+                <MudButton Variant="Variant.Outlined" OnClick="GoBack" Class="mb-4">Keep editing my saved changes</MudButton>
+                @if (DraftDifferences.Count > 0)
+                {
+                    <MudText Typo="Typo.h5" Class="mt-4">Changes saved in this tab</MudText>
+                    @foreach (var diff in DraftDifferences.Where(item => item.ChangedLinesCount > 0))
+                    {
+                        <MudExpansionPanel Text="@diff.FileName">
+                            <MudPaper Elevation="0" Class="pa-2 mt-2" Style="background-color: #f5f5f5; max-height: 300px; overflow: auto; font-family: monospace;">
+                                @((MarkupString)FormatDifference(diff.OldContent, diff.NewContent))
+                            </MudPaper>
+                        </MudExpansionPanel>
+                    }
+                }
+                <MudText Typo="Typo.h5" Class="mt-4">Newer data to review</MudText>
+            }
+            else
+            {
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Success"
+                           OnClick="CommitChanges"
+                           Disabled="IsCommitting"
+                           StartIcon="@Icons.Material.Filled.Save"
+                           Class="mb-4">
+                   @(IsCommitting ? "Publishing..." : "Publish changes")
+                </MudButton>
+            }
             
             <MudButton Variant="Variant.Outlined" 
                        Color="Color.Secondary" 
@@ -97,10 +119,15 @@
 </div>
 
 @code {
+    [SupplyParameterFromQuery(Name = "view")]
+    public string View { get; set; }
+
+    private bool ShowingLatestChanges => View == "latest";
     private bool IsLoading { get; set; } = true;
     private bool IsCommitting { get; set; } = false;
     private string ErrorMessage { get; set; }
     private List<GitEntityService.FileDifference> Differences { get; set; } = new List<GitEntityService.FileDifference>();
+    private List<GitEntityService.FileDifference> DraftDifferences { get; set; } = new();
     private string ProgressMessage = string.Empty;
 
     protected override async Task OnInitializedAsync()
@@ -114,7 +141,15 @@
         ErrorMessage = null;
         try
         {
-            Differences = await GitEntityService.GetAllDifferences();
+            if (ShowingLatestChanges)
+            {
+                DraftDifferences = await GitEntityService.GetAllDifferences();
+                Differences = await GitEntityService.GetLatestVersionDifferences();
+            }
+            else
+            {
+                Differences = await GitEntityService.GetAllDifferences();
+            }
         }
         catch (Exception ex)
         {

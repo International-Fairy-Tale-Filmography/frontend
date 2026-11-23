@@ -38,8 +38,9 @@
         {
             <MudAlert Severity="Severity.Error" Variant="Variant.Filled" Class="ma-4">
                 <MudText Typo="Typo.h6">This data set is out of date</MudText>
-                <MudText>Someone published newer data while this editing session was open. Your saved changes are still here, but do not publish them until you have reviewed the newer data.</MudText>
-                <MudButton Color="Color.Inherit" OnClick="ViewChanges" Class="mt-2">Review my changes</MudButton>
+                <MudText>Someone published newer data while this editing session was open. Your saved changes are still here, but publishing is paused until you review the differences.</MudText>
+                <MudButton Color="Color.Inherit" OnClick="CompareData" Class="mt-2">Compare data</MudButton>
+                <MudButton Color="Color.Inherit" OnClick="ViewChanges" Class="mt-2 ml-2">Review my changes</MudButton>
             </MudAlert>
         }
         @Body
@@ -117,7 +118,23 @@
         {
             _isStale = true;
             StateHasChanged();
+            var compareNow = await DialogService.ShowMessageBox(
+                "Newer data is available",
+                "This data set changed while you were editing. Your saved changes in this tab are preserved, and publishing is paused. Compare the changes before deciding what to re-enter.",
+                yesText: "Compare data",
+                cancelText: "Keep editing",
+                options: new DialogOptions { MaxWidth = MaxWidth.Large, FullWidth = true });
+
+            if (compareNow == true)
+            {
+                CompareData();
+            }
         }
+    }
+
+    private void CompareData()
+    {
+        NavigationManager.NavigateTo("/git-differences?view=latest");
     }
 
     private void DrawerToggle()
