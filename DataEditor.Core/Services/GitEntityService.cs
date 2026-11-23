@@ -28,11 +28,14 @@ namespace DataEditor.Core.Services
         private readonly GitService _gitService;
         private readonly SemaphoreSlim _dataVersionLock = new(1, 1);
         private readonly Dictionary<string, string> _draftContents = new(StringComparer.OrdinalIgnoreCase);
+        private readonly Dictionary<string, string> _baselineContents = new(StringComparer.OrdinalIgnoreCase);
         private string _dataVersionSha;
         private bool _draftLoaded;
 
         public string DataVersionSha => _dataVersionSha;
         public bool HasRecoverableDraft { get; private set; }
+        public int UnsavedRecordCount { get; private set; }
+        public event Action DraftStateChanged;
 
         public GitEntityService(DataEditorDataContext context, CoreSettingsModel settings, GitService gitService)
         {
@@ -743,12 +746,11 @@ namespace DataEditor.Core.Services
         private async Task<List<T>> FetchCsv<T>(string name)
         {
             await EnsureDataVersionCaptured();
-            string content;
-            if (!_draftContents.TryGetValue(name, out content))
-            {
-                var repositoryFile = await GetFileByName(name);
-                content = await GetFileContentFromDownloadUrl(repositoryFile);
-            }
+            var repositoryFile = await GetFileByName(name);
+            var baselineContent = await GetFileContentFromDownloadUrl(repositoryFile);
+            _baselineContents[name] = baselineContent;
+            var content = _draftContents.TryGetValue(name, out var draftContent) ? draftContent : baselineContent;
+            UpdateDraftState();
 
             using var reader = new StringReader(content);
 
@@ -914,18 +916,39 @@ namespace DataEditor.Core.Services
                 var content = await SerializeCurrentTable(entityType);
                 if (content != null)
                 {
-                    _draftContents[fileName] = content;
+                    if (!_baselineContents.TryGetValue(fileName, out var baselineContent))
+                    {
+                        throw new InvalidOperationException($"The baseline for {fileName} has not been loaded; the draft was not saved.");
+                    }
+
+                    if (BuildRecordDifferences(fileName, baselineContent, content).Count == 0)
+                    {
+                        _draftContents.Remove(fileName);
+                    }
+                    else
+                    {
+                        _draftContents[fileName] = content;
+                    }
                 }
             }
 
-            var snapshot = new DraftSnapshot
-            {
-                Branch = _settings.Branch,
-                BaseSha = _dataVersionSha,
-                Files = new Dictionary<string, string>(_draftContents, StringComparer.OrdinalIgnoreCase)
-            };
-            await _gitService.SaveEditorDraft(_settings.Branch, JsonSerializer.Serialize(snapshot));
             HasRecoverableDraft = _draftContents.Count > 0;
+            if (HasRecoverableDraft)
+            {
+                var snapshot = new DraftSnapshot
+                {
+                    Branch = _settings.Branch,
+                    BaseSha = _dataVersionSha,
+                    Files = new Dictionary<string, string>(_draftContents, StringComparer.OrdinalIgnoreCase)
+                };
+                await _gitService.SaveEditorDraft(_settings.Branch, JsonSerializer.Serialize(snapshot));
+            }
+            else
+            {
+                await _gitService.ClearEditorDraft(_settings.Branch);
+            }
+
+            UpdateDraftState();
         }
 
         private Task<string> SerializeCurrentTable(Type entityType)
@@ -956,11 +979,22 @@ namespace DataEditor.Core.Services
             return writer.ToString();
         }
 
+        private void UpdateDraftState()
+        {
+            UnsavedRecordCount = _draftContents.Sum(draft =>
+                _baselineContents.TryGetValue(draft.Key, out var baseline)
+                    ? BuildRecordDifferences(draft.Key, baseline, draft.Value).Count
+                    : 0);
+            HasRecoverableDraft = _draftContents.Count > 0;
+            DraftStateChanged?.Invoke();
+        }
+
         public async Task ClearDraftAsync()
         {
             await _gitService.ClearEditorDraft(_settings.Branch);
             _draftContents.Clear();
             HasRecoverableDraft = false;
+            UpdateDraftState();
         }
 
         public async Task ResetCaches()
@@ -975,6 +1009,7 @@ namespace DataEditor.Core.Services
             // Clear the LoadedFiles collection to force reloading all data from Git
             LoadedFiles.Clear();
             _draftContents.Clear();
+            _baselineContents.Clear();
             _draftLoaded = false;
             _dataVersionSha = null;
         }
