@@ -25,7 +25,7 @@
       "url": "icon-512.png"
     },
     {
-      "hash": "sha256-PJILF2mQ8as+NsRvF5QVS40DoEoU1O0Rp9UzoByeIhU=",
+      "hash": "sha256-SWPqavCHjlxoMnimkF0fIBLYCVSmcWseqHRhOMmHILk=",
       "url": "index.html"
     },
     {
@@ -69,7 +69,7 @@
       "url": "_framework\/icudt_no_CJK.dat"
     },
     {
-      "hash": "sha256-lpAaM1FxsDQxmCEAwyTHyhtvB6982GYBCHTn9N7q8sA=",
+      "hash": "sha256-jNh+XggcL9IxRm7Yl\/fv1Hv7w9yCsxm28Ss4rM5W\/l4=",
       "url": "_framework\/blazor.boot.json"
     },
     {
@@ -77,15 +77,15 @@
       "url": "_framework\/CsvHelper.wasm"
     },
     {
-      "hash": "sha256-jk9m90ocoPerJ1a7lYGWSdactT3PyYBdL2acPvAQEjA=",
+      "hash": "sha256-cSJ8yLh8JLepJ0cL5ovt81HfCPqYq\/gF7F\/1rVDwTnI=",
       "url": "_framework\/Data.Core.wasm"
     },
     {
-      "hash": "sha256-2\/1507cqVC+Cec3COXKUsOhFzIkqKNV3PMiGBALUUEY=",
+      "hash": "sha256-3vOzeE6PPSZJwOBxmdkK9d2CPocpN4tjQNBgs4u6uws=",
       "url": "_framework\/DataEditor.Core.wasm"
     },
     {
-      "hash": "sha256-uOJ11Bd8PuKa2jfqV00TcPCijG1qQu25TtNjoiD6YvU=",
+      "hash": "sha256-XhkRKWHQzffa1Qz58VTTOSgJvDjZnMCMYQsbgzB7xvM=",
       "url": "_framework\/DataEditor.Web.wasm"
     },
     {
@@ -181,7 +181,7 @@
       "url": "_framework\/Microsoft.JSInterop.WebAssembly.wasm"
     },
     {
-      "hash": "sha256-N+9XLgYtlhQc9JKmy6fjPNSsMSikhxnXvm0zMKFR4nk=",
+      "hash": "sha256-yaAhjSxI\/\/++RJhQ6hY6jL6uLRtrlaeKuRV3XnRlkb4=",
       "url": "_framework\/MudBlazor.wasm"
     },
     {
@@ -289,7 +289,7 @@
       "url": "_framework\/System.ObjectModel.wasm"
     },
     {
-      "hash": "sha256-Ceze1xqCck7yKUbqgMZBC1ED4K4XvhCTCyEvgxd0c7w=",
+      "hash": "sha256-HYNl92F1lqREt2kSfeigH67gQgJe4tBifQoaHJ\/FJdY=",
       "url": "_framework\/System.Private.CoreLib.wasm"
     },
     {
@@ -313,7 +313,7 @@
       "url": "_framework\/System.Runtime.Serialization.Formatters.wasm"
     },
     {
-      "hash": "sha256-S+4bvIp\/1AJOx+4XYBrhVAHPeQ1tDh2Mg7PdaVJbLNs=",
+      "hash": "sha256-46oIjO9aFIczlEM3mFkGR2nS3NycHhGVyjjMesPURic=",
       "url": "_framework\/System.Runtime.wasm"
     },
     {
@@ -361,5 +361,5 @@
       "url": "_content\/MudBlazor\/MudBlazor.min.js"
     }
   ],
-  "version": "+W0UdYFp"
+  "version": "\/W0b7yBo"
 };

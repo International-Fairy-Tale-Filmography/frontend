@@ -42,6 +42,89 @@
         <a href="" class="reload">Reload</a>
         <a class="dismiss">🗙</a>
     </div>
+    <script>
+        var editorTabId = sessionStorage.getItem('iftf-data-editor-tab') || crypto.randomUUID();
+        var editorTabChannel = null;
+        var editorTabIdClaimed = false;
+        sessionStorage.setItem('iftf-data-editor-tab', editorTabId);
+
+        function listenForDuplicateTabs() {
+            if (typeof BroadcastChannel === 'undefined') {
+                return;
+            }
+            editorTabChannel = new BroadcastChannel('iftf-data-editor-tab-' + editorTabId);
+            editorTabChannel.onmessage = function (event) {
+                if (event.data === 'probe') {
+                    editorTabChannel.postMessage('occupied');
+                }
+            };
+        }
+
+        listenForDuplicateTabs();
+
+        window.dataEditorDrafts = {
+            open: function () {
+                return new Promise(function (resolve, reject) {
+                    var request = indexedDB.open('iftf-data-editor', 1);
+                    request.onupgradeneeded = function () {
+                        request.result.createObjectStore('drafts');
+                    };
+                    request.onsuccess = function () { resolve(request.result); };
+                    request.onerror = function () { reject(request.error); };
+                });
+            },
+            key: async function (owner, repository, branch) {
+                if (!editorTabIdClaimed && editorTabChannel) {
+                    var duplicateFound = false;
+                    var handleProbeResponse = function (event) {
+                        if (event.data === 'occupied') {
+                            duplicateFound = true;
+                        }
+                    };
+                    editorTabChannel.addEventListener('message', handleProbeResponse);
+                    editorTabChannel.postMessage('probe');
+                    await new Promise(function (resolve) { setTimeout(resolve, 100); });
+                    editorTabChannel.removeEventListener('message', handleProbeResponse);
+                    if (duplicateFound) {
+                        editorTabChannel.close();
+                        editorTabId = crypto.randomUUID();
+                        sessionStorage.setItem('iftf-data-editor-tab', editorTabId);
+                        listenForDuplicateTabs();
+                    }
+                    editorTabIdClaimed = true;
+                }
+                return owner + '/' + repository + '/' + branch + '/' + editorTabId;
+            },
+            get: async function (key) {
+                var db = await this.open();
+                return new Promise(function (resolve, reject) {
+                    var request = db.transaction('drafts', 'readonly').objectStore('drafts').get(key);
+                    request.onsuccess = function () { resolve(request.result || null); };
+                    request.onerror = function () { reject(request.error); };
+                });
+            },
+            set: async function (key, value) {
+                var db = await this.open();
+                return new Promise(function (resolve, reject) {
+                    var transaction = db.transaction('drafts', 'readwrite');
+                    transaction.objectStore('drafts').put(value, key);
+                    transaction.oncomplete = function () { resolve(); };
+                    transaction.onerror = function () { reject(transaction.error); };
+                    transaction.onabort = function () { reject(transaction.error); };
+                });
+            },
+            remove: async function (key) {
+                var db = await this.open();
+                return new Promise(function (resolve, reject) {
+                    var transaction = db.transaction('drafts', 'readwrite');
+                    transaction.objectStore('drafts').delete(key);
+                    transaction.oncomplete = function () { resolve(); };
+                    transaction.onerror = function () { reject(transaction.error); };
+                    transaction.onabort = function () { reject(transaction.error); };
+                });
+            }
+        };
+    </script>
     <script src="_framework/blazor.webassembly.js"></script>
     <script>navigator.serviceWorker.register('service-worker.js');</script>
     <script src="_content/MudBlazor/MudBlazor.min.js"></script>
