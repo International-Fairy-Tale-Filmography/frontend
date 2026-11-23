@@ -1,7 +1,7 @@
 {
   "mainAssemblyName": "DataEditor.Web",
   "resources": {
-    "hash": "sha256-76ZWvSTHFdRfDH3NQ0QPkDoWXZRf8gNQuUafJN9sjGo=",
+    "hash": "sha256-oVsegOsYkOLrNm/TPDlRhQb4EZaR1Y+q0hd4v+YLcAE=",
     "jsModuleNative": {
       "dotnet.native.8.0.34.l8d8ux50rd.js": "sha256-Uc+HxggmSGuU1CkPjbVFhBiqRQ6cUsH1lnQ1keONjkE="
     },
@@ -18,11 +18,11 @@
     },
     "assembly": {
       "CsvHelper.wasm": "sha256-BXz5RCSFBrg3KCDZD4lxgyWmw1YH6vUT0N/oIQdCKfA=",
-      "Data.Core.wasm": "sha256-cSJ8yLh8JLepJ0cL5ovt81HfCPqYq/gF7F/1rVDwTnI=",
-      "DataEditor.Core.wasm": "sha256-3vOzeE6PPSZJwOBxmdkK9d2CPocpN4tjQNBgs4u6uws=",
-      "DataEditor.Web.wasm": "sha256-XhkRKWHQzffa1Qz58VTTOSgJvDjZnMCMYQsbgzB7xvM=",
+      "Data.Core.wasm": "sha256-fQsN4y45oXn+/GWYbFLIZb+uNhP8hyEZupsO/wF9ops=",
+      "DataEditor.Core.wasm": "sha256-ZxEKiyMPoz+QYI/5t6ns3YeOkEnoVe8NXtPIL1hw97U=",
+      "DataEditor.Web.wasm": "sha256-8ugK+1fyI9gAj0pVAHQDghls8kq/LNV4mMNVN1hAPAc=",
       "Microsoft.AspNetCore.Components.Forms.wasm": "sha256-IznTymONoWYZxUaAxg873S7Gf506KK16SpNG5+QEiEs=",
-      "Microsoft.AspNetCore.Components.wasm": "sha256-9fq5W8vhjuBEMsyN1edIWY+1rhDnEmeWB1VNqMzNlLc=",
+      "Microsoft.AspNetCore.Components.wasm": "sha256-yRl2gGVtxZ09Oa73ARIiRL7JQTfrzy8pa97nbf+UB5A=",
       "Microsoft.AspNetCore.Components.Web.wasm": "sha256-oNCl6OZwT32oWlQnIv1AN47lvxoRh/SFvIn015zYGrE=",
       "Microsoft.AspNetCore.Components.WebAssembly.wasm": "sha256-1EqVHiYPriBAwWUVWmjlwlhtCTorK+emFgCQfM0PLBw=",
       "Microsoft.CSharp.wasm": "sha256-PAEBpiUg8B6/PlcFSBBScnmrQAXL8S17sEkiO4GPgVw=",
@@ -44,7 +44,7 @@
       "Microsoft.Extensions.Primitives.wasm": "sha256-eqGAfIsQMgpShCCBuLWEPjM5avkmtNe/i/cNDj93T9k=",
       "Microsoft.JSInterop.wasm": "sha256-4Mxj4hEuOSyrYDEQpKdKvolOafm+0xSJOw02/WX0q+s=",
       "Microsoft.JSInterop.WebAssembly.wasm": "sha256-f7gcgRUY1DOJ9lCg5QmZJuH6UXfWbWjesONy3uIKIK0=",
-      "MudBlazor.wasm": "sha256-yaAhjSxI//++RJhQ6hY6jL6uLRtrlaeKuRV3XnRlkb4=",
+      "MudBlazor.wasm": "sha256-uhgOUaDEvri+MAIokVZHY+2h+yKDNf0LlU0bf8HKe14=",
       "netstandard.wasm": "sha256-vd4NC4mL8OdMmomxQh/0AM7WQNTFfK0RFh7qgK09DRI=",
       "Octokit.wasm": "sha256-h4a5luUbvS+HMGKlssAXQ8PRf2h3zG7LHTnrKcBLQrE=",
       "System.Collections.Concurrent.wasm": "sha256-Rx8iiQpZs/0FyKlPEcuUtf5AOAxEFPl1m6oQSXhSp/4=",
