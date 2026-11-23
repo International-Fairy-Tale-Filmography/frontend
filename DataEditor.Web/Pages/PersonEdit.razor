@@ -42,7 +42,7 @@
         }
         else
         {
-            item = new Person();
+            item = new Person { Guid = Guid.NewGuid() };
         }
 
     }
@@ -63,7 +63,7 @@
         ges.RecordSaveClick();
 
         Snackbar.Add($"{item.FirstName} {item.LastName} saved in this editing session. Publish your changes when ready.", Severity.Success);
-        MudDialog.Close();
+        MudDialog.Close(DialogResult.Ok(item));
 
     }
 

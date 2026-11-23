@@ -71,7 +71,10 @@
                                 <MudText Typo="Typo.h6">People and roles</MudText>
                                 <MudText Typo="Typo.body2" Class="mb-2">Find a person in the searchable people list, then choose their role.</MudText>
                                 <MudStack Spacing="2">
-                                    <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Search" OnClick="PickPerson">@(selectedPerson is null ? "Find a person" : PersonName(selectedPerson))</MudButton>
+                                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                        <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Search" OnClick="PickPerson">@(selectedPerson is null ? "Find a person" : PersonName(selectedPerson))</MudButton>
+                                        <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.PersonAdd" OnClick="CreatePerson">Add new person</MudButton>
+                                    </MudStack>
                                     <MudAutocomplete T="Role" Label="Choose a role" @bind-Value="selectedRole" @bind-Value:after="MarkChanged" SearchFunc="SearchRoles" ToStringFunc="@(role => role?.Name ?? string.Empty)" ShowProgressIndicator="true" ResetValueOnEmptyText="true" Clearable="true" Dense="true" />
                                     <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.PersonAdd" OnClick="AddPersonRole" Disabled="@(!CanAddPersonRole)">Add credit</MudButton>
                                 </MudStack>
@@ -98,9 +101,12 @@
                             </MudItem>
                             <MudItem xs="12" md="6">
                                 <MudText Typo="Typo.h6">Companies</MudText>
-                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                <MudStack Spacing="2">
                                     <MudAutocomplete T="Company" Label="Find a company" @bind-Value="selectedCompany" SearchFunc="SearchCompanies" ToStringFunc="@(company => company?.Name ?? string.Empty)" ShowProgressIndicator="true" ResetValueOnEmptyText="true" Clearable="true" Dense="true" />
-                                    <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Add" OnClick="AddCompany" Disabled="@(!CanAddCompany)">Add company</MudButton>
+                                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                        <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Add" OnClick="AddCompany" Disabled="@(!CanAddCompany)">Add selected company</MudButton>
+                                        <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.AddBusiness" OnClick="CreateCompany">Add new company</MudButton>
+                                    </MudStack>
                                 </MudStack>
                                 @if (selectedCompany is not null && !CanAddCompany)
                                 {
@@ -578,6 +584,27 @@
         if (result is { Canceled: false, Data: Person person })
         {
             selectedPerson = person;
+        }
+    }
+
+    private async Task CreatePerson()
+    {
+        var dialog = await DialogService.ShowAsync<PersonEdit>("Add person", options: new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true });
+        var result = await dialog.Result;
+        if (result is { Canceled: false, Data: Person person })
+        {
+            selectedPerson = person;
+            MarkChanged();
+        }
+    }
+
+    private async Task CreateCompany()
+    {
+        var dialog = await DialogService.ShowAsync<CompanyEdit>("Add company", options: new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true });
+        var result = await dialog.Result;
+        if (result is { Canceled: false, Data: Company company })
+        {
+            selectedCompany = company;
             MarkChanged();
         }
     }

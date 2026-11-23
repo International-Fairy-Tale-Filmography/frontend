@@ -44,7 +44,7 @@
         }
         else
         {
-            item = new Company();
+            item = new Company { Guid = Guid.NewGuid() };
         }
 
     }
@@ -65,7 +65,7 @@
         ges.RecordSaveClick();
 
         Snackbar.Add($"{item.Name} saved in this editing session. Publish your changes when ready.", Severity.Success);
-        MudDialog.Close();
+        MudDialog.Close(DialogResult.Ok(item));
 
     }
 
