@@ -28,7 +28,7 @@
             <MudSelect T="string" Label="Data set" Value="_selectedBranch" ValueChanged="OnBranchChanged" Dense="true" Disabled="_switchingBranch" Style="min-width: 180px;">
                 @foreach (var branch in _branches)
                 {
-                    <MudSelectItem T="string" Value="branch">@branch</MudSelectItem>
+                    <MudSelectItem T="string" Value="branch">@GetBranchLabel(branch)</MudSelectItem>
                 }
             </MudSelect>
         }
@@ -186,7 +186,7 @@
             await ges.ResetCaches();
             _isStale = false;
             _selectedBranch = branch;
-            Snackbar.Add($"Now viewing {branch}. Load a data table to begin editing.", Severity.Success);
+            Snackbar.Add($"Now viewing {GetBranchLabel(branch)}. Choose a table to begin editing.", Severity.Success);
             NavigationManager.NavigateTo("/home");
         }
         finally
@@ -194,6 +194,13 @@
             _switchingBranch = false;
         }
     }
+
+    private static string GetBranchLabel(string branch) => branch switch
+    {
+        "drafts" => "Draft data",
+        "main" or "master" => "Published data",
+        _ => branch
+    };
 
     public void Dispose()
     {

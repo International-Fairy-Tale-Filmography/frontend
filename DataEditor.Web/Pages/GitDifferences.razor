@@ -2,12 +2,12 @@
 @using DataEditor.Core.Services
 @using Microsoft.AspNetCore.Components
 @using Data.Core.Models
-@using System.Text
 @inject GitEntityService GitEntityService
 @inject NavigationManager NavigationManager
+@inject IDialogService DialogService
 @inject ISnackbar Snackbar
 
-<PageTitle>Git Differences</PageTitle>
+<PageTitle>Review changes</PageTitle>
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4">
     <MudPaper Elevation="3" Class="pa-4">
@@ -35,6 +35,7 @@
             {
                 <MudAlert Severity="Severity.Warning" Class="mb-4">Publishing is paused because this tab's data is older than the selected data set. Use these comparisons to review changes, then reload the latest data before continuing.</MudAlert>
                 <MudButton Variant="Variant.Outlined" OnClick="GoBack" Class="mb-4">Keep editing my saved changes</MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Error" OnClick="ReloadLatestData" Disabled="IsLoading" Class="mb-4 ml-2">Discard my saved changes and load latest data</MudButton>
                 @if (DraftDifferences.Count > 0)
                 {
                     <MudText Typo="Typo.h5" Class="mt-4">Changes saved in this tab</MudText>
@@ -210,6 +211,30 @@
         ProgressMessage = "Caches reset successfully.";
         Snackbar.Add("All caches have been reset.", Severity.Success);
         await LoadDifferences(); // Refresh differences after cache reset
+    }
+
+    private async Task ReloadLatestData()
+    {
+        var confirmed = await DialogService.ShowMessageBox(
+            "Discard this tab's saved changes?",
+            "This will permanently remove this tab's saved edits and load the latest data. Use the comparison above to note any changes you need to re-enter.",
+            yesText: "Discard edits and load latest data",
+            cancelText: "Keep my saved changes");
+
+        if (confirmed != true)
+        {
+            return;
+        }
+
+        try
+        {
+            await GitEntityService.ResetCaches();
+            NavigationManager.NavigateTo("/film");
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"We could not load the latest data. Your saved changes have not been reported as restored. Details: {ex.Message}";
+        }
     }
 
     private void GoBack()
