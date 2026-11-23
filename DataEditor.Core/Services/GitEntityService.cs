@@ -50,47 +50,42 @@ namespace DataEditor.Core.Services
             public string LatestSha { get; }
         }
 
+        private sealed record FileChange(string FileName, string Content);
+
         public async Task<string> CommitAllChangesToGit(Action<string> progressCallback = null)
         {
             await EnsureBranchIsCurrentAsync();
-            var sb = new StringBuilder();
-
-            var entitiesToCommit = new List<Func<Task<string>>>
+            var fileChanges = new List<FileChange?>
             {
-                () => CommitChangesToGit<Country>(),
-                () => CommitChangesToGit<Film>(),
-                () => CommitChangesToGit<Origin>(),
-                () => CommitChangesToGit<Person>(),
-                () => CommitChangesToGit<Role>(),
-                () => CommitChangesToGit<Language>(),
-                () => CommitChangesToGit<Company>(),
-                () => CommitChangesToGit<FilmLink>(),
-                () => CommitChangesToGit<FilmCompany>(),
-                () => CommitChangesToGit<FilmCountry>(),
-                () => CommitChangesToGit<FilmLanguage>(),
-                () => CommitChangesToGit<FilmOrigin>(),
-                () => CommitChangesToGit<FilmPersonRole>()
+                await GetFileChange(_context.Countries.OrderBy(i => i.Guid).ToList()),
+                await GetFileChange(_context.Films.OrderBy(i => i.Guid).ToList()),
+                await GetFileChange(_context.Origins.OrderBy(i => i.Guid).ToList()),
+                await GetFileChange(_context.People.OrderBy(i => i.Guid).ToList()),
+                await GetFileChange(_context.Roles.OrderBy(i => i.Guid).ToList()),
+                await GetFileChange(_context.Languages.OrderBy(i => i.Guid).ToList()),
+                await GetFileChange(_context.Companies.OrderBy(i => i.Guid).ToList()),
+                await GetFileChange(_context.FilmLinks.OrderBy(i => i.Guid).ThenBy(i => i.FilmGuid).ToList()),
+                await GetFileChange(_context.FilmCompanies.OrderBy(i => i.FilmGuid).ThenBy(i => i.CompanyGuid).ToList()),
+                await GetFileChange(_context.FilmCountries.OrderBy(i => i.FilmGuid).ThenBy(i => i.CountryGuid).ToList()),
+                await GetFileChange(_context.FilmLanguages.OrderBy(i => i.FilmGuid).ThenBy(i => i.LanguageGuid).ToList()),
+                await GetFileChange(_context.FilmOrigins.OrderBy(i => i.FilmGuid).ThenBy(i => i.OriginGuid).ToList()),
+                await GetFileChange(_context.FilmPersonRoles.OrderBy(i => i.Film).ThenBy(i => i.Person).ThenBy(i => i.RoleGuid).ToList())
             };
 
-            int totalFiles = entitiesToCommit.Count;
-            int currentFile = 0;
+            var changedFiles = fileChanges
+                .OfType<FileChange>()
+                .ToDictionary(change => change.FileName, change => change.Content);
 
-            foreach (var commitAction in entitiesToCommit)
+            if (changedFiles.Count == 0)
             {
-                currentFile++;
-                var result = await commitAction();
-                sb.AppendLine(result);
-
-                // Report progress
-                progressCallback?.Invoke($"Committed {currentFile}/{totalFiles} files.");
+                return "There are no saved changes to publish.";
             }
 
-            // After successful commit, reset caches to reflect the new state
-            progressCallback?.Invoke("Resetting caches to reflect latest changes...");
+            progressCallback?.Invoke($"Preparing {changedFiles.Count} changed data file(s)...");
+            await PublishChangesAtomically(changedFiles);
+            progressCallback?.Invoke("All changed data files were published together.");
             await ResetCaches();
-            progressCallback?.Invoke("Cache reset completed.");
-
-            return sb.ToString();
+            return string.Join("; ", changedFiles.Keys);
         }
 
         public async Task<List<FileDifference>> GetAllDifferences()
@@ -289,13 +284,27 @@ namespace DataEditor.Core.Services
 
         public async Task<string> CommitChangesToGit<T>(List<T> objects)
         {
+            await EnsureBranchIsCurrentAsync();
+            var change = await GetFileChange(objects);
+            if (change == null)
+            {
+                return string.Empty;
+            }
+
+            await PublishChangesAtomically(new Dictionary<string, string> { [change.FileName] = change.Content });
+            return change.FileName;
+        }
+
+        private async Task<FileChange?> GetFileChange<T>(List<T> objects)
+        {
             if (!LoadedFiles.Contains(typeof(T)))
             {
-                return "";
+                return null;
             }
 
             var filename = $"{CoreSettings.dbSetNames[typeof(T)]}.csv";
             var file = await GetFileByName(filename);
+            var oldContent = await GetFileContentFromDownloadUrl(file);
 
             await using var writer = new StringWriter();
             await using var csv = new CsvWriter(writer, new CsvConfiguration(CultureInfo.InvariantCulture));
@@ -303,25 +312,20 @@ namespace DataEditor.Core.Services
             await csv.NextRecordAsync();
             await csv.WriteRecordsAsync(objects);
 
-            //get the content on the server
-            var oldContent = await GetFileContentFromDownloadUrl(file);
-
             var newContent = writer.ToString();
-            //check if theres any differences
-            if (oldContent != newContent)
-            {
-                //update the server with latest if theres any differences
-                var result = await _gitService.UpdateFile(filename, file, newContent, $"updating {filename}");
-                return filename + "; ";
-            }
-            else
-            {
-                return "";
-            }
+            return oldContent == newContent ? null : new FileChange(filename, newContent);
+        }
 
-
-            
-              
+        private async Task PublishChangesAtomically(IReadOnlyDictionary<string, string> changedFiles)
+        {
+            try
+            {
+                await _gitService.UpdateFilesAtomically(changedFiles, _dataVersionSha, "Update data editor records");
+            }
+            catch (GitService.BranchMovedException ex)
+            {
+                throw new StaleDataException(_dataVersionSha, ex.LatestSha);
+            }
         }
 
 

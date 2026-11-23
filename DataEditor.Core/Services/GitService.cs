@@ -1,4 +1,5 @@
 ﻿// File: DataEditor.Core/Services/GitService.cs
+using System.Net;
 using Octokit;
 using Microsoft.JSInterop;
 
@@ -88,17 +89,71 @@ public class GitService
         return firstContent;
     }
     
-    public async Task<RepositoryContentChangeSet> UpdateFile(string filename, RepositoryContent lastCommit, string newContent, string summary)
+    public sealed class BranchMovedException : Exception
     {
-        await GetConfiguration();
+        public BranchMovedException(string latestSha)
+            : base("The selected data set changed before the publish could be completed.")
+        {
+            LatestSha = latestSha;
+        }
 
-        var updateResult = await _gitHubClient.Repository.Content.UpdateFile(
+        public string LatestSha { get; }
+    }
+
+    public async Task<string> UpdateFilesAtomically(IReadOnlyDictionary<string, string> files, string expectedHeadSha, string summary)
+    {
+        if (files.Count == 0)
+        {
+            return expectedHeadSha;
+        }
+
+        await GetConfiguration();
+        var branch = await _gitHubClient.Repository.Branch.Get(_coreSettings.Owner, _coreSettings.RepoName, _coreSettings.Branch);
+        if (!string.Equals(branch.Commit.Sha, expectedHeadSha, StringComparison.Ordinal))
+        {
+            throw new BranchMovedException(branch.Commit.Sha);
+        }
+
+        var parentCommit = await _gitHubClient.Git.Commit.Get(_coreSettings.Owner, _coreSettings.RepoName, expectedHeadSha);
+        var newTree = new NewTree { BaseTree = parentCommit.Tree.Sha };
+        foreach (var file in files)
+        {
+            newTree.Tree.Add(new NewTreeItem
+            {
+                Path = Path.Combine(_coreSettings.Folder, file.Key).Replace('\\', '/'),
+                Mode = "100644",
+                Type = TreeType.Blob,
+                Content = file.Value
+            });
+        }
+
+        var tree = await _gitHubClient.Git.Tree.Create(_coreSettings.Owner, _coreSettings.RepoName, newTree);
+
+        var commit = await _gitHubClient.Git.Commit.Create(
             _coreSettings.Owner,
             _coreSettings.RepoName,
-            Path.Combine(_coreSettings.Folder, filename),
-            new UpdateFileRequest(summary, newContent, lastCommit.Sha, _coreSettings.Branch));
+            new NewCommit(summary, tree.Sha, new[] { expectedHeadSha }));
 
-        return updateResult;
+        try
+        {
+            await _gitHubClient.Git.Reference.Update(
+                _coreSettings.Owner,
+                _coreSettings.RepoName,
+                $"heads/{_coreSettings.Branch}",
+                new ReferenceUpdate(commit.Sha, force: false));
+        }
+        catch (ApiException ex) when (ex.StatusCode == HttpStatusCode.UnprocessableEntity)
+        {
+            var latestBranch = await _gitHubClient.Repository.Branch.Get(_coreSettings.Owner, _coreSettings.RepoName, _coreSettings.Branch);
+            if (!string.Equals(latestBranch.Commit.Sha, expectedHeadSha, StringComparison.Ordinal))
+            {
+                throw new BranchMovedException(latestBranch.Commit.Sha);
+            }
+
+            throw;
+        }
+
+        return commit.Sha;
     }
 
     public async Task<List<string>> GetBranches()
