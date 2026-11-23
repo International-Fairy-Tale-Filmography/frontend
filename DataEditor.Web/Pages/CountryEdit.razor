@@ -3,7 +3,7 @@
 @using Data.Core.Models
 
 @inject DataEditorDataContext ctx
-
+@inject GitEntityService ges
 @inject ISnackbar Snackbar
 
 <MudDialog>
@@ -58,6 +58,16 @@
         }
 
         await ctx.SaveChangesAsync();
+        try
+        {
+            await ges.SaveDraftAsync(typeof(Country));
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Changes are saved in this tab, but the recovery copy could not be updated: {ex.Message}", Severity.Error);
+            return;
+        }
+
         Snackbar.Add($"{item.Name} saved in this editing session. Publish your changes when ready.", Severity.Success);
         MudDialog.Close();
 

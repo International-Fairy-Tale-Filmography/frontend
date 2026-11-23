@@ -3,7 +3,7 @@
 @using Data.Core.Models
 @using Origin = Data.Core.Models.Origin
 @inject DataEditorDataContext ctx
-
+@inject GitEntityService ges
 @inject ISnackbar Snackbar
 
 <MudDialog>
@@ -138,6 +138,16 @@
         }
 
         await ctx.SaveChangesAsync();
+        try
+        {
+            await ges.SaveDraftAsync(typeof(Film), typeof(FilmLink), typeof(FilmCompany), typeof(FilmCountry), typeof(FilmLanguage), typeof(FilmOrigin), typeof(FilmPersonRole));
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Changes are saved in this tab, but the recovery copy could not be updated: {ex.Message}", Severity.Error);
+            return;
+        }
+
         Snackbar.Add($"{item.Title} saved in this editing session. Publish your changes when ready.", Severity.Success);
         MudDialog.Close();
 

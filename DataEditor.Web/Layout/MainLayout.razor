@@ -19,6 +19,10 @@
         <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
         <MudText Typo="Typo.h5" Class="ml-3">IFTF Data Editor</MudText>
         <MudSpacer />
+        @if (ges.HasRecoverableDraft)
+        {
+            <MudChip T="string" Color="Color.Info" Size="Size.Small" Class="mr-2">Recovery copy saved</MudChip>
+        }
         @if (_branches.Count > 0)
         {
             <MudSelect T="string" Label="Data set" Value="_selectedBranch" ValueChanged="OnBranchChanged" Dense="true" Disabled="_switchingBranch" Style="min-width: 180px;">
@@ -70,7 +74,11 @@
         {
             while (await timer.WaitForNextTickAsync(cancellationToken))
             {
-                await InvokeAsync(CheckFreshnessAsync);
+                await InvokeAsync(async () =>
+                {
+                    await CheckFreshnessAsync();
+                    StateHasChanged();
+                });
             }
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
@@ -172,6 +180,7 @@
                 }
             }
 
+            await ges.ClearDraftAsync();
             Settings.Branch = branch;
             await GitService.SaveConfiguration(Settings);
             await ges.ResetCaches();

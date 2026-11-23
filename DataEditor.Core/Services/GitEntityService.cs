@@ -7,6 +7,7 @@ using System.Net.Http;
 using System.Net.Http.Json;
 using System.Reflection.PortableExecutable;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using CsvHelper;
@@ -26,9 +27,12 @@ namespace DataEditor.Core.Services
         private readonly CoreSettingsModel _settings;
         private readonly GitService _gitService;
         private readonly SemaphoreSlim _dataVersionLock = new(1, 1);
+        private readonly Dictionary<string, string> _draftContents = new(StringComparer.OrdinalIgnoreCase);
         private string _dataVersionSha;
+        private bool _draftLoaded;
 
         public string DataVersionSha => _dataVersionSha;
+        public bool HasRecoverableDraft { get; private set; }
 
         public GitEntityService(DataEditorDataContext context, CoreSettingsModel settings, GitService gitService)
         {
@@ -51,6 +55,12 @@ namespace DataEditor.Core.Services
         }
 
         private sealed record FileChange(string FileName, string Content);
+        private sealed class DraftSnapshot
+        {
+            public string Branch { get; set; }
+            public string BaseSha { get; set; }
+            public Dictionary<string, string> Files { get; set; } = new(StringComparer.OrdinalIgnoreCase);
+        }
 
         public async Task<string> CommitAllChangesToGit(Action<string> progressCallback = null)
         {
@@ -491,6 +501,35 @@ namespace DataEditor.Core.Services
             await _dataVersionLock.WaitAsync();
             try
             {
+                if (!_draftLoaded)
+                {
+                    var savedDraft = await _gitService.GetEditorDraft(_settings.Branch);
+                    if (!string.IsNullOrWhiteSpace(savedDraft))
+                    {
+                        var snapshot = JsonSerializer.Deserialize<DraftSnapshot>(savedDraft)
+                            ?? throw new InvalidDataException("The saved editing-session draft could not be read.");
+                        if (!string.Equals(snapshot.Branch, _settings.Branch, StringComparison.Ordinal))
+                        {
+                            throw new InvalidDataException("The saved editing-session draft belongs to a different data set.");
+                        }
+
+                        if (string.IsNullOrWhiteSpace(snapshot.BaseSha) || snapshot.Files == null)
+                        {
+                            throw new InvalidDataException("The saved editing-session draft is incomplete.");
+                        }
+
+                        _dataVersionSha = snapshot.BaseSha;
+                        foreach (var file in snapshot.Files)
+                        {
+                            _draftContents[file.Key] = file.Value;
+                        }
+
+                        HasRecoverableDraft = _draftContents.Count > 0;
+                    }
+
+                    _draftLoaded = true;
+                }
+
                 if (string.IsNullOrEmpty(_dataVersionSha))
                 {
                     _dataVersionSha = await _gitService.GetBranchHeadSha();
@@ -703,10 +742,14 @@ namespace DataEditor.Core.Services
 
         private async Task<List<T>> FetchCsv<T>(string name)
         {
-            var repositoryFile = await GetFileByName(name);
+            await EnsureDataVersionCaptured();
+            string content;
+            if (!_draftContents.TryGetValue(name, out content))
+            {
+                var repositoryFile = await GetFileByName(name);
+                content = await GetFileContentFromDownloadUrl(repositoryFile);
+            }
 
-            // Get file content with cache-busting parameter
-            var content = await GetFileContentFromDownloadUrl(repositoryFile);
             using var reader = new StringReader(content);
 
             var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -862,10 +905,68 @@ namespace DataEditor.Core.Services
             public string NewValue { get; set; }
         }
 
-        // Add this new method after the CommitAllChangesToGit method
+        public async Task SaveDraftAsync(params Type[] changedEntityTypes)
+        {
+            await EnsureDataVersionCaptured();
+            foreach (var entityType in changedEntityTypes.Distinct())
+            {
+                var fileName = $"{CoreSettings.dbSetNames[entityType]}.csv";
+                var content = await SerializeCurrentTable(entityType);
+                if (content != null)
+                {
+                    _draftContents[fileName] = content;
+                }
+            }
+
+            var snapshot = new DraftSnapshot
+            {
+                Branch = _settings.Branch,
+                BaseSha = _dataVersionSha,
+                Files = new Dictionary<string, string>(_draftContents, StringComparer.OrdinalIgnoreCase)
+            };
+            await _gitService.SaveEditorDraft(_settings.Branch, JsonSerializer.Serialize(snapshot));
+            HasRecoverableDraft = _draftContents.Count > 0;
+        }
+
+        private Task<string> SerializeCurrentTable(Type entityType)
+        {
+            return entityType == typeof(Company) ? SerializeCsv(_context.Companies.OrderBy(item => item.Guid).ToList())
+                : entityType == typeof(Country) ? SerializeCsv(_context.Countries.OrderBy(item => item.Guid).ToList())
+                : entityType == typeof(Film) ? SerializeCsv(_context.Films.OrderBy(item => item.Guid).ToList())
+                : entityType == typeof(Language) ? SerializeCsv(_context.Languages.OrderBy(item => item.Guid).ToList())
+                : entityType == typeof(Origin) ? SerializeCsv(_context.Origins.OrderBy(item => item.Guid).ToList())
+                : entityType == typeof(Person) ? SerializeCsv(_context.People.OrderBy(item => item.Guid).ToList())
+                : entityType == typeof(Role) ? SerializeCsv(_context.Roles.OrderBy(item => item.Guid).ToList())
+                : entityType == typeof(FilmLink) ? SerializeCsv(_context.FilmLinks.OrderBy(item => item.Guid).ThenBy(item => item.FilmGuid).ToList())
+                : entityType == typeof(FilmCompany) ? SerializeCsv(_context.FilmCompanies.OrderBy(item => item.FilmGuid).ThenBy(item => item.CompanyGuid).ToList())
+                : entityType == typeof(FilmCountry) ? SerializeCsv(_context.FilmCountries.OrderBy(item => item.FilmGuid).ThenBy(item => item.CountryGuid).ToList())
+                : entityType == typeof(FilmLanguage) ? SerializeCsv(_context.FilmLanguages.OrderBy(item => item.FilmGuid).ThenBy(item => item.LanguageGuid).ToList())
+                : entityType == typeof(FilmOrigin) ? SerializeCsv(_context.FilmOrigins.OrderBy(item => item.FilmGuid).ThenBy(item => item.OriginGuid).ToList())
+                : entityType == typeof(FilmPersonRole) ? SerializeCsv(_context.FilmPersonRoles.OrderBy(item => item.FilmGuid).ThenBy(item => item.PersonGuid).ThenBy(item => item.RoleGuid).ToList())
+                : throw new ArgumentOutOfRangeException(nameof(entityType), entityType, "Unsupported draft table.");
+        }
+
+        private static async Task<string> SerializeCsv<T>(List<T> records)
+        {
+            await using var writer = new StringWriter();
+            await using var csv = new CsvWriter(writer, new CsvConfiguration(CultureInfo.InvariantCulture));
+            csv.WriteHeader<T>();
+            await csv.NextRecordAsync();
+            await csv.WriteRecordsAsync(records);
+            return writer.ToString();
+        }
+
+        public async Task ClearDraftAsync()
+        {
+            await _gitService.ClearEditorDraft(_settings.Branch);
+            _draftContents.Clear();
+            HasRecoverableDraft = false;
+        }
+
         public async Task ResetCaches()
         {
-            // Clear all DbSets to avoid duplicate key conflicts
+            await ClearDraftAsync();
+            // Clear all DbSets by removing all entities and resetting their state
             _context.ClearAllDbSets();
 
             // Detach all tracked entities to avoid tracking conflicts
@@ -873,6 +974,8 @@ namespace DataEditor.Core.Services
 
             // Clear the LoadedFiles collection to force reloading all data from Git
             LoadedFiles.Clear();
+            _draftContents.Clear();
+            _draftLoaded = false;
             _dataVersionSha = null;
         }
     }
