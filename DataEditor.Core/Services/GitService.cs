@@ -27,7 +27,17 @@ public class GitService
     public async Task<CoreSettingsModel> GetConfiguration()
     {
         var githubAccessToken = await _jsRuntime.InvokeAsync<string>("localStorage.getItem", "github_accesstoken");
-        var selectedBranch = await _jsRuntime.InvokeAsync<string>("localStorage.getItem", "data_editor_branch");
+        var selectedBranch = await _jsRuntime.InvokeAsync<string>("sessionStorage.getItem", "data_editor_branch");
+        if (string.IsNullOrWhiteSpace(selectedBranch))
+        {
+            selectedBranch = await _jsRuntime.InvokeAsync<string>("localStorage.getItem", "data_editor_branch");
+            if (!string.IsNullOrWhiteSpace(selectedBranch))
+            {
+                await _jsRuntime.InvokeVoidAsync("sessionStorage.setItem", "data_editor_branch", selectedBranch);
+                await _jsRuntime.InvokeVoidAsync("localStorage.removeItem", "data_editor_branch");
+            }
+        }
+
         _coreSettings.AccessToken = githubAccessToken;
         if (!string.IsNullOrWhiteSpace(selectedBranch))
         {
@@ -53,7 +63,7 @@ public class GitService
         _coreSettings.Folder = settings.Folder;
 
         await _jsRuntime.InvokeVoidAsync("localStorage.setItem", "github_accesstoken", _coreSettings.AccessToken);
-        await _jsRuntime.InvokeVoidAsync("localStorage.setItem", "data_editor_branch", _coreSettings.Branch);
+        await _jsRuntime.InvokeVoidAsync("sessionStorage.setItem", "data_editor_branch", _coreSettings.Branch);
 
         _gitHubClient.Credentials = new Credentials(_coreSettings.AccessToken);
     }
