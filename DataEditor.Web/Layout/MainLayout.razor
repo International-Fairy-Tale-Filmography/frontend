@@ -2,6 +2,9 @@
 @using Data.Core.Models
 @inherits LayoutComponentBase
 @inject GitEntityService ges
+@inject GitService GitService
+@inject CoreSettingsModel Settings
+@inject IDialogService DialogService
 @inject ISnackbar Snackbar
 @inject NavigationManager NavigationManager
 <MudThemeProvider />
@@ -15,7 +18,16 @@
         <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
         <MudText Typo="Typo.h5" Class="ml-3">IFTF Data Editor</MudText>
         <MudSpacer />
-        <MudButton Variant="Variant.Filled" Color="Color.Success" OnClick="ViewChanges" Disabled="_isCommitting">Review and publish changes</MudButton>
+        @if (_branches.Count > 0)
+        {
+            <MudSelect T="string" Label="Data set" Value="_selectedBranch" ValueChanged="OnBranchChanged" Dense="true" Disabled="_switchingBranch" Style="min-width: 180px;">
+                @foreach (var branch in _branches)
+                {
+                    <MudSelectItem T="string" Value="branch">@branch</MudSelectItem>
+                }
+            </MudSelect>
+        }
+        <MudButton Variant="Variant.Filled" Color="Color.Success" OnClick="ViewChanges" Disabled="_switchingBranch">Review and publish changes</MudButton>
     </MudAppBar>
     <MudDrawer @bind-Open="_drawerOpen" ClipMode="DrawerClipMode.Always" Elevation="2">
         <NavMenu/>
@@ -25,32 +37,63 @@
     </MudMainContent>
 </MudLayout>
 @code {
-    bool _drawerOpen = true;
+    private bool _drawerOpen = true;
+    private bool _switchingBranch;
+    private List<string> _branches = new();
+    private string _selectedBranch;
 
-    void DrawerToggle()
+    protected override async Task OnInitializedAsync()
+    {
+        await GitService.GetConfiguration();
+        _branches = await GitService.GetBranches();
+        _selectedBranch = Settings.Branch;
+    }
+
+    private void DrawerToggle()
     {
         _drawerOpen = !_drawerOpen;
     }
 
-    bool _isCommitting = false;
-    
-    // Renamed method from CommitChanges to ViewChanges to better reflect its new purpose
     private void ViewChanges()
     {
-        // Navigate to the new GitDifferences page instead of immediately committing
         NavigationManager.NavigateTo("/git-differences");
     }
-    
-    // Keep original CommitChanges method for reference but mark as obsolete
-    // This can be removed once the new approach is verified
-    [Obsolete("Use ViewChanges instead to navigate to the differences page")]
-    private async Task CommitChanges()
+
+    private async Task OnBranchChanged(string branch)
     {
-        _isCommitting = true;
+        if (string.IsNullOrWhiteSpace(branch) || branch == Settings.Branch || _switchingBranch)
+        {
+            return;
+        }
 
-        var result = await ges.CommitAllChangesToGit();
+        _switchingBranch = true;
+        try
+        {
+            var differences = await ges.GetAllDifferences();
+            if (differences.Any(difference => difference.ChangedLinesCount > 0))
+            {
+                var shouldSwitch = await DialogService.ShowMessageBox(
+                    "Switch data set?",
+                    "Your saved changes in this editing session will be discarded when you switch. Continue only if you are ready to lose those changes.",
+                    yesText: "Switch data set",
+                    cancelText: "Keep current data");
 
-        Snackbar.Add(result, Severity.Success);
-        _isCommitting = false;
+                if (shouldSwitch != true)
+                {
+                    return;
+                }
+            }
+
+            Settings.Branch = branch;
+            await GitService.SaveConfiguration(Settings);
+            await ges.ResetCaches();
+            _selectedBranch = branch;
+            Snackbar.Add($"Now viewing {branch}. Load a data table to begin editing.", Severity.Success);
+            NavigationManager.NavigateTo("/home");
+        }
+        finally
+        {
+            _switchingBranch = false;
+        }
     }
 }
