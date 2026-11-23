@@ -91,7 +91,7 @@
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="Cancel">Cancel</MudButton>
-        <MudButton Color="Color.Error" OnClick="Save">Save</MudButton>
+        <MudButton Color="Color.Error" OnClick="Save">Save changes</MudButton>
     </DialogActions>
 </MudDialog>
 
@@ -138,7 +138,7 @@
         }
 
         await ctx.SaveChangesAsync();
-        Snackbar.Add($"{item.Title} queued!", Severity.Success);
+        Snackbar.Add($"{item.Title} saved in this editing session. Publish your changes when ready.", Severity.Success);
         MudDialog.Close();
 
     }

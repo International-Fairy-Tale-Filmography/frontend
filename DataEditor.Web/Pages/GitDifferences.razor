@@ -10,8 +10,8 @@
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4">
     <MudPaper Elevation="3" Class="pa-4">
-        <MudText Typo="Typo.h4">Changes to Commit</MudText>
-        <MudText Typo="Typo.body1" Class="mb-4">Review the differences between your current data and what's in Git.</MudText>
+        <MudText Typo="Typo.h4">Review your changes</MudText>
+        <MudText Typo="Typo.body1" Class="mb-4">Check the changes you have saved in this editing session before publishing them.</MudText>
         
         <MudDivider Class="my-4" />
         
@@ -22,7 +22,7 @@
         }
         else if (Differences.Count == 0)
         {
-            <MudAlert Severity="Severity.Info" Class="my-4">No differences found. All data is synchronized with Git.</MudAlert>
+            <MudAlert Severity="Severity.Info" Class="my-4">There are no saved changes to publish. Your data is up to date.</MudAlert>
         }
         else
         {
@@ -32,7 +32,7 @@
                        Disabled="IsCommitting"
                        StartIcon="@Icons.Material.Filled.Save"
                        Class="mb-4">
-                @(IsCommitting ? "Committing..." : "Commit All Changes")
+               @(IsCommitting ? "Publishing..." : "Publish changes")
             </MudButton>
             
             <MudButton Variant="Variant.Outlined" 

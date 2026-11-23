@@ -40,6 +40,10 @@
     {
         _settings = await _service.GetConfiguration();
         _editSettings.AccessToken = _settings.AccessToken;
+        _editSettings.Owner = _settings.Owner;
+        _editSettings.RepoName = _settings.RepoName;
+        _editSettings.Branch = _settings.Branch;
+        _editSettings.Folder = _settings.Folder;
 
     }
 
