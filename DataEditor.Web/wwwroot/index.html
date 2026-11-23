@@ -43,6 +43,25 @@
         <a class="dismiss">🗙</a>
     </div>
     <script>
+        var editorTabId = sessionStorage.getItem('iftf-data-editor-tab') || crypto.randomUUID();
+        var editorTabChannel = null;
+        var editorTabIdClaimed = false;
+        sessionStorage.setItem('iftf-data-editor-tab', editorTabId);
+
+        function listenForDuplicateTabs() {
+            if (typeof BroadcastChannel === 'undefined') {
+                return;
+            }
+            editorTabChannel = new BroadcastChannel('iftf-data-editor-tab-' + editorTabId);
+            editorTabChannel.onmessage = function (event) {
+                if (event.data === 'probe') {
+                    editorTabChannel.postMessage('occupied');
+                }
+            };
+        }
+
+        listenForDuplicateTabs();
+
         window.dataEditorDrafts = {
             open: function () {
                 return new Promise(function (resolve, reject) {
@@ -54,13 +73,27 @@
                     request.onerror = function () { reject(request.error); };
                 });
             },
-            key: function (owner, repository, branch) {
-                var tabId = sessionStorage.getItem('iftf-data-editor-tab');
-                if (!tabId) {
-                    tabId = crypto.randomUUID();
-                    sessionStorage.setItem('iftf-data-editor-tab', tabId);
+            key: async function (owner, repository, branch) {
+                if (!editorTabIdClaimed && editorTabChannel) {
+                    var duplicateFound = false;
+                    var handleProbeResponse = function (event) {
+                        if (event.data === 'occupied') {
+                            duplicateFound = true;
+                        }
+                    };
+                    editorTabChannel.addEventListener('message', handleProbeResponse);
+                    editorTabChannel.postMessage('probe');
+                    await new Promise(function (resolve) { setTimeout(resolve, 100); });
+                    editorTabChannel.removeEventListener('message', handleProbeResponse);
+                    if (duplicateFound) {
+                        editorTabChannel.close();
+                        editorTabId = crypto.randomUUID();
+                        sessionStorage.setItem('iftf-data-editor-tab', editorTabId);
+                        listenForDuplicateTabs();
+                    }
+                    editorTabIdClaimed = true;
                 }
-                return owner + '/' + repository + '/' + branch + '/' + tabId;
+                return owner + '/' + repository + '/' + branch + '/' + editorTabId;
             },
             get: async function (key) {
                 var db = await this.open();
