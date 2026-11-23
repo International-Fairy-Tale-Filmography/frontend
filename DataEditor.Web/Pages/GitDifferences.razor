@@ -41,7 +41,7 @@
                     <MudText Typo="Typo.h5" Class="mt-4">Changes saved in this tab</MudText>
                     @foreach (var diff in DraftDifferences.Where(item => item.ChangedLinesCount > 0))
                     {
-                        <MudExpansionPanel Text="@diff.FileName">
+                        <MudExpansionPanel Text="@GetTableLabel(diff.FileName)">
                             @foreach (var record in diff.RecordDifferences)
                             {
                                 @RenderRecordChange(record)
@@ -84,7 +84,7 @@
                         <TitleContent>
                             <MudText>
                                 <MudIcon Icon="@Icons.Material.Filled.Description" Class="mr-2" />
-                                @diff.FileName
+                                @GetTableLabel(diff.FileName)
                                 @if (diff.ChangedLinesCount > 0)
                                 {
                                     <MudChip T="string" Color="Color.Success" Size="Size.Small" Class="ml-2">@diff.ChangedLinesCount changed records</MudChip>
@@ -100,7 +100,7 @@
                             @if (diff.ChangedLinesCount > 0)
                             {
                                 <MudText Typo="Typo.subtitle2" Class="mt-2">
-                                    Records changed in @diff.FileName:
+                                    Records changed in @GetTableLabel(diff.FileName):
                                 </MudText>
                                 @foreach (var record in diff.RecordDifferences)
                                 {
@@ -233,7 +233,7 @@
         }
         catch (Exception ex)
         {
-            ErrorMessage = $"We could not load the latest data. Your saved changes have not been reported as restored. Details: {ex.Message}";
+            ErrorMessage = $"We could not load the latest data. Your saved changes may already have been discarded. Details: {ex.Message}";
         }
     }
 
@@ -292,5 +292,23 @@
     };
 
     private static string DisplayValue(string value) => string.IsNullOrEmpty(value) ? "(empty)" : value;
+
+    private static string GetTableLabel(string fileName) => fileName switch
+    {
+        "Films.csv" => "Films",
+        "Countries.csv" => "Countries",
+        "Companies.csv" => "Companies",
+        "Languages.csv" => "Languages",
+        "Origins.csv" => "Origins",
+        "People.csv" => "People",
+        "Roles.csv" => "Roles",
+        "FilmLinks.csv" => "Film links",
+        "FilmCompanies.csv" => "Film companies",
+        "FilmCountries.csv" => "Film countries",
+        "FilmLanguages.csv" => "Film languages",
+        "FilmOrigins.csv" => "Film origins",
+        "FilmPersonRoles.csv" => "Film people and roles",
+        _ => fileName
+    };
 
 }
