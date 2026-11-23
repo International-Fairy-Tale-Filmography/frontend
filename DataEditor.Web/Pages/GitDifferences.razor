@@ -25,7 +25,7 @@
         {
             <MudAlert Severity="Severity.Error" Class="my-4">@ErrorMessage</MudAlert>
         }
-        else if (Differences.Count == 0)
+        else if (Differences.Count == 0 && !ShowingLatestChanges)
         {
             <MudAlert Severity="Severity.Info" Class="my-4">There are no saved changes to publish. Your data is up to date.</MudAlert>
         }
@@ -41,13 +41,18 @@
                     @foreach (var diff in DraftDifferences.Where(item => item.ChangedLinesCount > 0))
                     {
                         <MudExpansionPanel Text="@diff.FileName">
-                            <MudPaper Elevation="0" Class="pa-2 mt-2" Style="background-color: #f5f5f5; max-height: 300px; overflow: auto; font-family: monospace;">
-                                @((MarkupString)FormatDifference(diff.OldContent, diff.NewContent))
-                            </MudPaper>
+                            @foreach (var record in diff.RecordDifferences)
+                            {
+                                @RenderRecordChange(record)
+                            }
                         </MudExpansionPanel>
                     }
                 }
                 <MudText Typo="Typo.h5" Class="mt-4">Newer data to review</MudText>
+                @if (Differences.Count == 0)
+                {
+                    <MudAlert Severity="Severity.Info" Class="my-2">The selected data set has advanced, but there are no differences in the tables currently loaded in this tab.</MudAlert>
+                }
             }
             else
             {
@@ -81,7 +86,7 @@
                                 @diff.FileName
                                 @if (diff.ChangedLinesCount > 0)
                                 {
-                                    <MudChip T="string" Color="Color.Success" Size="Size.Small" Class="ml-2">@diff.ChangedLinesCount changes</MudChip>
+                                    <MudChip T="string" Color="Color.Success" Size="Size.Small" Class="ml-2">@diff.ChangedLinesCount changed records</MudChip>
                                 }
                                 else
                                 {
@@ -94,11 +99,12 @@
                             @if (diff.ChangedLinesCount > 0)
                             {
                                 <MudText Typo="Typo.subtitle2" Class="mt-2">
-                                    Showing differences in @diff.FileName:
+                                    Records changed in @diff.FileName:
                                 </MudText>
-                                <MudPaper Elevation="0" Class="pa-2 mt-2" Style="background-color: #f5f5f5; max-height: 300px; overflow: auto; font-family: monospace;">
-                                    @((MarkupString)FormatDifference(diff.OldContent, diff.NewContent))
-                                </MudPaper>
+                                @foreach (var record in diff.RecordDifferences)
+                                {
+                                    @RenderRecordChange(record)
+                                }
                             }
                             else
                             {
@@ -211,48 +217,55 @@
         NavigationManager.NavigateTo("/");
     }
 
-    private string FormatDifference(string oldContent, string newContent)
+    private RenderFragment RenderRecordChange(GitEntityService.RecordDifference record) => builder =>
     {
-        if (string.IsNullOrEmpty(oldContent) && !string.IsNullOrEmpty(newContent))
+        var sequence = 0;
+        builder.OpenComponent<MudPaper>(sequence++);
+        builder.AddAttribute(sequence++, "Class", "pa-3 mt-2");
+        builder.AddAttribute(sequence++, "ChildContent", (RenderFragment)(content =>
         {
-            // New file
-            return $"<span style='color: green;'>+ {newContent.Replace("\n", "<br/>+ ")}</span>";
-        }
-        else if (!string.IsNullOrEmpty(oldContent) && string.IsNullOrEmpty(newContent))
-        {
-            // Deleted file 
-            return $"<span style='color: red;'>- {oldContent.Replace("\n", "<br/>- ")}</span>";
-        }
-
-        // This is a simple comparison, in a real-world application you might want
-        // to use a more sophisticated diff algorithm
-        var oldLines = oldContent.Split('\n');
-        var newLines = newContent.Split('\n');
-        var result = new StringBuilder();
-
-        for (int i = 0; i < Math.Max(oldLines.Length, newLines.Length); i++)
-        {
-            var oldLine = i < oldLines.Length ? oldLines[i] : null;
-            var newLine = i < newLines.Length ? newLines[i] : null;
-
-            if (oldLine == newLine)
+            var contentSequence = 0;
+            content.OpenComponent<MudText>(contentSequence++);
+            content.AddAttribute(contentSequence++, "Typo", Typo.subtitle1);
+            content.AddAttribute(contentSequence++, "ChildContent", (RenderFragment)(text => text.AddContent(0, $"{record.ChangeType}: {record.RecordLabel}")));
+            content.CloseComponent();
+            content.OpenComponent<MudSimpleTable>(contentSequence++);
+            content.AddAttribute(contentSequence++, "Dense", true);
+            content.AddAttribute(contentSequence++, "ChildContent", (RenderFragment)(table =>
             {
-                result.AppendLine($"&nbsp;&nbsp;{System.Net.WebUtility.HtmlEncode(oldLine ?? "")}<br/>");
-            }
-            else
-            {
-                if (oldLine != null)
+                var tableSequence = 0;
+                table.OpenElement(tableSequence++, "thead");
+                table.OpenElement(tableSequence++, "tr");
+                foreach (var heading in new[] { "Field", "Previous value", "New value" })
                 {
-                    result.AppendLine($"<span style='color: red;'>- {System.Net.WebUtility.HtmlEncode(oldLine)}</span><br/>");
+                    table.OpenElement(tableSequence++, "th");
+                    table.AddContent(tableSequence++, heading);
+                    table.CloseElement();
                 }
-                if (newLine != null)
+                table.CloseElement();
+                table.CloseElement();
+                table.OpenElement(tableSequence++, "tbody");
+                foreach (var field in record.Fields)
                 {
-                    result.AppendLine($"<span style='color: green;'>+ {System.Net.WebUtility.HtmlEncode(newLine)}</span><br/>");
+                    table.OpenElement(tableSequence++, "tr");
+                    table.OpenElement(tableSequence++, "td");
+                    table.AddContent(tableSequence++, field.FieldName);
+                    table.CloseElement();
+                    table.OpenElement(tableSequence++, "td");
+                    table.AddContent(tableSequence++, DisplayValue(field.OldValue));
+                    table.CloseElement();
+                    table.OpenElement(tableSequence++, "td");
+                    table.AddContent(tableSequence++, DisplayValue(field.NewValue));
+                    table.CloseElement();
+                    table.CloseElement();
                 }
-            }
-        }
+                table.CloseElement();
+            }));
+            content.CloseComponent();
+        }));
+        builder.CloseComponent();
+    };
 
-        return result.ToString();
-    }
+    private static string DisplayValue(string value) => string.IsNullOrEmpty(value) ? "(empty)" : value;
 
 }

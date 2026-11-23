@@ -151,24 +151,166 @@ namespace DataEditor.Core.Services
             var latestFile = await _gitService.GetFile(path, latestSha);
             difference.OldContent = await GetFileContentFromDownloadUrl(originalFile);
             difference.NewContent = await GetFileContentFromDownloadUrl(latestFile);
-            difference.ChangedLinesCount = CountChangedLines(difference.OldContent, difference.NewContent);
+            difference.RecordDifferences = BuildRecordDifferences(filename, difference.OldContent, difference.NewContent);
+            difference.ChangedLinesCount = difference.RecordDifferences.Count;
             return difference;
         }
 
-        private static int CountChangedLines(string oldContent, string newContent)
+        private static List<RecordDifference> BuildRecordDifferences(string fileName, string oldContent, string newContent)
         {
-            var oldLines = oldContent.Split('\n');
-            var newLines = newContent.Split('\n');
-            var changedLines = 0;
-            for (var i = 0; i < Math.Max(oldLines.Length, newLines.Length); i++)
+            var keyFields = GetKeyFields(fileName);
+            var oldRecords = ParseCsvRecords(oldContent);
+            var newRecords = ParseCsvRecords(newContent);
+            var oldByKey = IndexRecords(oldRecords, keyFields, fileName);
+            var newByKey = IndexRecords(newRecords, keyFields, fileName);
+            var differences = new List<RecordDifference>();
+
+            foreach (var key in oldByKey.Keys.Union(newByKey.Keys).OrderBy(value => value, StringComparer.Ordinal))
             {
-                if ((i < oldLines.Length ? oldLines[i] : null) != (i < newLines.Length ? newLines[i] : null))
+                oldByKey.TryGetValue(key, out var oldRecord);
+                newByKey.TryGetValue(key, out var newRecord);
+                if (oldRecord == null)
                 {
-                    changedLines++;
+                    differences.Add(CreateRecordDifference(fileName, key, newRecord, "Added"));
+                }
+                else if (newRecord == null)
+                {
+                    differences.Add(CreateRecordDifference(fileName, key, oldRecord, "Removed"));
+                }
+                else
+                {
+                    var changedFields = oldRecord.Keys.Union(newRecord.Keys, StringComparer.OrdinalIgnoreCase)
+                        .Where(field => !string.Equals(GetValue(oldRecord, field), GetValue(newRecord, field), StringComparison.Ordinal))
+                        .Select(field => new FieldDifference
+                        {
+                            FieldName = ToDisplayName(field),
+                            OldValue = GetValue(oldRecord, field),
+                            NewValue = GetValue(newRecord, field)
+                        })
+                        .ToList();
+
+                    if (changedFields.Count > 0)
+                    {
+                        differences.Add(new RecordDifference
+                        {
+                            RecordLabel = GetRecordLabel(fileName, newRecord, key),
+                            ChangeType = "Changed",
+                            Fields = changedFields
+                        });
+                    }
                 }
             }
 
-            return changedLines;
+            return differences;
+        }
+
+        private static Dictionary<string, string>[] ParseCsvRecords(string content)
+        {
+            using var reader = new StringReader(content);
+            using var csv = new CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture)
+            {
+                MissingFieldFound = null,
+                HeaderValidated = null
+            });
+
+            if (!csv.Read())
+            {
+                return Array.Empty<Dictionary<string, string>>();
+            }
+
+            csv.ReadHeader();
+            var headers = csv.HeaderRecord ?? Array.Empty<string>();
+            var records = new List<Dictionary<string, string>>();
+            while (csv.Read())
+            {
+                var record = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+                for (var index = 0; index < headers.Length; index++)
+                {
+                    record[headers[index]] = csv.GetField(index) ?? string.Empty;
+                }
+
+                records.Add(record);
+            }
+
+            return records.ToArray();
+        }
+
+        private static Dictionary<string, Dictionary<string, string>> IndexRecords(
+            IEnumerable<Dictionary<string, string>> records,
+            string[] keyFields,
+            string fileName)
+        {
+            var indexed = new Dictionary<string, Dictionary<string, string>>(StringComparer.Ordinal);
+            foreach (var record in records)
+            {
+                var missingFields = keyFields.Where(field => !record.ContainsKey(field)).ToArray();
+                if (missingFields.Length > 0)
+                {
+                    throw new InvalidDataException($"Cannot compare {fileName}: required record key field(s) are missing: {string.Join(", ", missingFields)}.");
+                }
+
+                var key = string.Join("|", keyFields.Select(field => record[field]));
+                if (!indexed.TryAdd(key, record))
+                {
+                    throw new InvalidDataException($"Cannot compare {fileName}: record key '{key}' appears more than once.");
+                }
+            }
+
+            return indexed;
+        }
+
+        private static RecordDifference CreateRecordDifference(
+            string fileName,
+            string key,
+            Dictionary<string, string> record,
+            string changeType)
+        {
+            return new RecordDifference
+            {
+                RecordLabel = GetRecordLabel(fileName, record, key),
+                ChangeType = changeType,
+                Fields = record.Select(field => new FieldDifference
+                {
+                    FieldName = ToDisplayName(field.Key),
+                    OldValue = changeType == "Removed" ? field.Value : string.Empty,
+                    NewValue = changeType == "Added" ? field.Value : string.Empty
+                }).ToList()
+            };
+        }
+
+        private static string[] GetKeyFields(string fileName) => fileName switch
+        {
+            "FilmCompanies.csv" => new[] { "FilmGuid", "CompanyGuid" },
+            "FilmCountries.csv" => new[] { "FilmGuid", "CountryGuid" },
+            "FilmLanguages.csv" => new[] { "FilmGuid", "LanguageGuid" },
+            "FilmOrigins.csv" => new[] { "FilmGuid", "OriginGuid" },
+            "FilmPersonRoles.csv" => new[] { "FilmGuid", "PersonGuid", "RoleGuid" },
+            _ => new[] { "Guid" }
+        };
+
+        private static string GetRecordLabel(string fileName, Dictionary<string, string> record, string key)
+        {
+            var displayFields = fileName switch
+            {
+                "Films.csv" => new[] { "Title" },
+                "Countries.csv" or "Companies.csv" or "Languages.csv" or "Roles.csv" => new[] { "Name" },
+                "Origins.csv" => new[] { "Title" },
+                "People.csv" => new[] { "FirstName", "LastName" },
+                "FilmLinks.csv" => new[] { "Url" },
+                _ => Array.Empty<string>()
+            };
+            var label = string.Join(" ", displayFields.Select(field => GetValue(record, field)).Where(value => !string.IsNullOrWhiteSpace(value)));
+            return string.IsNullOrWhiteSpace(label) ? key : label;
+        }
+
+        private static string GetValue(Dictionary<string, string> record, string field)
+        {
+            return record.TryGetValue(field, out var value) ? value : string.Empty;
+        }
+
+        private static string ToDisplayName(string fieldName)
+        {
+            return System.Text.RegularExpressions.Regex.Replace(fieldName, "(?<!^)([A-Z])", " $1");
         }
 
         public async Task<FileDifference> GetDifferences<T>()
@@ -234,22 +376,8 @@ namespace DataEditor.Core.Services
 
             fileDiff.OldContent = oldContent;
             fileDiff.NewContent = newContent;
-
-            var oldLines = oldContent.Split('\n');
-            var newLines = newContent.Split('\n');
-            int changedLines = 0;
-            for (int i = 0; i < Math.Max(oldLines.Length, newLines.Length); i++)
-            {
-                var oldLine = i < oldLines.Length ? oldLines[i] : null;
-                var newLine = i < newLines.Length ? newLines[i] : null;
-
-                if (oldLine != newLine)
-                {
-                    changedLines++;
-                }
-            }
-
-            fileDiff.ChangedLinesCount = changedLines;
+            fileDiff.RecordDifferences = BuildRecordDifferences(filename, oldContent, newContent);
+            fileDiff.ChangedLinesCount = fileDiff.RecordDifferences.Count;
             return fileDiff;
         }
 
@@ -717,6 +845,21 @@ namespace DataEditor.Core.Services
             public string OldContent { get; set; }
             public string NewContent { get; set; }
             public int ChangedLinesCount { get; set; }
+            public List<RecordDifference> RecordDifferences { get; set; } = new();
+        }
+
+        public class RecordDifference
+        {
+            public string RecordLabel { get; set; }
+            public string ChangeType { get; set; }
+            public List<FieldDifference> Fields { get; set; } = new();
+        }
+
+        public class FieldDifference
+        {
+            public string FieldName { get; set; }
+            public string OldValue { get; set; }
+            public string NewValue { get; set; }
         }
 
         // Add this new method after the CommitAllChangesToGit method
