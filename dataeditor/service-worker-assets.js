@@ -69,7 +69,7 @@
       "url": "_framework\/icudt_no_CJK.dat"
     },
     {
-      "hash": "sha256-rIZpC35ViEOEYPk4dwP8+5cEOvQTkJccV\/GA0YG6EHA=",
+      "hash": "sha256-lpAaM1FxsDQxmCEAwyTHyhtvB6982GYBCHTn9N7q8sA=",
       "url": "_framework\/blazor.boot.json"
     },
     {
@@ -77,15 +77,15 @@
       "url": "_framework\/CsvHelper.wasm"
     },
     {
-      "hash": "sha256-m\/Tkp+8SofcQesZA5UrnHslMW1yGC6fkqWoLNpgX7sw=",
+      "hash": "sha256-jk9m90ocoPerJ1a7lYGWSdactT3PyYBdL2acPvAQEjA=",
       "url": "_framework\/Data.Core.wasm"
     },
     {
-      "hash": "sha256-Aamh+d6bBIKzXHc8SuguX6sgX3r0LYblwA3+rJFVAsk=",
+      "hash": "sha256-2\/1507cqVC+Cec3COXKUsOhFzIkqKNV3PMiGBALUUEY=",
       "url": "_framework\/DataEditor.Core.wasm"
     },
     {
-      "hash": "sha256-K\/5J7i\/Bf3drQnmbIrl4MwU24C\/flNFpqHoC36MN8qo=",
+      "hash": "sha256-uOJ11Bd8PuKa2jfqV00TcPCijG1qQu25TtNjoiD6YvU=",
       "url": "_framework\/DataEditor.Web.wasm"
     },
     {
@@ -93,7 +93,7 @@
       "url": "_framework\/Microsoft.AspNetCore.Components.Forms.wasm"
     },
     {
-      "hash": "sha256-RafTF5d82F6KGzkwupepFvGoqkeG8tydNW0d\/gPKZ5U=",
+      "hash": "sha256-9fq5W8vhjuBEMsyN1edIWY+1rhDnEmeWB1VNqMzNlLc=",
       "url": "_framework\/Microsoft.AspNetCore.Components.wasm"
     },
     {
@@ -361,5 +361,5 @@
       "url": "_content\/MudBlazor\/MudBlazor.min.js"
     }
   ],
-  "version": "IQ72nY9m"
+  "version": "+W0UdYFp"
 };
