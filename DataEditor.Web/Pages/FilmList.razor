@@ -8,9 +8,13 @@
 @inject GitEntityService ges
 @implements IDisposable
 
-<h3>Film List</h3>
-
-<MudButton OnClick="@AddItem" Color="@Color.Success" Class="add-item-btn" Disabled="@_backgroundLoading">Add Item</MudButton>
+<MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mb-4">
+    <div>
+        <MudText Typo="Typo.h4">Films</MudText>
+        <MudText Typo="Typo.body2" Color="Color.Secondary">Browse and update films. @Items.Count films</MudText>
+    </div>
+    <MudButton OnClick="AddItem" Color="Color.Primary" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Add" Disabled="@(_loading || _backgroundLoading)">Add film</MudButton>
+</MudStack>
 
 @if (_loading)
 {
@@ -34,14 +38,20 @@ else if (_backgroundLoading)
     </MudAlert>
 }
 
-<MudDataGrid T="Film" Items="@Items" ReadOnly="true" Virtualize="true" Filterable="true" FilterCaseSensitivity="DataGridFilterCaseSensitivity.CaseInsensitive"
-             Bordered="true" Dense="true" Loading="_loading">
+@if (!string.IsNullOrWhiteSpace(_loadError))
+{
+    <MudAlert Severity="Severity.Error" Class="my-2">@_loadError</MudAlert>
+}
+
+<MudTextField @bind-Value="_searchText" Immediate="true" Clearable="true" Placeholder="Search films" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" Class="mb-3" />
+
+<MudDataGrid T="Film" Items="@Items" QuickFilter="QuickFilter" ReadOnly="true" Virtualize="true" Filterable="true" FilterCaseSensitivity="DataGridFilterCaseSensitivity.CaseInsensitive"
+             Bordered="true" Dense="true" Hover="true" Loading="_loading || _backgroundLoading">
+    <NoRecordsContent><MudText Class="pa-4">No films to show. Clear the search or add a film.</MudText></NoRecordsContent>
     <Columns>
-        <TemplateColumn CellClass="d-flex justify-end">
+        <TemplateColumn Title="Actions" CellClass="text-nowrap">
             <CellTemplate>
-                <MudIconButton Size="@Size.Small" Icon="@Icons.Material.Outlined.Edit" 
-                               OnClick="@((e) => EditCell(context.Item))" 
-                               Disabled="@_backgroundLoading" />
+                <MudButton Size="Size.Small" Variant="Variant.Text" StartIcon="@Icons.Material.Outlined.Edit" AriaLabel="@($"Edit {context.Item.Title}")" OnClick="@(() => EditCell(context.Item))" Disabled="@_backgroundLoading">Edit</MudButton>
             </CellTemplate>
         </TemplateColumn>
         <PropertyColumn Property="x => x.Title" />
@@ -62,6 +72,14 @@ else if (_backgroundLoading)
     private bool _loading = true;
     private bool _backgroundLoading = false;
     private string _loadingStatus = "Loading films...";
+    private string? _loadError;
+    private string _searchText = string.Empty;
+    private bool QuickFilter(Film film) => string.IsNullOrWhiteSpace(_searchText) ||
+        (film.Title?.Contains(_searchText, StringComparison.OrdinalIgnoreCase) ?? false) ||
+        (film.OtherTitle?.Contains(_searchText, StringComparison.OrdinalIgnoreCase) ?? false) ||
+        (film.Color?.Contains(_searchText, StringComparison.OrdinalIgnoreCase) ?? false) ||
+        (film.Mode?.Contains(_searchText, StringComparison.OrdinalIgnoreCase) ?? false) ||
+        (film.ReleaseYear?.ToString().Contains(_searchText, StringComparison.OrdinalIgnoreCase) ?? false);
     private CancellationTokenSource _cts = new CancellationTokenSource();
     private int _currentFileCount = 0;
     private int _totalFileCount = 0;
@@ -76,6 +94,7 @@ else if (_backgroundLoading)
     private async Task LoadInitialData()
     {
         _loading = true;
+        _loadError = null;
         _loadingStatus = "Loading film data...";
         StateHasChanged();
         
@@ -97,7 +116,8 @@ else if (_backgroundLoading)
         }
         catch (Exception ex)
         {
-            _loadingStatus = $"Error loading data: {ex.Message}";
+            _loadError = $"Could not load films: {ex.Message}";
+            _loadingStatus = "Loading films stopped.";
         }
         finally
         {
@@ -109,6 +129,7 @@ else if (_backgroundLoading)
     private async Task LoadRelatedDataInBackground()
     {
         _backgroundLoading = true;
+        _loadError = null;
         _loadingStatus = "Loading additional data in background...";
         _currentFileCount = 0;
         _totalFileCount = 0;
@@ -126,7 +147,7 @@ else if (_backgroundLoading)
         }
         catch (Exception ex)
         {
-            _loadingStatus = $"Error loading background data: {ex.Message}";
+            _loadError = $"Could not load related data: {ex.Message}";
         }
         finally
         {
@@ -137,7 +158,7 @@ else if (_backgroundLoading)
 
     async Task<EventCallback> EditCell(Film cell)
     {
-        if (_backgroundLoading) return EventCallback.Empty;
+        if (_loading || _backgroundLoading) return EventCallback.Empty;
         
         await EditItem(cell.Guid);
         return EventCallback.Empty;
@@ -145,7 +166,7 @@ else if (_backgroundLoading)
     
     async Task AddItem()
     {
-        if (_backgroundLoading) return;
+        if (_loading || _backgroundLoading) return;
         
         await EditItem(null);
     }
@@ -166,12 +187,21 @@ else if (_backgroundLoading)
     async Task Refresh()
     {
         _loading = true;
+        _loadError = null;
         _loadingStatus = "Refreshing data...";
         StateHasChanged();
-        
-        Items = await ctx.Films.ToListAsync();
-        
-        _loading = false;
+        try
+        {
+            Items = await ctx.Films.ToListAsync();
+        }
+        catch (Exception ex)
+        {
+            _loadError = $"Could not refresh films: {ex.Message}";
+        }
+        finally
+        {
+            _loading = false;
+        }
     }
 
     public void Dispose()

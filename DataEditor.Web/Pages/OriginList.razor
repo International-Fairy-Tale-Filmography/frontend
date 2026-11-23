@@ -6,16 +6,28 @@
 @inject IDialogService DialogService
 @inject GitEntityService ges
 
-<h3>Origin List</h3>
+<MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mb-4">
+    <div>
+        <MudText Typo="Typo.h4">Origins</MudText>
+        <MudText Typo="Typo.body2" Color="Color.Secondary">Browse and update story origins. @Items.Count origins</MudText>
+    </div>
+    <MudButton OnClick="AddItem" Color="Color.Primary" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Add" Disabled="@_loading">Add origin</MudButton>
+</MudStack>
 
-<MudButton OnClick="@AddItem" Color="@Color.Success" Class="add-item-btn">Add Item</MudButton>
+@if (!string.IsNullOrWhiteSpace(_loadError))
+{
+    <MudAlert Severity="Severity.Error" Class="mb-3">@_loadError</MudAlert>
+}
 
-<MudDataGrid T="Origin" Items="@Items" ReadOnly="true" Virtualize="true" Filterable="true" FilterCaseSensitivity="DataGridFilterCaseSensitivity.CaseInsensitive"
-             Bordered="true" Dense="true" Loading="_loading">
+<MudTextField @bind-Value="_searchText" Immediate="true" Clearable="true" Placeholder="Search origins" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" Class="mb-3" />
+
+<MudDataGrid T="Origin" Items="@Items" QuickFilter="QuickFilter" ReadOnly="true" Virtualize="true" Filterable="true" FilterCaseSensitivity="DataGridFilterCaseSensitivity.CaseInsensitive"
+             Bordered="true" Dense="true" Hover="true" Loading="_loading">
+    <NoRecordsContent><MudText Class="pa-4">No origins to show. Clear the search or add an origin.</MudText></NoRecordsContent>
     <Columns>
-        <TemplateColumn CellClass="d-flex justify-end">
+        <TemplateColumn Title="Actions" CellClass="text-nowrap">
             <CellTemplate>
-                <MudIconButton Size="@Size.Small" Icon="@Icons.Material.Outlined.Edit" OnClick="@((e) => EditCell(context.Item))" />
+                <MudButton Size="Size.Small" Variant="Variant.Text" StartIcon="@Icons.Material.Outlined.Edit" AriaLabel="@($"Edit {context.Item.Title}")" OnClick="@(() => EditCell(context.Item))">Edit</MudButton>
             </CellTemplate>
         </TemplateColumn>
         <PropertyColumn Property="x => x.Title"  />
@@ -29,22 +41,38 @@
 
 
 @code {
-    public bool _loading { get; set; }
+    private bool _loading;
+    private string _searchText = string.Empty;
+    private string? _loadError;
 
     public List<Origin> Items { get; set; } = new();
+    private bool QuickFilter(Origin origin) => string.IsNullOrWhiteSpace(_searchText) ||
+        (origin.Title?.Contains(_searchText, StringComparison.OrdinalIgnoreCase) ?? false) ||
+        (origin.Code?.Contains(_searchText, StringComparison.OrdinalIgnoreCase) ?? false) ||
+        (origin.Author?.Contains(_searchText, StringComparison.OrdinalIgnoreCase) ?? false);
 
     protected override async Task OnInitializedAsync()
     {
         await Refresh();
     }
 
-    async Task Refresh()
+    private async Task Refresh()
     {
         _loading = true;
-        Thread.Sleep(10);
-        await ges.SeedDataFromGit<Origin>();
-        Items = await ctx.Origins.ToListAsync();
-        _loading = false;
+        _loadError = null;
+        try
+        {
+            await ges.SeedDataFromGit<Origin>();
+            Items = await ctx.Origins.ToListAsync();
+        }
+        catch (Exception ex)
+        {
+            _loadError = $"Could not load origins: {ex.Message}";
+        }
+        finally
+        {
+            _loading = false;
+        }
     }
 
     async Task<EventCallback> EditCell(Origin cell)
