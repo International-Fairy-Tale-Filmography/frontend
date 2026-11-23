@@ -12,10 +12,6 @@
         <MudTextField @bind-Value="item.Description" Label="Description"></MudTextField>
         
         
-        <MudTextField @bind-Value="item.CreatedBy" Label="Created By"></MudTextField>
-        <MudDatePicker @bind-Date="item.CreatedOn" Label="Created On" Clearable="true" ShowToolbar="false" />
-        <MudTextField @bind-Value="item.UpdatedBy" Label="Updated By"></MudTextField>
-        <MudDatePicker @bind-Date="item.UpdatedOn" Label="Updated On" Clearable="true" ShowToolbar="false" />
         <MudDivider Class="my-3" />
         <MudText Typo="Typo.h6">Contribution history</MudText>
         <ContributionListField @bind-Value="item.ContributionHistory" />
@@ -34,13 +30,16 @@
     [Parameter]
     public Guid? Id { get; set; } = null;
 
+    [Parameter]
+    public bool DeferSave { get; set; }
+
     public Company item { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
         if (Id != null)
         {
-            item = await ctx.Companies.FirstAsync(i => i.Guid == Id);
+            item = await ctx.Companies.AsNoTracking().FirstAsync(i => i.Guid == Id);
         }
         else
         {
@@ -51,14 +50,27 @@
 
     private async Task Save()
     {
+        if (DeferSave)
+        {
+            MudDialog.Close(DialogResult.Ok(item));
+            return;
+        }
+
         if (Id == null)
         {
-            
             await ctx.Companies.AddAsync(item);
         }
         else
         {
-            ctx.Companies.Update(item);
+            var existing = ctx.Companies.Local.FirstOrDefault(company => company.Guid == item.Guid);
+            if (existing is null)
+            {
+                ctx.Companies.Update(item);
+            }
+            else
+            {
+                ctx.Entry(existing).CurrentValues.SetValues(item);
+            }
         }
 
         await ctx.SaveChangesAsync();

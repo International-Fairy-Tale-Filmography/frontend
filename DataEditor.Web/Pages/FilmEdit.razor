@@ -195,24 +195,10 @@
                             </MudItem>
                             <MudItem xs="12">
                                 <MudText Typo="Typo.h6">Contribution history</MudText>
-                                <MudText Typo="Typo.body2" Class="mb-2">Record who contributed, what they did, and when.</MudText>
                                 <ContributionListField @bind-Value="item.ContributionHistory" @bind-Value:after="MarkChanged" />
                             </MudItem>
                             <MudItem xs="12">
                                 <MudTextField @bind-Value="item.Comment" @bind-Value:after="MarkChanged" Label="Notes" Lines="4" MaxLength="4000" />
-                            </MudItem>
-                            <MudItem xs="12">
-                                <MudExpansionPanels>
-                                    <MudExpansionPanel Text="Record details">
-                                        <MudText Typo="Typo.body2" Class="mb-2">Optional record tracking information.</MudText>
-                                        <MudGrid Spacing="2">
-                                            <MudItem xs="12" sm="6"><MudTextField @bind-Value="item.CreatedBy" @bind-Value:after="MarkChanged" Label="Added by" MaxLength="200" /></MudItem>
-                                            <MudItem xs="12" sm="6"><MudDatePicker @bind-Date="item.CreatedOn" @bind-Date:after="MarkChanged" Label="Added on" Clearable="true" ShowToolbar="false" /></MudItem>
-                                            <MudItem xs="12" sm="6"><MudTextField @bind-Value="item.UpdatedBy" @bind-Value:after="MarkChanged" Label="Updated by" MaxLength="200" /></MudItem>
-                                            <MudItem xs="12" sm="6"><MudDatePicker @bind-Date="item.UpdatedOn" @bind-Date:after="MarkChanged" Label="Updated on" Clearable="true" ShowToolbar="false" /></MudItem>
-                                        </MudGrid>
-                                    </MudExpansionPanel>
-                                </MudExpansionPanels>
                             </MudItem>
                         </MudGrid>
                     </MudTabPanel>
@@ -245,6 +231,8 @@
     private string? _saveError;
     private string? _linkError;
     private string _newLinkUrl = string.Empty;
+    private readonly List<Person> _pendingPeople = new();
+    private readonly List<Company> _pendingCompanies = new();
 
     private Company? selectedCompany;
     private Country? selectedCountry;
@@ -340,6 +328,9 @@
         _saving = true;
         try
         {
+            if (_pendingPeople.Count > 0) ctx.People.AddRange(_pendingPeople);
+            if (_pendingCompanies.Count > 0) ctx.Companies.AddRange(_pendingCompanies);
+
             if (_originalFilm is null)
             {
                 await ctx.Films.AddAsync(item);
@@ -589,10 +580,12 @@
 
     private async Task CreatePerson()
     {
-        var dialog = await DialogService.ShowAsync<PersonEdit>("Add person", options: new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true });
+        var parameters = new DialogParameters<PersonEdit> { { editor => editor.DeferSave, true } };
+        var dialog = await DialogService.ShowAsync<PersonEdit>("Add person", parameters, new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true });
         var result = await dialog.Result;
         if (result is { Canceled: false, Data: Person person })
         {
+            _pendingPeople.Add(person);
             selectedPerson = person;
             MarkChanged();
         }
@@ -600,10 +593,12 @@
 
     private async Task CreateCompany()
     {
-        var dialog = await DialogService.ShowAsync<CompanyEdit>("Add company", options: new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true });
+        var parameters = new DialogParameters<CompanyEdit> { { editor => editor.DeferSave, true } };
+        var dialog = await DialogService.ShowAsync<CompanyEdit>("Add company", parameters, new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true });
         var result = await dialog.Result;
         if (result is { Canceled: false, Data: Company company })
         {
+            _pendingCompanies.Add(company);
             selectedCompany = company;
             MarkChanged();
         }

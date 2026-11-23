@@ -1,19 +1,14 @@
 @using Data.Core.Models
 @inject IDialogService DialogService
 
-<MudStack Spacing="1">
-    <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.EditNote" OnClick="EditContributions" Disabled="@(!string.IsNullOrEmpty(_error))">
-        Edit contribution list
-    </MudButton>
-    @if (!string.IsNullOrEmpty(_error))
-    {
-        <MudText Color="Color.Error" Typo="Typo.caption">@_error</MudText>
-    }
-    else
-    {
-        <MudText Typo="Typo.caption" Color="Color.Secondary">@_entryCount contribution rows</MudText>
-    }
+<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+    <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Visibility" OnClick="EditContributions" Disabled="@(!string.IsNullOrEmpty(_error))">View contributions (@_entryCount)</MudButton>
+    <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Add" OnClick="AddContribution" Disabled="@(!string.IsNullOrEmpty(_error))">Add contribution</MudButton>
 </MudStack>
+@if (!string.IsNullOrEmpty(_error))
+{
+    <MudText Color="Color.Error" Typo="Typo.caption">@_error</MudText>
+}
 
 @code {
     [Parameter]
@@ -57,10 +52,37 @@
         var result = await dialog.Result;
         if (result is { Canceled: false, Data: List<ContributionEntry> updatedEntries })
         {
-            Value = ContributionHistoryJson.Serialize(updatedEntries);
-            _entryCount = updatedEntries.Count;
-            _error = null;
-            await ValueChanged.InvokeAsync(Value);
+            await UpdateContributions(updatedEntries);
         }
+    }
+
+    private async Task AddContribution()
+    {
+        var dialog = await DialogService.ShowAsync<ContributionEntryEditor>("Add contribution", options: new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true });
+        var result = await dialog.Result;
+        if (result is { Canceled: false, Data: ContributionEntry entry })
+        {
+            List<ContributionEntry> entries;
+            try
+            {
+                entries = ContributionHistoryJson.Deserialize(Value);
+            }
+            catch (Exception ex)
+            {
+                _error = $"The contribution list could not be updated: {ex.Message}";
+                return;
+            }
+
+            entries.Add(entry);
+            await UpdateContributions(entries);
+        }
+    }
+
+    private async Task UpdateContributions(List<ContributionEntry> entries)
+    {
+        Value = ContributionHistoryJson.Serialize(entries);
+        _entryCount = entries.Count;
+        _error = null;
+        await ValueChanged.InvokeAsync(Value);
     }
 }

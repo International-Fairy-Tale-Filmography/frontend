@@ -11,10 +11,6 @@
         <MudTextField @bind-Value="item.Name" Label="Name"></MudTextField>
         <MudTextField @bind-Value="item.Code" Label="Code"></MudTextField>
         
-        <MudTextField @bind-Value="item.CreatedBy" Label="Created By"></MudTextField>
-        <MudDatePicker @bind-Date="item.CreatedOn" Label="Created On" Clearable="true" ShowToolbar="false" />
-        <MudTextField @bind-Value="item.UpdatedBy" Label="Updated By"></MudTextField>
-        <MudDatePicker @bind-Date="item.UpdatedOn" Label="Updated On" Clearable="true" ShowToolbar="false" />
         <MudDivider Class="my-3" />
         <MudText Typo="Typo.h6">Contribution history</MudText>
         <ContributionListField @bind-Value="item.ContributionHistory" />
@@ -39,7 +35,7 @@
     {
         if (Id != null)
         {
-            item = await ctx.Countries.FirstAsync(i => i.Guid == Id);
+            item = await ctx.Countries.AsNoTracking().FirstAsync(i => i.Guid == Id);
         }
         else
         {
@@ -57,7 +53,15 @@
         }
         else
         {
-            ctx.Countries.Update(item);
+            var existing = ctx.Countries.Local.FirstOrDefault(country => country.Guid == item.Guid);
+            if (existing is null)
+            {
+                ctx.Countries.Update(item);
+            }
+            else
+            {
+                ctx.Entry(existing).CurrentValues.SetValues(item);
+            }
         }
 
         await ctx.SaveChangesAsync();

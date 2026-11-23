@@ -1,0 +1,37 @@
+@using Data.Core.Models
+
+<MudDialog>
+    <DialogContent>
+        <MudForm @ref="_form">
+            <MudTextField @bind-Value="_entry.Who" Label="Who" HelperText="Enter a name; this does not need to be a person in the film cast list." Required="true" RequiredError="Enter who contributed." MaxLength="300" />
+            <MudTextField @bind-Value="_entry.What" Label="What did they contribute?" Required="true" RequiredError="Describe the contribution." MaxLength="1000" />
+            <MudDatePicker @bind-Date="_entry.When" Label="When" Clearable="true" ShowToolbar="false" />
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Save">Add contribution</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    private MudDialogInstance MudDialog { get; set; } = default!;
+
+    private MudForm? _form;
+    private ContributionEntry _entry = new();
+
+    private async Task Save()
+    {
+        if (_form is null) return;
+        await _form.Validate();
+        if (_form.IsValid)
+        {
+            _entry.Who = _entry.Who.Trim();
+            _entry.What = _entry.What.Trim();
+            MudDialog.Close(DialogResult.Ok(_entry));
+        }
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+}
