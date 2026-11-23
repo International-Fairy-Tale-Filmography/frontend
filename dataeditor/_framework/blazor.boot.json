@@ -1,7 +1,7 @@
 {
   "mainAssemblyName": "DataEditor.Web",
   "resources": {
-    "hash": "sha256-oVsegOsYkOLrNm/TPDlRhQb4EZaR1Y+q0hd4v+YLcAE=",
+    "hash": "sha256-HoQFOX8cwdrz0tE292W0Ttjgl3Jcmg6jWsW23KYl4W4=",
     "jsModuleNative": {
       "dotnet.native.8.0.34.l8d8ux50rd.js": "sha256-Uc+HxggmSGuU1CkPjbVFhBiqRQ6cUsH1lnQ1keONjkE="
     },
@@ -18,9 +18,9 @@
     },
     "assembly": {
       "CsvHelper.wasm": "sha256-BXz5RCSFBrg3KCDZD4lxgyWmw1YH6vUT0N/oIQdCKfA=",
-      "Data.Core.wasm": "sha256-fQsN4y45oXn+/GWYbFLIZb+uNhP8hyEZupsO/wF9ops=",
-      "DataEditor.Core.wasm": "sha256-ZxEKiyMPoz+QYI/5t6ns3YeOkEnoVe8NXtPIL1hw97U=",
-      "DataEditor.Web.wasm": "sha256-8ugK+1fyI9gAj0pVAHQDghls8kq/LNV4mMNVN1hAPAc=",
+      "Data.Core.wasm": "sha256-Ez8iGA6pTzyBU21U7an+XGk9icqV3rNUat4VEZ1+EOM=",
+      "DataEditor.Core.wasm": "sha256-dtl9JgrfniYAlvJZ/VVExfc4tbwlDATS2tFv0AoeRcQ=",
+      "DataEditor.Web.wasm": "sha256-gp959rnKDUaLZdaH+Z9+PQxdRqjrj4XpHE5fxECHsgY=",
       "Microsoft.AspNetCore.Components.Forms.wasm": "sha256-IznTymONoWYZxUaAxg873S7Gf506KK16SpNG5+QEiEs=",
       "Microsoft.AspNetCore.Components.wasm": "sha256-yRl2gGVtxZ09Oa73ARIiRL7JQTfrzy8pa97nbf+UB5A=",
       "Microsoft.AspNetCore.Components.Web.wasm": "sha256-oNCl6OZwT32oWlQnIv1AN47lvxoRh/SFvIn015zYGrE=",
