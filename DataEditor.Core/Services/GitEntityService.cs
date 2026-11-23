@@ -25,6 +25,10 @@ namespace DataEditor.Core.Services
         private readonly DataEditorDataContext _context;
         private readonly CoreSettingsModel _settings;
         private readonly GitService _gitService;
+        private readonly SemaphoreSlim _dataVersionLock = new(1, 1);
+        private string _dataVersionSha;
+
+        public string DataVersionSha => _dataVersionSha;
 
         public GitEntityService(DataEditorDataContext context, CoreSettingsModel settings, GitService gitService)
         {
@@ -262,10 +266,37 @@ namespace DataEditor.Core.Services
 
         public async Task<RepositoryContent> GetFileByName(string name)
         {
+            await EnsureDataVersionCaptured();
             var filePath = Path.Combine(_settings.Folder, name);
-            var file = await _gitService.GetFile(filePath);
+            var file = await _gitService.GetFile(filePath, _dataVersionSha);
 
             return file;
+        }
+
+        public Task<string> GetLatestBranchHeadSha()
+        {
+            return _gitService.GetBranchHeadSha();
+        }
+
+        private async Task EnsureDataVersionCaptured()
+        {
+            if (!string.IsNullOrEmpty(_dataVersionSha))
+            {
+                return;
+            }
+
+            await _dataVersionLock.WaitAsync();
+            try
+            {
+                if (string.IsNullOrEmpty(_dataVersionSha))
+                {
+                    _dataVersionSha = await _gitService.GetBranchHeadSha();
+                }
+            }
+            finally
+            {
+                _dataVersionLock.Release();
+            }
         }
 
         public static HashSet<Type> LoadedFiles = new ();
@@ -624,8 +655,7 @@ namespace DataEditor.Core.Services
 
             // Clear the LoadedFiles collection to force reloading all data from Git
             LoadedFiles.Clear();
-            
-     
+            _dataVersionSha = null;
         }
     }
 }

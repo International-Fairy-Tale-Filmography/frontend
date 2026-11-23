@@ -61,14 +61,26 @@ public class GitService
         return user.Login;
     }
 
-    public async Task<RepositoryContent> GetFile(string filePath)
+    public async Task<string> GetBranchHeadSha()
     {
         await GetConfiguration();
-        
+
+        var branch = await _gitHubClient.Repository.Branch.Get(
+            _coreSettings.Owner,
+            _coreSettings.RepoName,
+            _coreSettings.Branch);
+
+        return branch.Commit.Sha;
+    }
+
+    public async Task<RepositoryContent> GetFile(string filePath, string reference = null)
+    {
+        await GetConfiguration();
+
         var fileDetails = await _gitHubClient.Repository.Content.GetAllContentsByRef(
             _coreSettings.Owner,
             _coreSettings.RepoName,
-            filePath, _coreSettings.Branch);
+            filePath, reference ?? _coreSettings.Branch);
 
         var firstContent = fileDetails.First();
         
